@@ -1,6 +1,5 @@
 # Import the async app instead of the regular one
 from slack_bolt.async_app import AsyncApp
-
 import logging
 from decouple import config
 
@@ -32,4 +31,4 @@ async def command(ack, body, respond):
     await respond(f"Hello <@{body['user_id']}>!")
 
 if __name__ == "__main__":
-    app.start(3000)
+    app.start(8000)
