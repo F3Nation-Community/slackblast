@@ -8,44 +8,44 @@ from decouple import config
 logging.basicConfig(level=logging.DEBUG)
 
 
-app = AsyncApp(
+slack_app = AsyncApp(
     token=config('SLACK_BOT_TOKEN'),
     signing_secret=config('SLACK_SIGNING_SECRET'),
     logger=logging.Logger
 )
 
 
-@app.middleware  # or app.use(log_request)
+@slack_app.middleware  # or app.use(log_request)
 async def log_request(logger, body, next):
     logger.debug(body)
     return await next()
 
 
-@app.event("app_mention")
+@slack_app.event("app_mention")
 async def event_test(body, say, logger):
     logger.info(body)
     await say("What's up yo?")
 
 
-@app.command("/backblast")
+@slack_app.command("/backblast")
 async def command(ack, body, respond):
     await ack()
     await respond(f"Hello <@{body['user_id']}>!")
 
 # Initialize the Flask app
 
-flask_app = Flask(__name__)
-handler = SlackRequestHandler(app)
+app = Flask(__name__)
+handler = SlackRequestHandler(slack_app)
 
 # Register routes to Flask app
 
 
-@flask_app.route("/")
+@app.route("/")
 def hellow_world():
     return "ok"
 
 
-@flask_app.route("/slack/events", methods=["POST"])
+@app.route("/slack/events", methods=["POST"])
 def slack_events():
     # handler runs App's dispatch method
     return handler.handle(request)
