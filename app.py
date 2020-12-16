@@ -13,7 +13,7 @@ async def event_test(body, say, logger):
 @app.command("/backblast")
 async def command(ack, body, respond):
     await ack()
-    await respond(f"Hi <@{body['user_id']}>!")
+    await respond(f"Hello <@{body['user_id']}>!")
 
 if __name__ == "__main__":
     app.start(3000)
