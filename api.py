@@ -10,7 +10,7 @@ async def event_test(body, say, logger):
     await say("What's up?")
 
 
-@app.command("/hello-bolt-python")
+@app.command("/backblast")
 async def command(ack, body, respond):
     await ack()
     await respond(f"Hi <@{body['user_id']}>!")
