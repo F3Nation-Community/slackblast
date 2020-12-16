@@ -2,11 +2,16 @@
 from slack_bolt.async_app import AsyncApp
 
 import logging
+from decouple import config
+
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-app = AsyncApp()
+app = AsyncApp(
+    token=config('SLACK_BOT_TOKEN'),
+    signing_secret=config('SLACK_SIGNING_SECRET')
+)
 
 
 @app.middleware  # or app.use(log_request)
