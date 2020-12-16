@@ -23,7 +23,7 @@ async def log_request(logger, body, next):
 @app.event("app_mention")
 async def event_test(body, say, logger):
     logger.info(body)
-    await say("What's up?")
+    await say("What's up yo?")
 
 
 @app.command("/backblast")
