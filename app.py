@@ -6,31 +6,31 @@ from slack_bolt.async_app import AsyncApp
 
 logging.basicConfig(level=logging.DEBUG)
 
-app = AsyncApp(
+slack_app = AsyncApp(
     token=config('SLACK_BOT_TOKEN'),
     signing_secret=config('SLACK_SIGNING_SECRET')
 )
-app_handler = AsyncSlackRequestHandler(app)
+app_handler = AsyncSlackRequestHandler(slack_app)
 
 
-@app.middleware  # or app.use(log_request)
+@slack_app.middleware  # or app.use(log_request)
 async def log_request(logger, body, next):
     logger.debug(body)
     return await next()
 
 
-@app.event("app_mention")
+@slack_app.event("app_mention")
 async def event_test(body, say, logger):
     logger.info(body)
     await say("What's up yo?")
 
 
-@app.event("message")
+@slack_app.event("message")
 async def handle_message():
     pass
 
 
-@app.command("/backblast")
+@slack_app.command("/backblast")
 async def command(ack, body, respond, client, logger):
     await ack()
     res = client.views_open(
@@ -175,7 +175,7 @@ async def command(ack, body, respond, client, logger):
     logger.info(res)
 
 
-@app.view("backblast-id")
+@slack_app.view("backblast-id")
 async def view_submission(ack, body, logger, client):
     await ack()
     logger.info(body["view"]["state"]["values"])
@@ -192,14 +192,14 @@ async def view_submission(ack, body, logger, client):
         client.chat_postMessage(channel=user, text=msg)
 
 
-api = FastAPI()
+app = FastAPI()
 
 
-@api.post("/slack/events")
+@app.post("/slack/events")
 async def endpoint(req: Request):
     return await app_handler.handle(req)
 
 
-@api.get("/")
+@app.get("/")
 async def status_ok():
     return "ok"
