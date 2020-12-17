@@ -1,6 +1,6 @@
 import logging
 from decouple import config
-from fastapi import FastAPI, requests
+from fastapi import FastAPI, Request
 from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 from slack_bolt.async_app import AsyncApp
 
@@ -10,6 +10,7 @@ app = AsyncApp(
     token=config('SLACK_BOT_TOKEN'),
     signing_secret=config('SLACK_SIGNING_SECRET')
 )
+app_handler = AsyncSlackRequestHandler(app)
 
 
 @app.middleware  # or app.use(log_request)
@@ -22,6 +23,11 @@ async def log_request(logger, body, next):
 async def event_test(body, say, logger):
     logger.info(body)
     await say("What's up yo?")
+
+
+@app.event("message")
+async def handle_message():
+    pass
 
 
 @app.command("/backblast")
@@ -186,22 +192,14 @@ async def view_submission(ack, body, logger, client):
         client.chat_postMessage(channel=user, text=msg)
 
 
-@app.event("message")
-def handle_message():
-    pass
-
-
 api = FastAPI()
-app_handler = AsyncSlackRequestHandler(app)
-
-# Register routes to Flask app
-
-
-@api.get("/")
-def status_ok():
-    return "ok"
 
 
 @api.post("/slack/events")
-async def endpoint(req: requests):
+async def endpoint(req: Request):
     return await app_handler.handle(req)
+
+
+@api.get("/")
+async def status_ok():
+    return "ok"
