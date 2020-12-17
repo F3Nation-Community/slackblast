@@ -33,7 +33,7 @@ async def handle_message():
 @slack_app.command("/backblast")
 async def command(ack, body, respond, client, logger):
     await ack()
-    res = client.views_open(
+    res = await client.views_open(
         trigger_id=body["trigger_id"],
         view={
             "type": "modal",
