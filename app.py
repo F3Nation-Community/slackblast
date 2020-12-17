@@ -1,38 +1,44 @@
 # Import the async app instead of the regular one
 from slack_bolt.adapter.flask import SlackRequestHandler
 from flask import Flask, request
-from slack_bolt.async_app import AsyncApp
+from slack_bolt import App
 import logging
 from decouple import config
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-slack_app = AsyncApp(
+slack_app = App(
     token=config('SLACK_BOT_TOKEN'),
-    signing_secret=config('SLACK_SIGNING_SECRET'),
-    logger=logging.Logger
+    signing_secret=config('SLACK_SIGNING_SECRET')
 )
 
 
 @slack_app.middleware  # or app.use(log_request)
-async def log_request(logger, body, next):
+def log_request(logger, body, next):
     logger.debug(body)
-    return await next()
+    return next()
 
 
 @slack_app.event("app_mention")
-async def event_test(body, say, logger):
+def event_test(body, say, logger):
     logger.info(body)
-    await say("What's up yo?")
+    say("What's up yo?")
 
 
 @slack_app.command("/backblast")
-async def command(ack, body, respond):
-    await ack()
-    await respond(f"Hello <@{body['user_id']}>!")
+def command(ack, body, respond, logger):
+    ack()
+    logger.info(body)
+    respond(f"Hello <@{body['user_id']}>!")
+
+
+@slack_app.event("message")
+def handle_message():
+    pass
 
 # Initialize the Flask app
+
 
 app = Flask(__name__)
 handler = SlackRequestHandler(slack_app)
@@ -48,4 +54,5 @@ def hellow_world():
 @app.route("/slack/events", methods=["POST"])
 def slack_events():
     # handler runs App's dispatch method
-    return handler.handle(request)
+    response = handler.handle(request)
+    return response
