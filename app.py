@@ -13,20 +13,20 @@ app = AsyncApp(
 
 
 @app.middleware  # or app.use(log_request)
-def log_request(logger, body, next):
+async def log_request(logger, body, next):
     logger.debug(body)
-    return next()
+    return await next()
 
 
 @app.event("app_mention")
-def event_test(body, say, logger):
+async def event_test(body, say, logger):
     logger.info(body)
-    say("What's up yo?")
+    await say("What's up yo?")
 
 
 @app.command("/backblast")
-def command(ack, body, respond, client, logger):
-    ack()
+async def command(ack, body, respond, client, logger):
+    await ack()
     res = client.views_open(
         trigger_id=body["trigger_id"],
         view={
@@ -170,8 +170,8 @@ def command(ack, body, respond, client, logger):
 
 
 @app.view("backblast-id")
-def view_submission(ack, body, logger, client):
-    ack()
+async def view_submission(ack, body, logger, client):
+    await ack()
     logger.info(body["view"]["state"]["values"])
     user = body["user"]["id"]
     msg = ""
