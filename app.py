@@ -1,32 +1,30 @@
-# Import the async app instead of the regular one
-from slack_bolt.adapter.flask import SlackRequestHandler
-from flask import Flask, request
-from slack_bolt import App
 import logging
 from decouple import config
+from fastapi import FastAPI, requests
+from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
+from slack_bolt.async_app import AsyncApp
 
 logging.basicConfig(level=logging.DEBUG)
 
-
-slack_app = App(
+app = AsyncApp(
     token=config('SLACK_BOT_TOKEN'),
     signing_secret=config('SLACK_SIGNING_SECRET')
 )
 
 
-@slack_app.middleware  # or app.use(log_request)
+@app.middleware  # or app.use(log_request)
 def log_request(logger, body, next):
     logger.debug(body)
     return next()
 
 
-@slack_app.event("app_mention")
+@app.event("app_mention")
 def event_test(body, say, logger):
     logger.info(body)
     say("What's up yo?")
 
 
-@slack_app.command("/backblast")
+@app.command("/backblast")
 def command(ack, body, respond, client, logger):
     ack()
     res = client.views_open(
@@ -171,7 +169,7 @@ def command(ack, body, respond, client, logger):
     logger.info(res)
 
 
-@slack_app.view("backblast-id")
+@app.view("backblast-id")
 def view_submission(ack, body, logger, client):
     ack()
     logger.info(body["view"]["state"]["values"])
@@ -188,26 +186,22 @@ def view_submission(ack, body, logger, client):
         client.chat_postMessage(channel=user, text=msg)
 
 
-@slack_app.event("message")
+@app.event("message")
 def handle_message():
     pass
 
-# Initialize the Flask app
 
-
-app = Flask(__name__)
-handler = SlackRequestHandler(slack_app)
+api = FastAPI()
+app_handler = AsyncSlackRequestHandler(app)
 
 # Register routes to Flask app
 
 
-@app.route("/")
-def hellow_world():
+@api.get("/")
+def status_ok():
     return "ok"
 
 
-@app.route("/slack/events", methods=["POST"])
-def slack_events():
-    # handler runs App's dispatch method
-    response = handler.handle(request)
-    return response
+@api.post("/slack/events")
+async def endpoint(req: requests):
+    return await app_handler.handle(req)
