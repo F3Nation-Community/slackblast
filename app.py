@@ -199,9 +199,11 @@ async def view_submission(ack, body, logger, client):
     msg = ""
     try:
         # Save to DB
-        msg = f"" + title + "\nAO: " + the_ao + \
-            "\nThe Q: " + the_q + "\nThe pax: " + \
-            pax_formatted + "\nMoleskine: " + moleskine
+        msg = f"*Title*: " + title + \
+            "\n*AO*: " + the_ao + \
+            "\n*The Q*: <@" + the_q + ">" + \
+            "\n*The pax*: " + pax_formatted + \
+            "\n*Moleskine*:\n" + moleskine
     except Exception as e:
         # Handle error
         msg = "There was an error with your submission" + e
