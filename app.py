@@ -192,6 +192,8 @@ async def view_submission(ack, body, logger, client):
     pax = result["the_pax"]["multi_users_select-action"]["selected_users"]
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
 
+    pax_formatted = await get_pax(pax)
+
     logger.info(result)
     user = body["user"]["id"]
     msg = ""
@@ -199,10 +201,10 @@ async def view_submission(ack, body, logger, client):
         # Save to DB
         msg = f"" + title + "\nAO: " + the_ao + \
             "\nThe Q: " + the_q + "\nThe pax: " + \
-            get_pax(pax) + "\nMoleskine: " + moleskine
+            pax_formatted + "\nMoleskine: " + moleskine
     except Exception as e:
         # Handle error
-        msg = "There was an error with your submission"
+        msg = "There was an error with your submission" + e
     finally:
         # Message the user
         await client.chat_postMessage(channel=user, text=msg)
