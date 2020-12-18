@@ -78,7 +78,7 @@ async def command(ack, body, respond, client, logger):
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "*this is plain_text text*",
+                                    "text": "The Brave",
                                     "emoji": True
                                 },
                                 "value": "value-0"
@@ -86,7 +86,7 @@ async def command(ack, body, respond, client, logger):
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "*this is plain_text text*",
+                                    "text": "Centurion",
                                     "emoji": True
                                 },
                                 "value": "value-1"
@@ -94,7 +94,7 @@ async def command(ack, body, respond, client, logger):
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "*this is plain_text text*",
+                                    "text": "Cerburus",
                                     "emoji": True
                                 },
                                 "value": "value-2"
@@ -185,13 +185,21 @@ async def command(ack, body, respond, client, logger):
 @slack_app.view("backblast-id")
 async def view_submission(ack, body, logger, client):
     await ack()
-    result = json.loads(body["view"]["state"]["values"])
+    result = body["view"]["state"]["values"]
+    title = result["title"]["title"]["value"]
+    the_ao = result["the_ao"]["static_select-action"]["selected_option"]["text"]["text"]
+    the_q = result["the_q"]["users_select-action"]["selected_user"]
+    pax = result["the_pax"]["multi_users_select-action"]["selected_users"]
+    moleskine = result["moleskine"]["plain_text_input-action"]["value"]
+
     logger.info(result)
     user = body["user"]["id"]
     msg = ""
     try:
         # Save to DB
-        msg = f"Your submission of blah was successful"
+        msg = f"" + title + "\nAO: " + the_ao + \
+            "\nThe Q: " + the_q + "\nThe pax: " + \
+            get_pax(pax) + "\nMoleskine: " + moleskine
     except Exception as e:
         # Handle error
         msg = "There was an error with your submission"
@@ -201,6 +209,13 @@ async def view_submission(ack, body, logger, client):
 
 
 app = FastAPI()
+
+
+async def get_pax(pax):
+    p = ""
+    for x in pax:
+        p += "<#" + x + "> "
+    return p
 
 
 @app.post("/slack/events")
