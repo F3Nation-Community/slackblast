@@ -3,6 +3,7 @@ from decouple import config
 from fastapi import FastAPI, Request
 from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 from slack_bolt.async_app import AsyncApp
+import json
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -49,6 +50,7 @@ async def command(ack, body, respond, client, logger):
             "blocks": [
                 {
                     "type": "input",
+                    "block_id": "title",
                     "element": {
                         "type": "plain_text_input",
                         "action_id": "title",
@@ -64,6 +66,7 @@ async def command(ack, body, respond, client, logger):
                 },
                 {
                     "type": "input",
+                    "block_id": "the_ao",
                     "element": {
                         "type": "static_select",
                         "placeholder": {
@@ -107,6 +110,7 @@ async def command(ack, body, respond, client, logger):
                 },
                 {
                     "type": "input",
+                    "block_id": "date",
                     "element": {
                         "type": "datepicker",
                         "initial_date": "1990-04-28",
@@ -125,6 +129,7 @@ async def command(ack, body, respond, client, logger):
                 },
                 {
                     "type": "section",
+                    "block_id": "the_q",
                     "text": {
                         "type": "mrkdwn",
                         "text": "*The Q*"
@@ -141,6 +146,7 @@ async def command(ack, body, respond, client, logger):
                 },
                 {
                     "type": "input",
+                    "block_id": "the_pax",
                     "element": {
                         "type": "multi_users_select",
                         "placeholder": {
@@ -158,6 +164,7 @@ async def command(ack, body, respond, client, logger):
                 },
                 {
                     "type": "input",
+                    "block_id": "moleskine",
                     "element": {
                         "type": "plain_text_input",
                         "multiline": True,
@@ -178,7 +185,8 @@ async def command(ack, body, respond, client, logger):
 @slack_app.view("backblast-id")
 async def view_submission(ack, body, logger, client):
     await ack()
-    logger.info(body["view"]["state"]["values"])
+    result = json.loads(body["view"]["state"]["values"])
+    logger.info(result)
     user = body["user"]["id"]
     msg = ""
     try:
