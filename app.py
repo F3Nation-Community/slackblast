@@ -189,7 +189,7 @@ async def view_submission(ack, body, logger, client):
         msg = "There was an error with your submission"
     finally:
         # Message the user
-        client.chat_postMessage(channel=user, text=msg)
+        await client.chat_postMessage(channel=user, text=msg)
 
 
 app = FastAPI()
