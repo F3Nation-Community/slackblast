@@ -216,7 +216,7 @@ app = FastAPI()
 async def get_pax(pax):
     p = ""
     for x in pax:
-        p += "<#" + x + "> "
+        p += "<@" + x + "> "
     return p
 
 
