@@ -3,7 +3,7 @@ from decouple import config
 from fastapi import FastAPI, Request
 from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 from slack_bolt.async_app import AsyncApp
-import json
+import datetime
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -34,6 +34,9 @@ async def handle_message():
 @slack_app.command("/backblast")
 async def command(ack, body, respond, client, logger):
     await ack()
+    today = datetime.datetime.now()
+    datestring = today.strftime("%Y-%m-%d")
+
     res = await client.views_open(
         trigger_id=body["trigger_id"],
         view={
@@ -113,7 +116,7 @@ async def command(ack, body, respond, client, logger):
                     "block_id": "date",
                     "element": {
                         "type": "datepicker",
-                        "initial_date": "1990-04-28",
+                        "initial_date": datestring,
                         "placeholder": {
                             "type": "plain_text",
                             "text": "Select a date",
@@ -198,7 +201,8 @@ async def view_submission(ack, body, logger, client):
     user = body["user"]["id"]
     msg = ""
     try:
-        # Save to DB
+        # formatting a message
+        # todo: change to use json object
         msg = f"*Title*: " + title + \
             "\n*AO*: " + the_ao + \
             "\n*The Q*: <@" + the_q + ">" + \
@@ -206,10 +210,11 @@ async def view_submission(ack, body, logger, client):
             "\n*Moleskine*:\n" + moleskine
     except Exception as e:
         # Handle error
-        msg = "There was an error with your submission" + e
+        msg = "There was an error with your submission: " + e
     finally:
-        # Message the user
+        # Message the user via the app/bot name
         await client.chat_postMessage(channel=user, text=msg)
+        # todo: Post this to the backblast channel and/or wordpress
 
 
 app = FastAPI()
