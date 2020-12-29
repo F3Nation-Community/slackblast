@@ -213,7 +213,7 @@ async def view_submission(ack, body, logger, client):
         msg = "There was an error with your submission: " + e
     finally:
         # Message the user via the app/bot name
-        await client.chat_postMessage(channel=user, text=msg)
+        await client.chat_postMessage(channel="backblast", text=msg)
         # todo: Post this to the backblast channel and/or wordpress
 
 
