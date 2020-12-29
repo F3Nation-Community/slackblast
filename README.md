@@ -11,7 +11,10 @@ SLACK_BOT_TOKEN=<YOURTOKEN>
 SLACK_VERIFICATION_TOKEN=<SLACKVERIFICATIONTOKEN>
 SLACK_SIGNING_SECRET=<SLACKSIGNINGSECRET>
 PORT=<PORT>
+CHANNEL=USER
 ```
+
+set `CHANNEL` equal to the channel you wan the modal results to post in otherwise use `USER` to post a DM from the slackblast to you with the results (testing).
 
 # deployment
 
