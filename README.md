@@ -15,7 +15,7 @@ CHANNEL=USER
 ```
 
 set `CHANNEL` equal to the channel id you wan the modal results to post in otherwise use `USER` to post a DM from the slackblast to you with the results (testing).
-set SLACK_BOT_TOKEN from the token on the oath page in the slack app
+set `SLACK_BOT_TOKEN` from the token on the oath page in the slack app
 # deployment
 
 main_slackblast contains the code to deploy on Azure via github repository
