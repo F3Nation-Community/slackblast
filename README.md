@@ -14,8 +14,8 @@ PORT=<PORT>
 CHANNEL=USER
 ```
 
-set `CHANNEL` equal to the channel you wan the modal results to post in otherwise use `USER` to post a DM from the slackblast to you with the results (testing).
-
+set `CHANNEL` equal to the channel id you wan the modal results to post in otherwise use `USER` to post a DM from the slackblast to you with the results (testing).
+set SLACK_BOT_TOKEN from the token on the oath page in the slack app
 # deployment
 
 main_slackblast contains the code to deploy on Azure via github repository
@@ -25,3 +25,9 @@ main_slackblast contains the code to deploy on Azure via github repository
 Use vscode locally with a `.env` file with the above variables. With vscode Azure extension you can right-click on 'Application Settings' and it will upload your `.env` variables right into the AppService.
 
 Pushing to the github repo should trigger a new deployment to Azure if you set up the AppService correct.
+
+# startup command
+
+```
+gunicorn -kuvicorn.workers.UvicornWorker --bind "0.0.0.0:8000" --log-level debug app:app
+```
