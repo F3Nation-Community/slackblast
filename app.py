@@ -200,7 +200,7 @@ async def view_submission(ack, body, logger, client):
     logger.info(result)
     user = body["user"]["id"]
     chan = user
-    if config('CHANNEL') == 'USER':
+    if config('CHANNEL') != 'USER':
         chan = config('CHANNEL')
 
     msg = ""
