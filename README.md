@@ -33,5 +33,5 @@ Pushing to the github repo should trigger a new deployment to Azure if you set u
 # startup command
 
 ```
-gunicorn -kuvicorn.workers.UvicornWorker --bind "0.0.0.0:8000" --log-level debug app:app
+gunicorn -k uvicorn.workers.UvicornWorker --bind "0.0.0.0:8000" --log-level debug app:app
 ```
