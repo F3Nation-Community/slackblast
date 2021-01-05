@@ -199,9 +199,8 @@ async def view_submission(ack, body, logger, client):
 async def show_categories(ack, logger):
     cats = await get_categories()
     logger.info(cats)
-    options = cats
 
-    await ack(options=options)
+    await ack(options=cats)
 
 
 async def get_pax(pax):
