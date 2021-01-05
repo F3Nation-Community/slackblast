@@ -211,7 +211,7 @@ async def get_categories():
         return data
 
 
-@app.options("es_a")
+@slack_app.options("es_a")
 def show_options(ack, logger):
     cats = get_categories()
     logger.info(cats)
