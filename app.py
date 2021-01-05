@@ -206,13 +206,15 @@ async def get_pax(pax):
 
 
 async def get_categories():
-    with open('path_to_file/person.json') as c:
+    with open('categories.json') as c:
         data = json.load(c)
         return data
 
 
 @app.options("es_categories")
-def show_options(ack):
+def show_options(ack, logger):
+    cats = get_categories()
+    logger.info(cats)
     ack(
         {"options": [
             {"text": {"type": "plain_text", "text": "The Brave"}, "value": "The Brave"}]}
