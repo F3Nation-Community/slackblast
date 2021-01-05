@@ -197,24 +197,22 @@ async def view_submission(ack, body, logger, client):
 
 @slack_app.options("es_categories")
 async def show_categories(ack):
-    options = [{
-        "options": [
-            {
-                "text": {
-                    "type": "plain_text",
-                    "text": "The Brave"
-                },
-                "value": "The Brave"
+    options = [
+        {
+            "text": {
+                "type": "plain_text",
+                "text": "The Brave"
             },
-            {
-                "text": {
-                    "type": "plain_text",
-                    "text": "Centurion"
-                },
-                "value": "Centurion"
-            }
-        ]
-    }]
+            "value": "The Brave"
+        },
+        {
+            "text": {
+                "type": "plain_text",
+                "text": "Centurion"
+            },
+            "value": "Centurion"
+        }
+    ]
 
     await ack(options=options)
 
