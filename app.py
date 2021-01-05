@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 from slack_bolt.async_app import AsyncApp
 import datetime
+import json
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -71,39 +72,12 @@ async def command(ack, body, respond, client, logger):
                     "type": "input",
                     "block_id": "the_ao",
                     "element": {
-                        "type": "static_select",
+                        "type": "external_select",
+                        "action_id": "es_categories",
                         "placeholder": {
                             "type": "plain_text",
                             "text": "Choose an AO",
-                            "emoji": True
-                        },
-                        "options": [
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "The Brave",
-                                    "emoji": True
-                                },
-                                "value": "value-0"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Centurion",
-                                    "emoji": True
-                                },
-                                "value": "value-1"
-                            },
-                            {
-                                "text": {
-                                    "type": "plain_text",
-                                    "text": "Cerburus",
-                                    "emoji": True
-                                },
-                                "value": "value-2"
-                            }
-                        ],
-                        "action_id": "static_select-action"
+                        }
                     },
                     "label": {
                         "type": "plain_text",
@@ -229,6 +203,20 @@ async def get_pax(pax):
     for x in pax:
         p += "<@" + x + "> "
     return p
+
+
+async def get_categories():
+    with open('path_to_file/person.json') as c:
+        data = json.load(c)
+        return data
+
+
+@app.options("es_categories")
+def show_options(ack):
+    ack(
+        {"options": [
+            {"text": {"type": "plain_text", "text": "The Brave"}, "value": "The Brave"}]}
+    )
 
 
 @app.post("/slack/events")
