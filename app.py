@@ -198,7 +198,7 @@ async def view_submission(ack, body, logger, client):
 @slack_app.options("es_a")
 async def show_options(ack):
     cats = await get_categories()
-    ack(
+    await ack(
         {
             "options": [
                 {
