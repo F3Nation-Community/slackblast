@@ -220,7 +220,7 @@ async def get_categories():
                     "type": "plain_text",
                     "text": cat["name"]
                 },
-                "value": cat["id"]
+                "value": str(cat["id"])
             }
             opts.append(x)
     return opts
