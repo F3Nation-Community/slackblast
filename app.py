@@ -191,30 +191,15 @@ async def view_submission(ack, body, logger, client):
         msg = "There was an error with your submission: " + e
     finally:
         # Message the user via the app/bot name
-        await client.chat_postMessage(channel=chan, text=msg)
-        # todo: Post this to the backblast channel and/or wordpress
+        if config('POST_TO_CHANNEL', cast=bool):
+            await client.chat_postMessage(channel=chan, text=msg)
 
 
 @slack_app.options("es_categories")
 async def show_categories(ack, logger):
     cats = await get_categories()
     logger.info(cats)
-    options = [
-        {
-            "text": {
-                "type": "plain_text",
-                "text": "The Brave"
-            },
-            "value": "The Brave"
-        },
-        {
-            "text": {
-                "type": "plain_text",
-                "text": "Centurion"
-            },
-            "value": "Centurion"
-        }
-    ]
+    options = cats
 
     await ack(options=options)
 
@@ -227,9 +212,19 @@ async def get_pax(pax):
 
 
 async def get_categories():
+    opts = []
     with open('categories.json') as c:
         data = json.load(c)
-        return data
+        for cat in data:
+            x = {
+                "text": {
+                    "type": "plain_text",
+                    "text": cat["name"]
+                },
+                "value": cat["id"]
+            }
+            opts.append(x)
+    return opts
 
 
 app = FastAPI()
