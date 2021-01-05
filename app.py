@@ -195,7 +195,24 @@ async def view_submission(ack, body, logger, client):
         # todo: Post this to the backblast channel and/or wordpress
 
 
-app = FastAPI()
+@slack_app.options("es_a")
+def show_options(ack):
+    cats = get_categories()
+    ack(
+        {
+            "options": [
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "The Brave"
+                    },
+                    "value": "The Brave"
+                }
+            ]
+        }
+    )
+
+# helper functions
 
 
 async def get_pax(pax):
@@ -211,23 +228,7 @@ async def get_categories():
         return data
 
 
-@slack_app.options("es_a")
-def show_options(ack, logger):
-    cats = get_categories()
-    logger.info(cats)
-    ack(
-        {
-            "options": [
-                {
-                    "text": {
-                        "type": "plain_text",
-                        "text": "The Brave"
-                    },
-                    "value": "The Brave"
-                }
-            ]
-        }
-    )
+app = FastAPI()
 
 
 @app.post("/slack/events")
