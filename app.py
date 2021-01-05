@@ -73,7 +73,7 @@ async def command(ack, body, respond, client, logger):
                     "block_id": "the_ao",
                     "element": {
                         "type": "external_select",
-                        "action_id": "es_a",
+                        "action_id": "es_categories",
                         "placeholder": {
                             "type": "plain_text",
                             "text": "Choose an AO",
@@ -195,9 +195,8 @@ async def view_submission(ack, body, logger, client):
         # todo: Post this to the backblast channel and/or wordpress
 
 
-@slack_app.options("es_a")
-async def show_options(ack):
-    cats = await get_categories()
+@slack_app.options("es_categories")
+async def show_categories(ack):
     await ack(
         {
             "options": [
@@ -207,12 +206,17 @@ async def show_options(ack):
                         "text": "The Brave"
                     },
                     "value": "The Brave"
+                },
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Centurion"
+                    },
+                    "value": "Centurion"
                 }
             ]
         }
     )
-
-# helper functions
 
 
 async def get_pax(pax):
