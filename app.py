@@ -8,18 +8,22 @@ import json
 
 
 def get_categories():
-    opts = []
     with open('categories.json') as c:
         data = json.load(c)
-        for cat in data:
-            x = {
-                "text": {
-                    "type": "plain_text",
-                    "text": cat["name"]
-                },
-                "value": str(cat["id"])
-            }
-            opts.append(x)
+        return data
+
+
+def formatted_categories(filteredcats):
+    opts = []
+    for cat in filteredcats:
+        x = {
+            "text": {
+                "type": "plain_text",
+                "text": cat["name"]
+            },
+            "value": str(cat["id"])
+        }
+        opts.append(x)
     return opts
 
 
@@ -220,7 +224,8 @@ async def view_submission(ack, body, logger, client):
 async def show_categories(ack, body, logger):
     await ack()
     lookup = body["value"]
-    output = [x for x in categories if lookup in x["name"]]
+    filtered = [x for x in categories if lookup in x["name"]]
+    output = formatted_categories(filtered)
     options = output
     logger.info(options)
 
