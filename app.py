@@ -184,7 +184,8 @@ async def view_submission(ack, body, logger, client):
     await ack()
     result = body["view"]["state"]["values"]
     title = result["title"]["title"]["value"]
-    the_ao = result["the_ao"]["static_select-action"]["selected_option"]["text"]["text"]
+    the_ao = result["the_ao"]["es_categories"]["selected_option"]["text"]["text"]
+    logger.info(the_ao)
     the_q = result["the_q"]["users_select-action"]["selected_user"]
     pax = result["the_pax"]["multi_users_select-action"]["selected_users"]
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
