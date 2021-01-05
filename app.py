@@ -76,13 +76,13 @@ async def command(ack, body, respond, client, logger):
                         "action_id": "es_categories",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "Choose an AO",
-                        }
+                            "text": "Choose an AO"
+                        },
+                        "min_query_length": 0
                     },
                     "label": {
                         "type": "plain_text",
-                        "text": "Workout",
-                        "emoji": True
+                        "text": "Workout"
                     }
                 },
                 {
