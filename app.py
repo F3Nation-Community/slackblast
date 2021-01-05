@@ -217,9 +217,11 @@ async def view_submission(ack, body, logger, client):
 
 
 @slack_app.options("es_categories")
-async def show_categories(ack, logger):
+async def show_categories(ack, body, logger):
     await ack()
-    options = categories
+    lookup = body["value"]
+    output = [x for x in categories if lookup in x["name"]]
+    options = output
     logger.info(options)
 
     await ack(options=options)
