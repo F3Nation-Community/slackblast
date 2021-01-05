@@ -6,13 +6,33 @@ from slack_bolt.async_app import AsyncApp
 import datetime
 import json
 
+
+def get_categories():
+    opts = []
+    with open('categories.json') as c:
+        data = json.load(c)
+        for cat in data:
+            x = {
+                "text": {
+                    "type": "plain_text",
+                    "text": cat["name"]
+                },
+                "value": str(cat["id"])
+            }
+            opts.append(x)
+    return opts
+
+
 logging.basicConfig(level=logging.DEBUG)
+categories = []
 
 slack_app = AsyncApp(
     token=config('SLACK_BOT_TOKEN'),
     signing_secret=config('SLACK_SIGNING_SECRET')
 )
 app_handler = AsyncSlackRequestHandler(slack_app)
+
+categories = get_categories()
 
 
 @slack_app.middleware  # or app.use(log_request)
@@ -198,7 +218,7 @@ async def view_submission(ack, body, logger, client):
 @slack_app.options("es_categories")
 async def show_categories(ack, logger):
     await ack()
-    options = await get_categories()
+    options = categories
     logger.info(options)
 
     await ack(options=options)
@@ -209,22 +229,6 @@ async def get_pax(pax):
     for x in pax:
         p += "<@" + x + "> "
     return p
-
-
-async def get_categories():
-    opts = []
-    with open('categories.json') as c:
-        data = json.load(c)
-        for cat in data:
-            x = {
-                "text": {
-                    "type": "plain_text",
-                    "text": cat["name"]
-                },
-                "value": str(cat["id"])
-            }
-            opts.append(x)
-    return opts
 
 
 app = FastAPI()
