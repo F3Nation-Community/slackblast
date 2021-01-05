@@ -73,7 +73,7 @@ async def command(ack, body, respond, client, logger):
                     "block_id": "the_ao",
                     "element": {
                         "type": "external_select",
-                        "action_id": "es_categories",
+                        "action_id": "es_a",
                         "placeholder": {
                             "type": "plain_text",
                             "text": "Choose an AO",
@@ -211,13 +211,22 @@ async def get_categories():
         return data
 
 
-@app.options("es_categories")
+@app.options("es_a")
 def show_options(ack, logger):
     cats = get_categories()
     logger.info(cats)
     ack(
-        {"options": [
-            {"text": {"type": "plain_text", "text": "The Brave"}, "value": "The Brave"}]}
+        {
+            "options": [
+                {
+                    "text": {
+                        "type": "plain_text",
+                        "text": "The Brave"
+                    },
+                    "value": "The Brave"
+                }
+            ]
+        }
     )
 
 
