@@ -3046,6 +3046,46 @@
     }
   },
   {
+    "id": 4326,
+    "count": 0,
+    "description": "",
+    "link": "https://f3southcharlotte.com/category/neighborhood-watch/",
+    "name": "Neighborhood Watch",
+    "slug": "neighborhood-watch",
+    "taxonomy": "category",
+    "parent": 0,
+    "meta": [],
+    "_links": {
+      "self": [
+        {
+          "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4326"
+        }
+      ],
+      "collection": [
+        {
+          "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories"
+        }
+      ],
+      "about": [
+        {
+          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
+        }
+      ],
+      "wp:post_type": [
+        {
+          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4326"
+        }
+      ],
+      "curies": [
+        {
+          "name": "wp",
+          "href": "https://api.w.org/{rel}",
+          "templated": true
+        }
+      ]
+    }
+  },
+  {
     "id": 4131,
     "count": 9,
     "description": "",
