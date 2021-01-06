@@ -8,18 +8,22 @@ import json
 
 
 def get_categories():
-    opts = []
     with open('categories.json') as c:
         data = json.load(c)
-        for cat in data:
-            x = {
-                "text": {
-                    "type": "plain_text",
-                    "text": cat["name"]
-                },
-                "value": str(cat["id"])
-            }
-            opts.append(x)
+        return data
+
+
+def formatted_categories(filteredcats):
+    opts = []
+    for cat in filteredcats:
+        x = {
+            "text": {
+                "type": "plain_text",
+                "text": cat["name"]
+            },
+            "value": str(cat["id"])
+        }
+        opts.append(x)
     return opts
 
 
@@ -98,7 +102,7 @@ async def command(ack, body, respond, client, logger):
                             "type": "plain_text",
                             "text": "Choose an AO"
                         },
-                        "min_query_length": 0
+                        "min_query_length": 2
                     },
                     "label": {
                         "type": "plain_text",
@@ -217,9 +221,12 @@ async def view_submission(ack, body, logger, client):
 
 
 @slack_app.options("es_categories")
-async def show_categories(ack, logger):
+async def show_categories(ack, body, logger):
     await ack()
-    options = categories
+    lookup = body["value"]
+    filtered = [x for x in categories if lookup.lower() in x["name"].lower()]
+    output = formatted_categories(filtered)
+    options = output
     logger.info(options)
 
     await ack(options=options)
