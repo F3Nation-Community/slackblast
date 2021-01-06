@@ -139,7 +139,7 @@ async def command(ack, body, respond, client, logger):
                         "type": "users_select",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "Select a PAX",
+                            "text": "Tag the Q",
                             "emoji": True
                         },
                         "action_id": "users_select-action"
@@ -152,14 +152,14 @@ async def command(ack, body, respond, client, logger):
                         "type": "multi_users_select",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "Select users",
+                            "text": "Tag the PAX",
                             "emoji": True
                         },
                         "action_id": "multi_users_select-action"
                     },
                     "label": {
                         "type": "plain_text",
-                        "text": "The Pax",
+                        "text": "The PAX",
                         "emoji": True
                     }
                 },
@@ -173,7 +173,7 @@ async def command(ack, body, respond, client, logger):
                     },
                     "label": {
                         "type": "plain_text",
-                        "text": "The Details",
+                        "text": "The Moleskine",
                         "emoji": True
                     }
                 }
@@ -209,7 +209,7 @@ async def view_submission(ack, body, logger, client):
         msg = f"*Title*: " + title + \
             "\n*AO*: " + the_ao + \
             "\n*The Q*: <@" + the_q + ">" + \
-            "\n*The pax*: " + pax_formatted + \
+            "\n*The PAX*: " + pax_formatted + \
             "\n*Moleskine*:\n" + moleskine
     except Exception as e:
         # Handle error
