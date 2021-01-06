@@ -102,7 +102,7 @@ async def command(ack, body, respond, client, logger):
                             "type": "plain_text",
                             "text": "Choose an AO"
                         },
-                        "min_query_length": 0
+                        "min_query_length": 2
                     },
                     "label": {
                         "type": "plain_text",
@@ -224,7 +224,7 @@ async def view_submission(ack, body, logger, client):
 async def show_categories(ack, body, logger):
     await ack()
     lookup = body["value"]
-    filtered = [x for x in categories if lookup in x["name"]]
+    filtered = [x for x in categories if lookup.lower() in x["name"].lower()]
     output = formatted_categories(filtered)
     options = output
     logger.info(options)
