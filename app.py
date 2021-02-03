@@ -206,7 +206,8 @@ async def view_submission(ack, body, logger, client):
     try:
         # formatting a message
         # todo: change to use json object
-        msg = f"*Title*: " + title + \
+        msg = f"*Slackblast*: " + \
+            "\n*Title*: " + title + \
             "\n*AO*: " + the_ao + \
             "\n*The Q*: <@" + the_q + ">" + \
             "\n*The PAX*: " + pax_formatted + \
