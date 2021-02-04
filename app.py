@@ -106,7 +106,7 @@ async def command(ack, body, respond, client, logger):
                     },
                     "label": {
                         "type": "plain_text",
-                        "text": "Workout"
+                        "text": "AO"
                     }
                 },
                 {
@@ -165,11 +165,47 @@ async def command(ack, body, respond, client, logger):
                 },
                 {
                     "type": "input",
+                    "block_id": "fngs",
+                    "element": {
+                        "type": "plain_text_input",
+                        "action_id": "fng-action",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "List new FNG names separated by commas"
+                        }
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "FNGs"
+                    }
+                },
+                {
+                    "type": "input",
+                    "block_id": "count",
+                    "element": {
+                        "type": "plain_text_input",
+                        "action_id": "count-action",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "Total PAX count including FNGs"
+                        }
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "Count"
+                    }
+                },
+                {
+                    "type": "input",
                     "block_id": "moleskine",
                     "element": {
                         "type": "plain_text_input",
                         "multiline": True,
-                        "action_id": "plain_text_input-action"
+                        "action_id": "plain_text_input-action",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "Tell us what happened"
+                        }
                     },
                     "label": {
                         "type": "plain_text",
@@ -188,10 +224,13 @@ async def view_submission(ack, body, logger, client):
     await ack()
     result = body["view"]["state"]["values"]
     title = result["title"]["title"]["value"]
+    date = result["date"]["datepicker-action"]["value"]
     the_ao = result["the_ao"]["es_categories"]["selected_option"]["text"]["text"]
     logger.info(the_ao)
     the_q = result["the_q"]["users_select-action"]["selected_user"]
     pax = result["the_pax"]["multi_users_select-action"]["selected_users"]
+    fngs = result["fngs"]["fng-action"]["value"]
+    count = result["count"]["count-action"]["value"]
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
 
     pax_formatted = await get_pax(pax)
@@ -208,9 +247,12 @@ async def view_submission(ack, body, logger, client):
         # todo: change to use json object
         msg = f"*Slackblast*: " + \
             "\n*Title*: " + title + \
+            "\n*Date*: " + date + \
             "\n*AO*: " + the_ao + \
-            "\n*The Q*: <@" + the_q + ">" + \
-            "\n*The PAX*: " + pax_formatted + \
+            "\n*Q*: <@" + the_q + ">" + \
+            "\n*PAX*: " + pax_formatted + \
+            "\n*FNGs*: " + fngs + \
+            "\n*Count*: " + count + \
             "\n*Moleskine*:\n" + moleskine
     except Exception as e:
         # Handle error
