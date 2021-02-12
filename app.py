@@ -224,7 +224,7 @@ async def view_submission(ack, body, logger, client):
     await ack()
     result = body["view"]["state"]["values"]
     title = result["title"]["title"]["value"]
-    date = result["date"]["datepicker-action"]["value"]
+    # date = result["date"]["datepicker-action"]["value"]
     the_ao = result["the_ao"]["es_categories"]["selected_option"]["text"]["text"]
     logger.info(the_ao)
     the_q = result["the_q"]["users_select-action"]["selected_user"]
@@ -247,7 +247,7 @@ async def view_submission(ack, body, logger, client):
         # todo: change to use json object
         msg = f"*Slackblast*: " + \
             "\n*Title*: " + title + \
-            "\n*Date*: " + date + \
+            # "\n*Date*: " + date + \
             "\n*AO*: " + the_ao + \
             "\n*Q*: <@" + the_q + ">" + \
             "\n*PAX*: " + pax_formatted + \
