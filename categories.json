@@ -846,6 +846,46 @@
         }
     },
     {
+        "id": 2589,
+        "count": 0,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/ruckership",
+        "name": "Ruckership",
+        "slug": "ruckership",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/2589"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=2589"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
         "id": 1084,
         "count": 136,
         "description": "",
