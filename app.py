@@ -93,20 +93,20 @@ async def command(ack, body, respond, client, logger):
                     }
                 },
                 {
-                    "type": "input",
+                    "type": "section",
                     "block_id": "the_ao",
-                    "element": {
-                        "type": "external_select",
-                        "action_id": "es_categories",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "*The AO*"
+                    },
+                    "accessory": {
+                        "type": "channels_select",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "Choose an AO"
+                            "text": "Select the AO",
+                            "emoji": True
                         },
-                        "min_query_length": 2
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "AO"
+                        "action_id": "channels_select-action"
                     }
                 },
                 {
@@ -225,8 +225,7 @@ async def view_submission(ack, body, logger, client):
     result = body["view"]["state"]["values"]
     title = result["title"]["title"]["value"]
     date = result["date"]["datepicker-action"]["selected_date"]
-    the_ao = result["the_ao"]["es_categories"]["selected_option"]["text"]["text"]
-    logger.info(the_ao)
+    the_ao = result["the_ao"]["channels_select-action"]["selected_channel"]
     the_q = result["the_q"]["users_select-action"]["selected_user"]
     pax = result["the_pax"]["multi_users_select-action"]["selected_users"]
     fngs = result["fngs"]["fng-action"]["value"]
