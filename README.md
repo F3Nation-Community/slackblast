@@ -63,7 +63,7 @@ Use vscode locally with a `.env` file with the above variables. With vscode Azur
 
 Pushing to the github repo should trigger a new deployment to Azure if you set up the AppService correct.
 
-# startup command
+# startup command(s)
 
 ```
 gunicorn -k uvicorn.workers.UvicornWorker --bind "0.0.0.0:8000" --log-level debug app:app
