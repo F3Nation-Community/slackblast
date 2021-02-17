@@ -247,7 +247,6 @@ async def view_submission(ack, body, logger, client):
         msg = f"*Slackblast*: " + \
             "\n*Title*: " + title + \
             "\n*Date*: " + date + \
-            "\n*AO*: " + the_ao + \
             "\n*AO*: <#" + the_ao + ">" + \
             "\n*Q*: <@" + the_q + ">" + \
             "\n*PAX*: " + pax_formatted + \
