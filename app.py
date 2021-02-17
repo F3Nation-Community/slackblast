@@ -248,7 +248,7 @@ async def view_submission(ack, body, logger, client):
             "\n*Title*: " + title + \
             "\n*Date*: " + date + \
             "\n*AO*: " + the_ao + \
-            "\n*AO*: <@" + the_ao + ">" + \
+            "\n*AO*: <#" + the_ao + ">" + \
             "\n*Q*: <@" + the_q + ">" + \
             "\n*PAX*: " + pax_formatted + \
             "\n*FNGs*: " + fngs + \
