@@ -56,7 +56,7 @@ async def handle_message():
     pass
 
 
-@slack_app.command("/backblast")
+@slack_app.command("/slackblast")
 async def command(ack, body, respond, client, logger):
     await ack()
     today = datetime.datetime.now()
