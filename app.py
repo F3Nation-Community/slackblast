@@ -193,6 +193,7 @@ async def view_submission(ack, body, logger, client):
     the_q = result["the_q"]["users_select-action"]["selected_user"]
     pax = result["the_pax"]["multi_users_select-action"]["selected_users"]
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
+    the_date = result["date"]["datepicker-action"]["selected_date"]
 
     pax_formatted = await get_pax(pax)
 
@@ -207,6 +208,7 @@ async def view_submission(ack, body, logger, client):
         # formatting a message
         # todo: change to use json object
         msg = f"*Title*: " + title + \
+            "\n*Date: " + the_date + \
             "\n*AO*: " + the_ao + \
             "\n*The Q*: <@" + the_q + ">" + \
             "\n*The pax*: " + pax_formatted + \
