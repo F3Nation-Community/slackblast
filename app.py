@@ -174,6 +174,7 @@ async def command(ack, body, respond, client, logger):
                             "text": "List new FNG names separated by commas"
                         }
                     },
+                    "initial_value": " ",
                     "label": {
                         "type": "plain_text",
                         "text": "FNGs"
