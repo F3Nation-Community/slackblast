@@ -169,6 +169,7 @@ async def command(ack, body, respond, client, logger):
                     "element": {
                         "type": "plain_text_input",
                         "action_id": "fng-action",
+                        "initial_value": " ",
                         "placeholder": {
                             "type": "plain_text",
                             "text": "List new FNG names separated by commas"
@@ -176,7 +177,7 @@ async def command(ack, body, respond, client, logger):
                     },
                     "label": {
                         "type": "plain_text",
-                        "text": "FNGs"
+                        "text": "FNGs - list names separated by commas"
                     }
                 },
                 {
