@@ -93,13 +93,9 @@ async def command(ack, body, respond, client, logger):
                     }
                 },
                 {
-                    "type": "section",
+                    "type": "input",
                     "block_id": "the_ao",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "*The AO*"
-                    },
-                    "accessory": {
+                    "element": {
                         "type": "channels_select",
                         "placeholder": {
                             "type": "plain_text",
@@ -107,6 +103,11 @@ async def command(ack, body, respond, client, logger):
                             "emoji": True
                         },
                         "action_id": "channels_select-action"
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "The AO",
+                        "emoji": True
                     }
                 },
                 {
