@@ -129,13 +129,9 @@ async def command(ack, body, respond, client, logger):
                     }
                 },
                 {
-                    "type": "section",
+                    "type": "input",
                     "block_id": "the_q",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "*The Q*"
-                    },
-                    "accessory": {
+                    "element": {
                         "type": "users_select",
                         "placeholder": {
                             "type": "plain_text",
@@ -143,6 +139,11 @@ async def command(ack, body, respond, client, logger):
                             "emoji": True
                         },
                         "action_id": "users_select-action"
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "The Q",
+                        "emoji": True
                     }
                 },
                 {
