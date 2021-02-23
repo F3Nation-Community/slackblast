@@ -174,7 +174,7 @@ async def command(ack, body, respond, client, logger):
                         "initial_value": "None",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "List new FNG names separated by commas"
+                            "text": "List untaggable names separated by commas (FNGs, Willy Lomans, etc.)"
                         }
                     },
                     "label": {
