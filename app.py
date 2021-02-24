@@ -115,7 +115,7 @@ async def command(ack, body, respond, client, logger):
                     "block_id": "date",
                     "element": {
                         "type": "datepicker",
-                        "initial_date": "1990-04-28",
+                        "initial_date": datestring,
                         "placeholder": {
                             "type": "plain_text",
                             "text": "Select a date",
@@ -174,12 +174,12 @@ async def command(ack, body, respond, client, logger):
                         "initial_value": "None",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "List untaggable names separated by commas (FNGs, Willy Lomans, etc.)"
+                            "text": "FNGs"
                         }
                     },
                     "label": {
                         "type": "plain_text",
-                        "text": "FNGs - list names separated by commas"
+                        "text": "List untaggable names separated by commas (FNGs, Willy Lomans, etc.)"
                     }
                 },
                 {
