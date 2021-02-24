@@ -115,7 +115,7 @@ async def command(ack, body, respond, client, logger):
                     "block_id": "date",
                     "element": {
                         "type": "datepicker",
-                        "initial_date": datestring,
+                        "initial_date": "1990-04-28",
                         "placeholder": {
                             "type": "plain_text",
                             "text": "Select a date",
