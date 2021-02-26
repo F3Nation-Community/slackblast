@@ -61,7 +61,7 @@ async def handle_message():
 @slack_app.command("/slackblast")
 async def command(ack, body, respond, client, logger):
     await ack()
-    today = datetime.datetime.now(pytz.timezone('US/Central'))
+    today = datetime.datetime.now()
     datestring = today.strftime("%Y-%m-%d")
 
     res = await client.views_open(
