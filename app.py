@@ -4,8 +4,6 @@ from fastapi import FastAPI, Request
 from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 from slack_bolt.async_app import AsyncApp
 import datetime
-import pytz
-from pytz import common_timezones
 import json
 
 
