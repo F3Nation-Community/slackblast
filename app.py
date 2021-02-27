@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request
 from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 from slack_bolt.async_app import AsyncApp
 import datetime
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import json
 
 
@@ -61,6 +61,7 @@ async def handle_message():
 async def command(ack, body, respond, client, logger):
     await ack()
     today = datetime.now(timezone.utc).astimezone()
+    today = today - timedelta(hours = 6)
     datestring = today.strftime("%Y-%m-%d")
 
     res = await client.views_open(
