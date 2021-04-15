@@ -243,8 +243,7 @@ async def view_submission(ack, body, logger, client):
 
     logger.info(result)
     user = body["user"]["id"]
-    specific_channel = body["text"]
-    logger.info('specific channel', specific_channel)
+    specific_channel = '' # body["text"] does not exist though 'text': 'foobar' is shown in log request
     logger.info('body is', body)
     config_channel = config['CHANNEL']
     chan = config_channel
