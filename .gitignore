@@ -138,3 +138,9 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Ignore Azure App Service configuration
+# In Azure Portal, go to Deployment Center and integrate to Github sand it will
+# automatically put the published file, e.g. main_<your-azure-app-name>.yml into
+# your github repo
+main_*.yml
