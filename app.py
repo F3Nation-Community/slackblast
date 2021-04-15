@@ -242,9 +242,13 @@ async def view_submission(ack, body, logger, client):
     pax_formatted = await get_pax(pax)
 
     logger.info(result)
+    try:
+        logger.info(body)
+    except Exception as e:
+        tmp = ''
+
     user = body["user"]["id"]
     specific_channel = '' # body["text"] does not exist though 'text': 'foobar' is shown in log request
-    logger.info('body is', body)
     config_channel = config['CHANNEL']
     chan = config_channel
     if config_channel == 'USER':
