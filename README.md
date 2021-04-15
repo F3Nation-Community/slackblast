@@ -10,7 +10,6 @@ slackblast requires the following environment variables:
 SLACK_BOT_TOKEN=<YOURTOKEN>
 SLACK_VERIFICATION_TOKEN=<SLACKVERIFICATIONTOKEN>
 SLACK_SIGNING_SECRET=<SLACKSIGNINGSECRET>
-PORT=<PORT>
 POST_TO_CHANNEL=<False or True>
 CHANNEL=USER
 ```
@@ -19,11 +18,9 @@ set `SLACK_BOT_TOKEN` from the token on the oath page in the slack app
 
 set `SLACK_VERIFICATION_TOKEN` from the Basic Information -> Verification Token field in the settings for your slack app.
 
-set `PORT` equal to the port used below in the startup command
-
 set `POST_TO_CHANNEL` equal to `True` or `False`. Set to true if you are using paxminer. Indicates whether or not to take the modal data and post to a channel in slack.
 
-set `CHANNEL` equal to the channel id you wan the modal results to post in otherwise use `USER` to post a DM from the slackblast to you with the results (testing).
+set `CHANNEL` equal to the channel id (ID -> NOT THE NAME) you want the modal results to post in otherwise user `THE_AO` to post to the channel that was selected in the modal otherwise use `USER` to post a DM from the slackblast to you with the results (testing).
 
 # slack app configuration
 
@@ -65,6 +62,9 @@ Pushing to the github repo should trigger a new deployment to Azure if you set u
 
 # startup command(s)
 
+To run locally:
+
 ```
+pip install -r requirements.txt
 gunicorn -k uvicorn.workers.UvicornWorker --bind "0.0.0.0:8000" --log-level debug app:app
 ```

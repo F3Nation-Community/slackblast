@@ -243,14 +243,18 @@ async def view_submission(ack, body, logger, client):
 
     logger.info(result)
     user = body["user"]["id"]
-    chan = user
     specific_channel = body["text"]
     logger.info('specific channel', specific_channel)
     logger.info('body is', body)
-    if config('CHANNEL') != 'USER':
-        chan = config('CHANNEL')
-    if specific_channel
-        chan = specific_channel
+    config_channel = config['CHANNEL']
+    chan = config_channel
+    if config_channel == 'USER':
+        chan = user
+    if config_channel == 'THE_AO':
+        chan = the_ao
+    if specific_channel:
+        # TODO: Retrieve channel id from specific_channel, which is most likely the name passed in from user
+        # chan = specific_channel
 
     msg = ""
     try:
@@ -271,7 +275,7 @@ async def view_submission(ack, body, logger, client):
     finally:
         # Message the user via the app/bot name
         if config('POST_TO_CHANNEL', cast=bool):
-            await client.chat_postMessage(channel=the_ao, text=msg)
+            await client.chat_postMessage(channel=chan, text=msg)
 
 
 # @slack_app.options("es_categories")
