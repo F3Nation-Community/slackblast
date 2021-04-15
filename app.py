@@ -249,11 +249,10 @@ async def view_submission(ack, body, logger, client):
 
     user = body["user"]["id"]
     specific_channel = '' # body["text"] does not exist though 'text': 'foobar' is shown in log request
-    config_channel = config('CHANNEL')
-    chan = config_channel
-    if config_channel == 'USER':
+    chan = config('CHANNEL')
+    if config('CHANNEL') == 'USER':
         chan = user
-    if config_channel == 'THE_AO':
+    if config('CHANNEL') == 'THE_AO':
         chan = the_ao
     if specific_channel:
         # TODO: Retrieve channel id from specific_channel, which is most likely the name passed in from user
