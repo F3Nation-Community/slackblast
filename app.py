@@ -244,8 +244,13 @@ async def view_submission(ack, body, logger, client):
     logger.info(result)
     user = body["user"]["id"]
     chan = user
+    specific_channel = body["text"]
+    logger.info('specific channel', specific_channel)
+    logger.info('body is', body)
     if config('CHANNEL') != 'USER':
         chan = config('CHANNEL')
+    if specific_channel
+        chan = specific_channel
 
     msg = ""
     try:
