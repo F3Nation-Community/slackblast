@@ -249,7 +249,7 @@ async def view_submission(ack, body, logger, client):
 
     user = body["user"]["id"]
     specific_channel = '' # body["text"] does not exist though 'text': 'foobar' is shown in log request
-    config_channel = config['CHANNEL']
+    config_channel = config('CHANNEL')
     chan = config_channel
     if config_channel == 'USER':
         chan = user
