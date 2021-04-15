@@ -58,6 +58,7 @@ async def handle_message():
 
 
 @slack_app.command("/slackblast")
+@slack_app.command("/backblast")
 async def command(ack, body, respond, client, logger):
     await ack()
     today = datetime.now(timezone.utc).astimezone()
