@@ -4,31 +4,32 @@ from fastapi import FastAPI, Request
 from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 from slack_bolt.async_app import AsyncApp
 import datetime
+from datetime import datetime, timezone, timedelta
 import json
 
 
-def get_categories():
-    with open('categories.json') as c:
-        data = json.load(c)
-        return data
+# def get_categories():
+#     with open('categories.json') as c:
+#         data = json.load(c)
+#         return data
 
 
-def formatted_categories(filteredcats):
-    opts = []
-    for cat in filteredcats:
-        x = {
-            "text": {
-                "type": "plain_text",
-                "text": cat["name"]
-            },
-            "value": str(cat["id"])
-        }
-        opts.append(x)
-    return opts
+# def formatted_categories(filteredcats):
+#     opts = []
+#     for cat in filteredcats:
+#         x = {
+#             "text": {
+#                 "type": "plain_text",
+#                 "text": cat["name"]
+#             },
+#             "value": str(cat["id"])
+#         }
+#         opts.append(x)
+#     return opts
 
 
 logging.basicConfig(level=logging.DEBUG)
-categories = []
+#categories = []
 
 slack_app = AsyncApp(
     token=config('SLACK_BOT_TOKEN'),
@@ -36,7 +37,7 @@ slack_app = AsyncApp(
 )
 app_handler = AsyncSlackRequestHandler(slack_app)
 
-categories = get_categories()
+#categories = get_categories()
 
 
 @slack_app.middleware  # or app.use(log_request)
@@ -56,10 +57,11 @@ async def handle_message():
     pass
 
 
-@slack_app.command("/backblast")
+@slack_app.command("/slackblast")
 async def command(ack, body, respond, client, logger):
     await ack()
-    today = datetime.datetime.now()
+    today = datetime.now(timezone.utc).astimezone()
+    today = today - timedelta(hours = 6)
     datestring = today.strftime("%Y-%m-%d")
 
     res = await client.views_open(
@@ -96,17 +98,18 @@ async def command(ack, body, respond, client, logger):
                     "type": "input",
                     "block_id": "the_ao",
                     "element": {
-                        "type": "external_select",
-                        "action_id": "es_categories",
+                        "type": "channels_select",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "Choose an AO"
+                            "text": "Select the AO",
+                            "emoji": True
                         },
-                        "min_query_length": 2
+                        "action_id": "channels_select-action"
                     },
                     "label": {
                         "type": "plain_text",
-                        "text": "Workout"
+                        "text": "The AO",
+                        "emoji": True
                     }
                 },
                 {
@@ -129,20 +132,21 @@ async def command(ack, body, respond, client, logger):
                     }
                 },
                 {
-                    "type": "section",
+                    "type": "input",
                     "block_id": "the_q",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "*The Q*"
-                    },
-                    "accessory": {
+                    "element": {
                         "type": "users_select",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "Select a PAX",
+                            "text": "Tag the Q",
                             "emoji": True
                         },
                         "action_id": "users_select-action"
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "The Q",
+                        "emoji": True
                     }
                 },
                 {
@@ -152,15 +156,48 @@ async def command(ack, body, respond, client, logger):
                         "type": "multi_users_select",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "Select users",
+                            "text": "Tag the PAX",
                             "emoji": True
                         },
                         "action_id": "multi_users_select-action"
                     },
                     "label": {
                         "type": "plain_text",
-                        "text": "The Pax",
+                        "text": "The PAX",
                         "emoji": True
+                    }
+                },
+                {
+                    "type": "input",
+                    "block_id": "fngs",
+                    "element": {
+                        "type": "plain_text_input",
+                        "action_id": "fng-action",
+                        "initial_value": "None",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "FNGs"
+                        }
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "List untaggable names separated by commas (FNGs, Willy Lomans, etc.)"
+                    }
+                },
+                {
+                    "type": "input",
+                    "block_id": "count",
+                    "element": {
+                        "type": "plain_text_input",
+                        "action_id": "count-action",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "Total PAX count including FNGs"
+                        }
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "Count"
                     }
                 },
                 {
@@ -169,11 +206,15 @@ async def command(ack, body, respond, client, logger):
                     "element": {
                         "type": "plain_text_input",
                         "multiline": True,
-                        "action_id": "plain_text_input-action"
+                        "action_id": "plain_text_input-action",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "Tell us what happened"
+                        }
                     },
                     "label": {
                         "type": "plain_text",
-                        "text": "The Details",
+                        "text": "The Moleskine",
                         "emoji": True
                     }
                 }
@@ -188,10 +229,12 @@ async def view_submission(ack, body, logger, client):
     await ack()
     result = body["view"]["state"]["values"]
     title = result["title"]["title"]["value"]
-    the_ao = result["the_ao"]["es_categories"]["selected_option"]["text"]["text"]
-    logger.info(the_ao)
+    date = result["date"]["datepicker-action"]["selected_date"]
+    the_ao = result["the_ao"]["channels_select-action"]["selected_channel"]
     the_q = result["the_q"]["users_select-action"]["selected_user"]
     pax = result["the_pax"]["multi_users_select-action"]["selected_users"]
+    fngs = result["fngs"]["fng-action"]["value"]
+    count = result["count"]["count-action"]["value"]
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
     the_date = result["date"]["datepicker-action"]["selected_date"]
 
@@ -207,11 +250,14 @@ async def view_submission(ack, body, logger, client):
     try:
         # formatting a message
         # todo: change to use json object
-        msg = f"*Title*: " + title + \
-            "\n*Date: " + the_date + \
-            "\n*AO*: " + the_ao + \
-            "\n*The Q*: <@" + the_q + ">" + \
-            "\n*The pax*: " + pax_formatted + \
+        msg = f"*Slackblast*: " + \
+            "\n*Title*: " + title + \
+            "\n*Date*: " + date + \
+            "\n*AO*: <#" + the_ao + ">" + \
+            "\n*Q*: <@" + the_q + ">" + \
+            "\n*PAX*: " + pax_formatted + \
+            "\n*FNGs*: " + fngs + \
+            "\n*Count*: " + count + \
             "\n*Moleskine*:\n" + moleskine
     except Exception as e:
         # Handle error
@@ -219,19 +265,19 @@ async def view_submission(ack, body, logger, client):
     finally:
         # Message the user via the app/bot name
         if config('POST_TO_CHANNEL', cast=bool):
-            await client.chat_postMessage(channel=chan, text=msg)
+            await client.chat_postMessage(channel=the_ao, text=msg)
 
 
-@slack_app.options("es_categories")
-async def show_categories(ack, body, logger):
-    await ack()
-    lookup = body["value"]
-    filtered = [x for x in categories if lookup.lower() in x["name"].lower()]
-    output = formatted_categories(filtered)
-    options = output
-    logger.info(options)
+# @slack_app.options("es_categories")
+# async def show_categories(ack, body, logger):
+#     await ack()
+#     lookup = body["value"]
+#     filtered = [x for x in categories if lookup.lower() in x["name"].lower()]
+#     output = formatted_categories(filtered)
+#     options = output
+#     logger.info(options)
 
-    await ack(options=options)
+#     await ack(options=options)
 
 
 async def get_pax(pax):

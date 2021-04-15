@@ -1,3930 +1,1008 @@
 [
-  {
-    "id": 540,
-    "count": 89,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/csaup/",
-    "name": "#CSAUP",
-    "slug": "csaup",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/540" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
+    {
+        "id": 2327,
+        "count": 42,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/8-Track",
+        "name": "8-Track",
+        "slug": "8-track",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/2327"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=2327"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 344,
+        "count": 260,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/annex",
+        "name": "Annex",
+        "slug": "annex",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/344"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=344"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 4,
+        "count": 169,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/announcements",
+        "name": "Announcements",
+        "slug": "announcements",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/4"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=4"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 1812,
+        "count": 131,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/arcadia",
+        "name": "Arcadia",
+        "slug": "arcadia",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/1812"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=1812"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 2261,
+        "count": 66,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/armory",
+        "name": "Armory",
+        "slug": "armory",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/2261"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=2261"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 22,
+        "count": 318,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/barracks",
+        "name": "Barracks",
+        "slug": "barracks",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/22"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=22"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 27,
+        "count": 476,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/berm",
+        "name": "Bermuda Triangle",
+        "slug": "berm",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/27"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=27"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 43,
+        "count": 52,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/black-ops",
+        "name": "Black Ops",
+        "slug": "black-ops",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/43"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=43"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 1340,
+        "count": 168,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/blazing-saddle",
+        "name": "Blazing Saddle",
+        "slug": "blazing-saddle",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/1340"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=1340"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 1567,
+        "count": 53,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/blue-collar",
+        "name": "Blue Collar",
+        "slug": "blue-collar",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/1567"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=1567"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 2470,
+        "count": 3,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/special-event\/csaup",
+        "name": "CSAUP",
+        "slug": "csaup",
+        "taxonomy": "category",
+        "parent": 21,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/2470"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "up": [
+                {
+                    "embeddable": true,
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/21"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=2470"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 1540,
+        "count": 66,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/green-mile",
+        "name": "Green Mile",
+        "slug": "green-mile",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/1540"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=1540"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 46,
+        "count": 227,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/lair",
+        "name": "Lair",
+        "slug": "lair",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/46"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=46"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 10,
+        "count": 393,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/levee",
+        "name": "Levee",
+        "slug": "levee",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/10"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=10"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 77,
+        "count": 358,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/morg",
+        "name": "Morg",
+        "slug": "morg",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/77"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=77"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 3,
+        "count": 151,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/mothership",
+        "name": "Mothership",
+        "slug": "mothership",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/3"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=3"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 931,
+        "count": 200,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/neverland",
+        "name": "Neverland",
+        "slug": "neverland",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/931"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=931"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 26,
+        "count": 264,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/old-forest",
+        "name": "Old Forest",
+        "slug": "old-forest",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/26"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=26"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 2543,
+        "count": 10,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/pit",
+        "name": "Pit",
+        "slug": "pit",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/2543"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=2543"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 16,
+        "count": 160,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/preblast",
+        "name": "Preblast",
+        "slug": "preblast",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/16"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=16"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 2441,
+        "count": 20,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/quad-city",
+        "name": "Quad City",
+        "slug": "quad-city",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/2441"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=2441"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 2589,
+        "count": 0,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/ruckership",
+        "name": "Ruckership",
+        "slug": "ruckership",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/2589"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=2589"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 1084,
+        "count": 136,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/ruins",
+        "name": "Ruins",
+        "slug": "ruins",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/1084"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=1084"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 55,
+        "count": 114,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/sandlot",
+        "name": "Sandlot",
+        "slug": "sandlot",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/55"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=55"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
+        }
+    },
+    {
+        "id": 2489,
+        "count": 32,
+        "description": "",
+        "link": "https:\/\/f3memphis.com\/category\/six-wicket",
+        "name": "Six Wicket",
+        "slug": "six-wicket",
+        "taxonomy": "category",
+        "parent": 0,
+        "meta": [],
+        "_links": {
+            "self": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories\/2489"
+                }
+            ],
+            "collection": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/categories"
+                }
+            ],
+            "about": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/taxonomies\/category"
+                }
+            ],
+            "wp:post_type": [
+                {
+                    "href": "https:\/\/f3memphis.com\/wp-json\/wp\/v2\/posts?categories=2489"
+                }
+            ],
+            "curies": [
+                {
+                    "name": "wp",
+                    "href": "https:\/\/api.w.org\/{rel}",
+                    "templated": true
+                }
+            ]
         }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=540"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 2681,
-    "count": 6,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/fng-day/",
-    "name": "#FNGDay",
-    "slug": "fng-day",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/2681" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=2681"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 722,
-    "count": 18,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/red-friday/",
-    "name": "#REDFriday",
-    "slug": "red-friday",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/722" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=722"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 374,
-    "count": 42,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/3rdf/",
-    "name": "3rdF",
-    "slug": "3rdf",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/374" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=374"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 888,
-    "count": 1594,
-    "description": "South Charlotte sub region for Area 51",
-    "link": "https://f3southcharlotte.com/category/south-charlotte/a51-region/",
-    "name": "A51 Region",
-    "slug": "a51-region",
-    "taxonomy": "category",
-    "parent": 10,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/888" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "up": [
-        {
-          "embeddable": true,
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/10"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=888"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 893,
-    "count": 2,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/abyss/",
-    "name": "Abyss",
-    "slug": "abyss",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/893" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=893"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 608,
-    "count": 13,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/anson/",
-    "name": "Anson",
-    "slug": "anson",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/608" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=608"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 332,
-    "count": 340,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/anvil/",
-    "name": "Anvil",
-    "slug": "anvil",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/332" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=332"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 296,
-    "count": 7061,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/archive/",
-    "name": "Archive",
-    "slug": "archive",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/296" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=296"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 355,
-    "count": 224,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/ascent/",
-    "name": "Ascent",
-    "slug": "ascent",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/355" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=355"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3029,
-    "count": 88,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/asylum/",
-    "name": "Asylum",
-    "slug": "asylum",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3029" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3029"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 884,
-    "count": 531,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/authorissue/",
-    "name": "authorissue",
-    "slug": "authorissue",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/884" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=884"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 325,
-    "count": 269,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/bagpipe/",
-    "name": "Bagpipe",
-    "slug": "bagpipe",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/325" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=325"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 317,
-    "count": 285,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/basecamp/",
-    "name": "Base Camp",
-    "slug": "basecamp",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/317" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=317"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 645,
-    "count": 25,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/black-diamond/",
-    "name": "Black Diamond",
-    "slug": "black-diamond",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/645" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=645"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 883,
-    "count": 41,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/blackhawk/",
-    "name": "Blackhawk",
-    "slug": "blackhawk",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/883" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=883"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 886,
-    "count": 52,
-    "description": "Recovery running workout with stretching",
-    "link": "https://f3southcharlotte.com/category/blakovery/",
-    "name": "Blakovery",
-    "slug": "blakovery",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/886" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=886"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4038,
-    "count": 36,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/body-shop/",
-    "name": "Body Shop",
-    "slug": "body-shop",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4038" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4038"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3322,
-    "count": 1,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/burly-beast/",
-    "name": "Burly Beast",
-    "slug": "burly-beast",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3322" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3322"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3575,
-    "count": 68,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/bushwood/",
-    "name": "Bushwood",
-    "slug": "bushwood",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3575" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3575"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 309,
-    "count": 370,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/centurion/",
-    "name": "Centurion",
-    "slug": "centurion",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/309" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=309"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 2381,
-    "count": 89,
-    "description": "Workout at Waverly",
-    "link": "https://f3southcharlotte.com/category/cerberus/",
-    "name": "Cerberus",
-    "slug": "cerberus",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/2381" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=2381"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 305,
-    "count": 530,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/charlotte-metro-nc/",
-    "name": "Charlotte, NC - Metro",
-    "slug": "charlotte-metro-nc",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/305" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=305"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3036,
-    "count": 124,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/chiseled/",
-    "name": "Chiseled",
-    "slug": "chiseled",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3036" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3036"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4321,
-    "count": 8,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/clean-slate/",
-    "name": "Clean Slate",
-    "slug": "clean-slate",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4321" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4321"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3106,
-    "count": 90,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/clyent-dinner/",
-    "name": "Clyent Dinner",
-    "slug": "clyent-dinner",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3106" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3106"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 497,
-    "count": 228,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/commitment/",
-    "name": "Commitment",
-    "slug": "commitment",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/497" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=497"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 306,
-    "count": 50,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/convergence/",
-    "name": "Convergence",
-    "slug": "convergence",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/306" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=306"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 898,
-    "count": 40,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/conviction/",
-    "name": "Conviction",
-    "slug": "conviction",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/898" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=898"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 860,
-    "count": 6,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/cool-runnings/",
-    "name": "Cool Runnings",
-    "slug": "cool-runnings",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/860" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=860"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4320,
-    "count": 9,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/cowbell/",
-    "name": "Cowbell",
-    "slug": "cowbell",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4320" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4320"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 636,
-    "count": 135,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/da-vinci/",
-    "name": "da Vinci",
-    "slug": "da-vinci",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/636" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=636"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 336,
-    "count": 192,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/day-zero/",
-    "name": "Day Zero",
-    "slug": "day-zero",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/336" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=336"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 298,
-    "count": 320,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/deathvalley/",
-    "name": "Death Valley",
-    "slug": "deathvalley",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/298" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=298"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 301,
-    "count": 314,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/devils-turn/",
-    "name": "Devil's Turn",
-    "slug": "devils-turn",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/301" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=301"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3706,
-    "count": 76,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/diesel/",
-    "name": "Diesel",
-    "slug": "diesel",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3706" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3706"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 338,
-    "count": 237,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/dmz/",
-    "name": "DMZ",
-    "slug": "dmz",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/338" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=338"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 818,
-    "count": 51,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/donut-run/",
-    "name": "Donut Run",
-    "slug": "donut-run",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/818" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=818"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 495,
-    "count": 281,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/dromedary/",
-    "name": "Dromedary",
-    "slug": "dromedary",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/495" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=495"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 424,
-    "count": 19,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/events-races/",
-    "name": "Events &amp; Races",
-    "slug": "events-races",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/424" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=424"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 470,
-    "count": 44,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/f3-dads/",
-    "name": "F3-Dads",
-    "slug": "f3-dads",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/470" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=470"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 334,
-    "count": 27,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/f3foundation-info/",
-    "name": "F3Foundation",
-    "slug": "f3foundation-info",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/334" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=334"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 335,
-    "count": 330,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/fast-twitch/",
-    "name": "Fast Twitch",
-    "slug": "fast-twitch",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/335" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=335"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 656,
-    "count": 56,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/fat-camp/",
-    "name": "Fat Camp",
-    "slug": "fat-camp",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/656" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=656"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 526,
-    "count": 58,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/fight-club/",
-    "name": "Fight Club",
-    "slug": "fight-club",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/526" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=526"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4244,
-    "count": 8,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/firestarter/",
-    "name": "Firestarter",
-    "slug": "firestarter",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4244" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4244"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 583,
-    "count": 233,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/flash/",
-    "name": "Flash",
-    "slug": "flash",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/583" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=583"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 430,
-    "count": 7,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/flex/",
-    "name": "Flex",
-    "slug": "flex",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/430" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=430"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 344,
-    "count": 227,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/foxhole/",
-    "name": "Foxhole",
-    "slug": "foxhole",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/344" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=344"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4000,
-    "count": 6,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/garage-band/",
-    "name": "Garage Band",
-    "slug": "garage-band",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4000" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4000"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3093,
-    "count": 2,
-    "description": "Monday SOB bootcamp",
-    "link": "https://f3southcharlotte.com/category/genesis/",
-    "name": "Genesis",
-    "slug": "genesis",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3093" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3093"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 570,
-    "count": 17,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/ghost-runner/",
-    "name": "Ghost Runner",
-    "slug": "ghost-runner",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/570" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=570"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 327,
-    "count": 14,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/goruck/",
-    "name": "GORUCK",
-    "slug": "goruck",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/327" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=327"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 770,
-    "count": 110,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/gumby/",
-    "name": "Gumby",
-    "slug": "gumby",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/770" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=770"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4193,
-    "count": 0,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/happy-feet/",
-    "name": "Happy Feet",
-    "slug": "happy-feet",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4193" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4193"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 2519,
-    "count": 83,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/hawks-nest/",
-    "name": "Hawks Nest",
-    "slug": "hawks-nest",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/2519" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=2519"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 723,
-    "count": 12,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/high-t/",
-    "name": "High T",
-    "slug": "high-t",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/723" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=723"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3782,
-    "count": 65,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/homecoming/",
-    "name": "Homecoming",
-    "slug": "homecoming",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3782" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3782"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 721,
-    "count": 46,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/horsey-mchorsearse/",
-    "name": "Horsey-McHorseArse",
-    "slug": "horsey-mchorsearse",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/721" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=721"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 330,
-    "count": 316,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/hydra/",
-    "name": "Hydra",
-    "slug": "hydra",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/330" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=330"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3017,
-    "count": 119,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/ignition/",
-    "name": "Ignition",
-    "slug": "ignition",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3017" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3017"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 632,
-    "count": 217,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/impromptu/",
-    "name": "Impromptu",
-    "slug": "impromptu",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/632" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=632"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 369,
-    "count": 211,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/joust/",
-    "name": "Joust",
-    "slug": "joust",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/369" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=369"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 302,
-    "count": 305,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/kevlar/",
-    "name": "Kevlar",
-    "slug": "kevlar",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/302" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=302"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 897,
-    "count": 1,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/kinetic/",
-    "name": "Kinetic",
-    "slug": "kinetic",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/897" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=897"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4322,
-    "count": 5,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/last-call/",
-    "name": "Last Call",
-    "slug": "last-call",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4322" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4322"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3875,
-    "count": 19,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/lrc/",
-    "name": "LRC",
-    "slug": "lrc",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3875" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3875"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 299,
-    "count": 440,
-    "description": "Mckee Rd Area 51 Saturday Workout\r\nThis is not the Area 51 Region!",
-    "link": "https://f3southcharlotte.com/category/mckee-area-51/",
-    "name": "McKee/Area51 AO",
-    "slug": "mckee-area-51",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/299" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=299"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 474,
-    "count": 268,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/meathead/",
-    "name": "Meathead",
-    "slug": "meathead",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/474" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=474"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4132,
-    "count": 23,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/mobile-mash-unit/",
-    "name": "Mobile Mash Unit",
-    "slug": "mobile-mash-unit",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4132" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4132"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 779,
-    "count": 25,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/monroe/",
-    "name": "monroe",
-    "slug": "monroe",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/779" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=779"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3928,
-    "count": 18,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/morning-wood/",
-    "name": "Morning Wood",
-    "slug": "morning-wood",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3928" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3928"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 569,
-    "count": 180,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/mountain-goat/",
-    "name": "Mountain Goat",
-    "slug": "mountain-goat",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/569" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=569"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 488,
-    "count": 2,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/mud-run/",
-    "name": "Mud Run",
-    "slug": "mud-run",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/488" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=488"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 391,
-    "count": 3,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/murph/",
-    "name": "Murph",
-    "slug": "murph",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/391" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=391"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 404,
-    "count": 2,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/mustang/",
-    "name": "Mustang",
-    "slug": "mustang",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/404" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=404"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4326,
-    "count": 8,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/neighborhood-watch/",
-    "name": "Neighborhood Watch",
-    "slug": "neighborhood-watch",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4326" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4326"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4131,
-    "count": 11,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/nightmare-on-elm/",
-    "name": "Nightmare on Elm",
-    "slug": "nightmare-on-elm",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4131" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4131"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 368,
-    "count": 7,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/nomad/",
-    "name": "Nomad",
-    "slug": "nomad",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/368" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=368"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 316,
-    "count": 173,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/olympus/",
-    "name": "Olympus",
-    "slug": "olympus",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/316" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=316"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 346,
-    "count": 260,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/outland/",
-    "name": "Outland",
-    "slug": "outland",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/346" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=346"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 482,
-    "count": 162,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/overdrive/",
-    "name": "Overdrive",
-    "slug": "overdrive",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/482" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=482"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 392,
-    "count": 234,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/peak-51/",
-    "name": "Peak 51",
-    "slug": "peak-51",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/392" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=392"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 2827,
-    "count": 11,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/pokey/",
-    "name": "Pokey",
-    "slug": "pokey",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/2827" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=2827"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 496,
-    "count": 216,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/preblast/",
-    "name": "PreBlast",
-    "slug": "preblast",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/496" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=496"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 2429,
-    "count": 50,
-    "description": "Running Workout in W. Union Co.",
-    "link": "https://f3southcharlotte.com/category/pursuit/",
-    "name": "Pursuit",
-    "slug": "pursuit",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/2429" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=2429"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 366,
-    "count": 244,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/rebel-yell/",
-    "name": "Rebel Yell",
-    "slug": "rebel-yell",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/366" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=366"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 804,
-    "count": 135,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/rock-zero/",
-    "name": "Rock Zero",
-    "slug": "rock-zero",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/804" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=804"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4192,
-    "count": 5,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/sacs/",
-    "name": "SACS",
-    "slug": "sacs",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4192" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4192"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 435,
-    "count": 31,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/secondf/",
-    "name": "SecondF",
-    "slug": "secondf",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/435" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=435"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 297,
-    "count": 340,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/skunkworks/",
-    "name": "Skunk Works",
-    "slug": "skunkworks",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/297" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=297"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 885,
-    "count": 1149,
-    "description": "Son's of Ballantyne",
-    "link": "https://f3southcharlotte.com/category/south-charlotte/sob/",
-    "name": "SOB",
-    "slug": "sob",
-    "taxonomy": "category",
-    "parent": 10,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/885" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "up": [
-        {
-          "embeddable": true,
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/10"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=885"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 597,
-    "count": 147,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/sofawib/",
-    "name": "SOFAWIB",
-    "slug": "sofawib",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/597" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=597"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 10,
-    "count": 2519,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/south-charlotte/",
-    "name": "South Charlotte",
-    "slug": "south-charlotte",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/10" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=10"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 2336,
-    "count": 59,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/sparta/",
-    "name": "Sparta",
-    "slug": "sparta",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/2336" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=2336"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 353,
-    "count": 93,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/spearhead/",
-    "name": "SPEARHEAD",
-    "slug": "spearhead",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/353" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=353"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 861,
-    "count": 27,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/speed-for-need/",
-    "name": "speedforneed",
-    "slug": "speed-for-need",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/861" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=861"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 314,
-    "count": 257,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/stonehenge/",
-    "name": "Stonehenge",
-    "slug": "stonehenge",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/314" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=314"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3790,
-    "count": 57,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/swarm/",
-    "name": "Swarm",
-    "slug": "swarm",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3790" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3790"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 319,
-    "count": 414,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/swift/",
-    "name": "Swift",
-    "slug": "swift",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/319" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=319"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3818,
-    "count": 33,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/swole/",
-    "name": "Swole",
-    "slug": "swole",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3818" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3818"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4283,
-    "count": 12,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-appetizer/",
-    "name": "The Appetizer",
-    "slug": "the-appetizer",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4283" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4283"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 489,
-    "count": 64,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-arsenal/",
-    "name": "The Arsenal",
-    "slug": "the-arsenal",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/489" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=489"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 794,
-    "count": 72,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-big-house/",
-    "name": "The Big House",
-    "slug": "the-big-house",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/794" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=794"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 467,
-    "count": 228,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-brave/",
-    "name": "The Brave",
-    "slug": "the-brave",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/467" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=467"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 380,
-    "count": 116,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-charge/",
-    "name": "The Charge",
-    "slug": "the-charge",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/380" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=380"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 2500,
-    "count": 30,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-fishing-hole/",
-    "name": "The Fishing Hole",
-    "slug": "the-fishing-hole",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/2500" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=2500"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 2413,
-    "count": 169,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-floater/",
-    "name": "The Floater",
-    "slug": "the-floater",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/2413" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=2413"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 894,
-    "count": 8,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-fort/",
-    "name": "The Fort",
-    "slug": "the-fort",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/894" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=894"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 311,
-    "count": 272,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-matrix/",
-    "name": "The Matrix",
-    "slug": "the-matrix",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/311" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=311"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 324,
-    "count": 252,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-maul/",
-    "name": "The Maul",
-    "slug": "the-maul",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/324" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=324"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 491,
-    "count": 6,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-reservation/",
-    "name": "The Reservation",
-    "slug": "the-reservation",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/491" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=491"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 304,
-    "count": 220,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-rock/",
-    "name": "The Rock",
-    "slug": "the-rock",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/304" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=304"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 604,
-    "count": 46,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/the-valley/",
-    "name": "The Valley",
-    "slug": "the-valley",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/604" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=604"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 423,
-    "count": 19,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/thirdf/",
-    "name": "ThirdF",
-    "slug": "thirdf",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/423" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=423"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 610,
-    "count": 117,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/thrive/",
-    "name": "Thrive",
-    "slug": "thrive",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/610" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=610"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 887,
-    "count": 901,
-    "description": "South Charlotte sub region for Union County",
-    "link": "https://f3southcharlotte.com/category/south-charlotte/union-county/",
-    "name": "UnionCo",
-    "slug": "union-county",
-    "taxonomy": "category",
-    "parent": 10,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/887" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "up": [
-        {
-          "embeddable": true,
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/10"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=887"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3974,
-    "count": 17,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/virtual/",
-    "name": "Virtual",
-    "slug": "virtual",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3974" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3974"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3003,
-    "count": 28,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/wamrap/",
-    "name": "WAMRAP",
-    "slug": "wamrap",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3003" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3003"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 788,
-    "count": 170,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/watchtower/",
-    "name": "Watchtower",
-    "slug": "watchtower",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/788" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=788"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 3618,
-    "count": 940,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/south-charlotte/waxhaw/",
-    "name": "Waxhaw",
-    "slug": "waxhaw",
-    "taxonomy": "category",
-    "parent": 10,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/3618" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "up": [
-        {
-          "embeddable": true,
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/10"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=3618"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
-    }
-  },
-  {
-    "id": 4375,
-    "count": 2,
-    "description": "",
-    "link": "https://f3southcharlotte.com/category/wxw-express/",
-    "name": "WXW Express",
-    "slug": "wxw-express",
-    "taxonomy": "category",
-    "parent": 0,
-    "meta": [],
-    "_links": {
-      "self": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories/4375" }
-      ],
-      "collection": [
-        { "href": "https://f3southcharlotte.com/wp-json/wp/v2/categories" }
-      ],
-      "about": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/taxonomies/category"
-        }
-      ],
-      "wp:post_type": [
-        {
-          "href": "https://f3southcharlotte.com/wp-json/wp/v2/posts?categories=4375"
-        }
-      ],
-      "curies": [
-        { "name": "wp", "href": "https://api.w.org/{rel}", "templated": true }
-      ]
     }
-  }
 ]
