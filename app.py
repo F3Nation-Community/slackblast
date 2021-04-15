@@ -255,6 +255,7 @@ async def view_submission(ack, body, logger, client):
     if specific_channel:
         # TODO: Retrieve channel id from specific_channel, which is most likely the name passed in from user
         # chan = specific_channel
+        chan = chan
 
     msg = ""
     try:
