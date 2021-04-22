@@ -57,6 +57,24 @@ async def handle_message():
     pass
 
 
+def get_channel_id_and_name(body, logger):
+    user_id = body.get("user_id")
+    # Get "text" value which is everything after the /slash-command
+    # e.g. /slackblast #our-aggregate-backblast-channel
+    # then text would be "#our-aggregate-backblast-channel" if /slash command is not encoding
+    # but encoding needs to be checked so it will be "<#C01V75UFE56|our-aggregate-backblast-channel>" instead
+    channel_name = body.get("text") or ''
+    channel_id = ''
+    try:
+        channel_id = channel_name.split('|')[0].split('#')[1]
+        channel_name = channel_name.split('|')[1].split('>')[0]
+    except IndexError as ierr:
+        logger.error('Bad user input - cannot parse channel id', channel_name, ierr)
+    except Exception as error:
+        logger.error('User did not pass in any input')
+    return channel_id, channel_name
+
+
 @slack_app.command("/slackblast")
 @slack_app.command("/backblast")
 async def command(ack, body, respond, client, logger):
@@ -64,6 +82,70 @@ async def command(ack, body, respond, client, logger):
     today = datetime.now(timezone.utc).astimezone()
     today = today - timedelta(hours = 6)
     datestring = today.strftime("%Y-%m-%d")
+    user_id = body.get("user_id")
+
+    channel_id, channel_name = get_channel_id_and_name(body, logger)
+    
+
+    # In .env, CHANNEL=USER
+    channel_me_option =  {
+        "text": {
+        "type": "plain_text",
+        "text": "Me"
+        },
+        "value": user_id
+    }
+    # In .env, CHANNEL=THE_AO
+    channel_the_ao_option = {
+        "text": {
+        "type": "plain_text",
+        "text": "The AO Channel"
+        },
+        "value": "THE_AO"
+    }
+    # In .env, CHANNEL=<channel-id>
+    channel_configured_ao_option = {
+        "text": {
+        "type": "plain_text",
+        "text": "Preconfigured Backblast Channel"
+        },
+        "value": config('CHANNEL')
+    }
+    # User typed /slackblast #<channel-name> AND
+    # slackblast slashcommand is checked to escape channels.
+    #   Escape channels, users, and links sent to your app
+    #   Escaped: <#C1234|general>
+    channel_user_specified_channel_option = {
+        "text": {
+        "type": "plain_text",
+        "text": '# ' + channel_name
+        },
+        "value": channel_id
+    }
+
+    channel_options = []
+
+    # figure out which channel should be default/initial and then remaining operations
+    if channel_id:
+        initial_channel_option = channel_user_specified_channel_option
+        channel_options.append(channel_user_specified_channel_option)
+        channel_options.append(channel_me_option)
+        channel_options.append(channel_the_ao_option) 
+        channel_options.append(channel_configured_ao_option)
+    if config('CHANNEL') == 'USER':
+        initial_channel_option = channel_me_option
+        channel_options.append(channel_me_option)
+        channel_options.append(channel_the_ao_option) 
+    elif config('CHANNEL') == 'THE_AO':
+        initial_channel_option = channel_the_ao_option
+        channel_options.append(channel_the_ao_option) 
+        channel_options.append(channel_me_option)
+    else:
+        # Default to using the required .env CHANNEL value which at this point must be a channel id
+        initial_channel_option = channel_configured_ao_option
+        channel_options.append(channel_configured_ao_option)
+        channel_options.append(channel_me_option)
+        channel_options.append(channel_the_ao_option) 
 
     res = await client.views_open(
         trigger_id=body["trigger_id"],
@@ -208,15 +290,37 @@ async def command(ack, body, respond, client, logger):
                         "type": "plain_text_input",
                         "multiline": True,
                         "action_id": "plain_text_input-action",
+                        "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: ",
                         "placeholder": {
                             "type": "plain_text",
-                            "text": "Tell us what happened"
+                            "text": "Tell us what happened\n\n"
                         }
                     },
                     "label": {
                         "type": "plain_text",
                         "text": "The Moleskine",
                         "emoji": True
+                    }
+                },
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "section",
+                    "block_id": "destination",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Choose where to post this"
+                    },
+                    "accessory": {
+                        "action_id": "destination-action",
+                        "type": "static_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Choose where"
+                    },
+                    "initial_option": initial_channel_option,
+                    "options": channel_options
                     }
                 }
             ]
@@ -237,27 +341,18 @@ async def view_submission(ack, body, logger, client):
     fngs = result["fngs"]["fng-action"]["value"]
     count = result["count"]["count-action"]["value"]
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
+    destination = result["destination"]["destination-action"]["selected_option"]["value"]
     the_date = result["date"]["datepicker-action"]["selected_date"]
 
     pax_formatted = await get_pax(pax)
 
     logger.info(result)
-    try:
-        logger.info(body)
-    except Exception as e:
-        tmp = ''
 
-    user = body["user"]["id"]
-    specific_channel = '' # body["text"] does not exist though 'text': 'foobar' is shown in log request
-    chan = config('CHANNEL')
-    if config('CHANNEL') == 'USER':
-        chan = user
-    if config('CHANNEL') == 'THE_AO':
+    chan = destination
+    if chan == 'THE_AO':
         chan = the_ao
-    if specific_channel:
-        # TODO: Retrieve channel id from specific_channel, which is most likely the name passed in from user
-        # chan = specific_channel
-        chan = chan
+
+    logger.info('Channel to post to will be', chan, " Because the selected destination value was", destination, " while the selected AO in the modal was", the_ao)
 
     msg = ""
     try:
