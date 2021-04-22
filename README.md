@@ -73,3 +73,5 @@ To run locally:
 pip install -r requirements.txt
 gunicorn -k uvicorn.workers.UvicornWorker --bind "0.0.0.0:8000" --log-level debug app:app
 ```
+
+See .env-f3nation-community file for help on local development
