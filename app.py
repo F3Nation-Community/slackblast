@@ -358,7 +358,7 @@ async def view_submission(ack, body, logger, client):
     try:
         # formatting a message
         # todo: change to use json object
-        msg = f"*Slackblast*: " + \
+        msg = f"*Backblast!* " + \
             "\n*Title*: " + title + \
             "\n*Date*: " + date + \
             "\n*AO*: <#" + the_ao + ">" + \
@@ -366,7 +366,7 @@ async def view_submission(ack, body, logger, client):
             "\n*PAX*: " + pax_formatted + \
             "\n*FNGs*: " + fngs + \
             "\n*Count*: " + count + \
-            "\n*Moleskine*:\n" + moleskine
+            "\n" + moleskine
     except Exception as e:
         # Handle error
         msg = "There was an error with your submission: " + e
