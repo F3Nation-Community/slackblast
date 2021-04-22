@@ -11,7 +11,7 @@ SLACK_BOT_TOKEN=<YOURTOKEN>
 SLACK_VERIFICATION_TOKEN=<SLACKVERIFICATIONTOKEN>
 SLACK_SIGNING_SECRET=<SLACKSIGNINGSECRET>
 POST_TO_CHANNEL=<False or True>
-CHANNEL=USER
+CHANNEL=<USER or THE_AO or channel-id>
 ```
 
 set `SLACK_BOT_TOKEN` from the token on the oath page in the slack app
@@ -20,7 +20,12 @@ set `SLACK_VERIFICATION_TOKEN` from the Basic Information -> Verification Token 
 
 set `POST_TO_CHANNEL` equal to `True` or `False`. Set to true if you are using paxminer. Indicates whether or not to take the modal data and post to a channel in slack.
 
-set `CHANNEL` equal to the channel id (ID -> NOT THE NAME) you want the modal results to post in otherwise user `THE_AO` to post to the channel that was selected in the modal otherwise use `USER` to post a DM from the slackblast to you with the results (testing).
+set `CHANNEL=channel-id` to the channel id (ID such as C01DB7S04KH -> NOT THE NAME) you want the modal results to post to by default.
+set `CHANNEL=THE_AO` to post to the channel that was selected in the modal by default.
+set `CHANNEL=USER` to post a DM from the slackblast to you with the results (testing) by default.
+NOTE: In the modal, the user can choose where to post to.
+
+See .env-f3nation-community file for help on local development
 
 # slack app configuration
 
