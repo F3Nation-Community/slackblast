@@ -132,7 +132,7 @@ async def command(ack, body, respond, client, logger):
         channel_options.append(channel_me_option)
         channel_options.append(channel_the_ao_option) 
         channel_options.append(channel_configured_ao_option)
-    if config('CHANNEL') == 'USER':
+    elif config('CHANNEL') == 'USER':
         initial_channel_option = channel_me_option
         channel_options.append(channel_me_option)
         channel_options.append(channel_the_ao_option) 
