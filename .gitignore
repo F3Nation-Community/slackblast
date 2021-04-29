@@ -106,6 +106,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env-prod
 .venv
 env/
 venv/
@@ -140,7 +141,7 @@ dmypy.json
 cython_debug/
 
 # Ignore Azure App Service configuration
-# In Azure Portal, go to Deployment Center and integrate to Github sand it will
+# In Azure Portal, go to Deployment Center and integrate to Github and it will
 # automatically put the published file, e.g. main_<your-azure-app-name>.yml into
 # your github repo
 main_*.yml
