@@ -69,7 +69,7 @@ def get_channel_id_and_name(body, logger):
         channel_id = channel_name.split('|')[0].split('#')[1]
         channel_name = channel_name.split('|')[1].split('>')[0]
     except IndexError as ierr:
-        logger.error('Bad user input - cannot parse channel id', channel_name, ierr)
+        logger.error('Bad user input - cannot parse channel id')
     except Exception as error:
         logger.error('User did not pass in any input')
     return channel_id, channel_name
