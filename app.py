@@ -1,11 +1,13 @@
 import logging
-from decouple import config
+from decouple import config, UndefinedValueError
 from fastapi import FastAPI, Request
 from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 from slack_bolt.async_app import AsyncApp
 import datetime
 from datetime import datetime, timezone, timedelta
 import json
+
+import sendmail
 
 
 # def get_categories():
@@ -56,8 +58,16 @@ async def event_test(body, say, logger):
 async def handle_message():
     pass
 
+def safeget(dct, *keys):
+    for key in keys:
+        try:
+            dct = dct[key]
+        except KeyError:
+            return None
+    return dct
 
 def get_channel_id_and_name(body, logger):
+    # returns channel_iid, channel_name if it exists as an escaped parameter of slashcommand
     user_id = body.get("user_id")
     # Get "text" value which is everything after the /slash-command
     # e.g. /slackblast #our-aggregate-backblast-channel
@@ -74,6 +84,26 @@ def get_channel_id_and_name(body, logger):
         logger.error('User did not pass in any input')
     return channel_id, channel_name
 
+async def get_channel_name(id, logger, client):
+    channel_info_dict = await client.conversations_info(
+        channel=id
+    )
+    channel_name = safeget(channel_info_dict, 'channel', 'name') or None 
+    logger.info('channel_name is {}'.format(channel_name))
+    return channel_name
+
+async def get_user_names(array_of_user_ids, logger, client):
+    names = []
+    for user_id in array_of_user_ids:
+        user_info_dict = await client.users_info(
+            user=user_id
+        )
+        user_name = safeget(user_info_dict, 'user', 'profile', 'display_name') or  safeget(user_info_dict, 'user', 'profile', 'real_name') or None
+        if user_name:
+            names.append(user_name)
+        logger.info('user_name is {}'.format(user_name))
+    logger.info('names are {}'.format(names))
+    return names
 
 @slack_app.command("/slackblast")
 @slack_app.command("/backblast")
@@ -84,37 +114,49 @@ async def command(ack, body, respond, client, logger):
     datestring = today.strftime("%Y-%m-%d")
     user_id = body.get("user_id")
 
-    channel_id, channel_name = get_channel_id_and_name(body, logger)
+    # Figure out where user sent slashcommand from to set current channel id and name
+    is_direct_message = body.get("channel_name") == 'directmessage'
+    current_channel_id = user_id if is_direct_message else body.get("channel_id")
+    current_channel_name = "Me" if is_direct_message else body.get("channel_id")
     
+    # The channel where user submitted the slashcommand 
+    current_channel_option = {
+        "text": {
+            "type": "plain_text",
+            "text": "Current Channel"
+        },
+        "value": current_channel_id
+    }
 
     # In .env, CHANNEL=USER
     channel_me_option =  {
         "text": {
-        "type": "plain_text",
-        "text": "Me"
+            "type": "plain_text",
+            "text": "Me"
         },
         "value": user_id
     }
     # In .env, CHANNEL=THE_AO
     channel_the_ao_option = {
         "text": {
-        "type": "plain_text",
-        "text": "The AO Channel"
+            "type": "plain_text",
+            "text": "The AO Channel"
         },
         "value": "THE_AO"
     }
     # In .env, CHANNEL=<channel-id>
     channel_configured_ao_option = {
         "text": {
-        "type": "plain_text",
-        "text": "Preconfigured Backblast Channel"
+            "type": "plain_text",
+            "text": "Preconfigured Backblast Channel"
         },
-        "value": config('CHANNEL')
+        "value": config('CHANNEL', default=current_channel_id) 
     }
-    # User typed /slackblast #<channel-name> AND
+    # User may have typed /slackblast #<channel-name> AND
     # slackblast slashcommand is checked to escape channels.
     #   Escape channels, users, and links sent to your app
     #   Escaped: <#C1234|general>
+    channel_id, channel_name = get_channel_id_and_name(body, logger)
     channel_user_specified_channel_option = {
         "text": {
         "type": "plain_text",
@@ -129,23 +171,213 @@ async def command(ack, body, respond, client, logger):
     if channel_id:
         initial_channel_option = channel_user_specified_channel_option
         channel_options.append(channel_user_specified_channel_option)
+        channel_options.append(current_channel_option)
         channel_options.append(channel_me_option)
         channel_options.append(channel_the_ao_option) 
         channel_options.append(channel_configured_ao_option)
-    elif config('CHANNEL') == 'USER':
+    elif config('CHANNEL', default=current_channel_id) == 'USER':
         initial_channel_option = channel_me_option
         channel_options.append(channel_me_option)
+        channel_options.append(current_channel_option)
         channel_options.append(channel_the_ao_option) 
-    elif config('CHANNEL') == 'THE_AO':
+    elif config('CHANNEL', default=current_channel_id) == 'THE_AO':
         initial_channel_option = channel_the_ao_option
-        channel_options.append(channel_the_ao_option) 
+        channel_options.append(channel_the_ao_option)
+        channel_options.append(current_channel_option) 
         channel_options.append(channel_me_option)
+    elif config('CHANNEL', default=current_channel_id) == current_channel_id:
+        # if there is no .env CHANNEL value, use default of current channel
+        initial_channel_option = current_channel_option
+        channel_options.append(current_channel_option)
+        channel_options.append(channel_me_option)
+        channel_options.append(channel_the_ao_option) 
     else:
-        # Default to using the required .env CHANNEL value which at this point must be a channel id
+        # Default to using the .env CHANNEL value which at this point must be a channel id 
         initial_channel_option = channel_configured_ao_option
         channel_options.append(channel_configured_ao_option)
+        channel_options.append(current_channel_option)
         channel_options.append(channel_me_option)
         channel_options.append(channel_the_ao_option) 
+
+    blocks = [
+        {
+            "type": "input",
+            "block_id": "title",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "title",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Snarky Title?"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Title"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "the_ao",
+            "element": {
+                "type": "channels_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select the AO",
+                    "emoji": True
+                },
+                "action_id": "channels_select-action"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The AO",
+                "emoji": True
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "date",
+            "element": {
+                "type": "datepicker",
+                "initial_date": datestring,
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select a date",
+                    "emoji": True
+                },
+                "action_id": "datepicker-action"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Workout Date",
+                "emoji": True
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "the_q",
+            "element": {
+                "type": "users_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Tag the Q",
+                    "emoji": True
+                },
+                "action_id": "users_select-action"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The Q",
+                "emoji": True
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "the_pax",
+            "element": {
+                "type": "multi_users_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Tag the PAX",
+                    "emoji": True
+                },
+                "action_id": "multi_users_select-action"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The PAX",
+                "emoji": True
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "fngs",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "fng-action",
+                "initial_value": "None",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "FNGs"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "List untaggable names separated by commas (FNGs, Willy Lomans, etc.)"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "count",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "count-action",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Total PAX count including FNGs"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Count"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "moleskine",
+            "element": {
+                "type": "plain_text_input",
+                "multiline": True,
+                "action_id": "plain_text_input-action",
+                "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: ",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Tell us what happened\n\n"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The Moleskine",
+                "emoji": True
+            }
+        },
+        {
+            "type": "divider"
+        },
+        {
+            "type": "section",
+            "block_id": "destination",
+            "text": {
+                "type": "plain_text",
+                "text": "Choose where to post this"
+            },
+            "accessory": {
+                "action_id": "destination-action",
+                "type": "static_select",
+            "placeholder": {
+                "type": "plain_text",
+                "text": "Choose where"
+            },
+            "initial_option": initial_channel_option,
+            "options": channel_options
+            }
+        }
+    ]
+
+    if config('EMAIL_TO', default=''):
+        blocks.append({
+            "type": "input",
+            "block_id": "email",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "email-action",
+                "initial_value": config('EMAIL_TO', default='')
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Email"
+            }
+        })
 
     res = await client.views_open(
         trigger_id=body["trigger_id"],
@@ -160,170 +392,7 @@ async def command(ack, body, respond, client, logger):
                 "type": "plain_text",
                 "text": "Submit"
             },
-            "blocks": [
-                {
-                    "type": "input",
-                    "block_id": "title",
-                    "element": {
-                        "type": "plain_text_input",
-                        "action_id": "title",
-                        "placeholder": {
-                            "type": "plain_text",
-                            "text": "Snarky Title?"
-                        }
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "Title"
-                    }
-                },
-                {
-                    "type": "input",
-                    "block_id": "the_ao",
-                    "element": {
-                        "type": "channels_select",
-                        "placeholder": {
-                            "type": "plain_text",
-                            "text": "Select the AO",
-                            "emoji": True
-                        },
-                        "action_id": "channels_select-action"
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "The AO",
-                        "emoji": True
-                    }
-                },
-                {
-                    "type": "input",
-                    "block_id": "date",
-                    "element": {
-                        "type": "datepicker",
-                        "initial_date": datestring,
-                        "placeholder": {
-                            "type": "plain_text",
-                            "text": "Select a date",
-                            "emoji": True
-                        },
-                        "action_id": "datepicker-action"
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "Workout Date",
-                        "emoji": True
-                    }
-                },
-                {
-                    "type": "input",
-                    "block_id": "the_q",
-                    "element": {
-                        "type": "users_select",
-                        "placeholder": {
-                            "type": "plain_text",
-                            "text": "Tag the Q",
-                            "emoji": True
-                        },
-                        "action_id": "users_select-action"
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "The Q",
-                        "emoji": True
-                    }
-                },
-                {
-                    "type": "input",
-                    "block_id": "the_pax",
-                    "element": {
-                        "type": "multi_users_select",
-                        "placeholder": {
-                            "type": "plain_text",
-                            "text": "Tag the PAX",
-                            "emoji": True
-                        },
-                        "action_id": "multi_users_select-action"
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "The PAX",
-                        "emoji": True
-                    }
-                },
-                {
-                    "type": "input",
-                    "block_id": "fngs",
-                    "element": {
-                        "type": "plain_text_input",
-                        "action_id": "fng-action",
-                        "initial_value": "None",
-                        "placeholder": {
-                            "type": "plain_text",
-                            "text": "FNGs"
-                        }
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "List untaggable names separated by commas (FNGs, Willy Lomans, etc.)"
-                    }
-                },
-                {
-                    "type": "input",
-                    "block_id": "count",
-                    "element": {
-                        "type": "plain_text_input",
-                        "action_id": "count-action",
-                        "placeholder": {
-                            "type": "plain_text",
-                            "text": "Total PAX count including FNGs"
-                        }
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "Count"
-                    }
-                },
-                {
-                    "type": "input",
-                    "block_id": "moleskine",
-                    "element": {
-                        "type": "plain_text_input",
-                        "multiline": True,
-                        "action_id": "plain_text_input-action",
-                        "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: ",
-                        "placeholder": {
-                            "type": "plain_text",
-                            "text": "Tell us what happened\n\n"
-                        }
-                    },
-                    "label": {
-                        "type": "plain_text",
-                        "text": "The Moleskine",
-                        "emoji": True
-                    }
-                },
-                {
-                    "type": "divider"
-                },
-                {
-                    "type": "section",
-                    "block_id": "destination",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "Choose where to post this"
-                    },
-                    "accessory": {
-                        "action_id": "destination-action",
-                        "type": "static_select",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Choose where"
-                    },
-                    "initial_option": initial_channel_option,
-                    "options": channel_options
-                    }
-                }
-            ]
+            "blocks": blocks
         },
     )
     logger.info(res)
@@ -342,6 +411,7 @@ async def view_submission(ack, body, logger, client):
     count = result["count"]["count-action"]["value"]
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
     destination = result["destination"]["destination-action"]["selected_option"]["value"]
+    email_to = safeget(result, "email", "email-action", "value")
     the_date = result["date"]["datepicker-action"]["selected_date"]
 
     pax_formatted = await get_pax(pax)
@@ -352,28 +422,67 @@ async def view_submission(ack, body, logger, client):
     if chan == 'THE_AO':
         chan = the_ao
 
-    logger.info('Channel to post to will be', chan, " Because the selected destination value was", destination, " while the selected AO in the modal was", the_ao)
+    logger.info('Channel to post to will be {} because the selected destination value was {} while the selected AO in the modal was {}'.format(chan, destination, the_ao))
+
+    ao_name = await get_channel_name(the_ao, logger, client)
+    q_name = (await get_user_names([the_q], logger, client) or [''])[0]
+    pax_names = ', '.join(await get_user_names(pax, logger, client) or [''])
 
     msg = ""
     try:
         # formatting a message
         # todo: change to use json object
-        msg = f"*Backblast!* " + \
-            "\n*Title*: " + title + \
-            "\n*Date*: " + date + \
-            "\n*AO*: <#" + the_ao + ">" + \
-            "\n*Q*: <@" + the_q + ">" + \
-            "\n*PAX*: " + pax_formatted + \
-            "\n*FNGs*: " + fngs + \
-            "\n*Count*: " + count + \
-            "\n" + moleskine
-    except Exception as e:
-        # Handle error
-        msg = "There was an error with your submission: " + e
-    finally:
+        header_msg = f"*Slackblast*: "
+        title_msg =  f"*" + title + "*"
+
+        date_msg = f"*DATE*: " + the_date
+        ao_msg = f"*AO*: <#" + the_ao + ">"
+        q_msg = f"*Q*: <@" + the_q + ">"
+        pax_msg =  f"*PAX*: " + pax_formatted
+        fngs_msg = f"*FNGs*: " + fngs
+        count_msg = f"*COUNT*: " + count
+        moleskine_msg = moleskine
+
         # Message the user via the app/bot name
         if config('POST_TO_CHANNEL', cast=bool):
+            body = make_body(date_msg, ao_msg, q_msg, pax_msg, fngs_msg, count_msg, moleskine_msg)
+            msg = header_msg + "\n" + title_msg + "\n" + body
             await client.chat_postMessage(channel=chan, text=msg)
+            logger.info('\nMessage posted to Slack! \n{}'.format(msg))
+    except Exception as slack_bolt_err:
+        logger.error('Error with posting Slack message with chat_postMessage: {}'.format(slack_bolt_err))
+        # Try again and bomb out without attempting to send email
+        await client.chat_postMessage(channel=chan, text='There was an error with your submission: {}'.format(slack_bolt_err))
+    try: 
+        if config('GMAIL_USER'):
+            subject = title
+
+            date_msg = f"DATE: " + the_date
+            ao_msg = f"AO: " + (ao_name or '').replace('the','').title()
+            q_msg = f"Q: " + q_name
+            pax_msg =  f"PAX: " + pax_names
+            fngs_msg = f"FNGs: " + fngs
+            count_msg = f"COUNT: " + count
+            moleskine_msg = moleskine
+
+            body_email = make_body(date_msg, ao_msg, q_msg, pax_msg, fngs_msg, count_msg, moleskine_msg)
+            sendmail.send(subject=subject, recipient=email_to, body=body_email)
+            
+            logger.info('\nEmail Sent! \n{}'.format(body_email))
+    except UndefinedValueError as gmail_not_configured_error:
+        logger.info('Skipping sending email since no GMAIL_USER or GMAIL_PWD found. {}'.format(gmail_not_configured_error))
+    except Exception as sendmail_err:
+        logger.error('Error with sendmail: {}'.format(sendmail_err))
+
+
+def make_body(date, ao, q, pax, fngs, count, moleskine):
+    return date + \
+        "\n" + ao + \
+        "\n" + q + \
+        "\n" + pax + \
+        "\n" + fngs + \
+        "\n" + count + \
+        "\n" + moleskine
 
 
 # @slack_app.options("es_categories")

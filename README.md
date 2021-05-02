@@ -47,6 +47,7 @@ https://<YOUR APP URL>/slack/events
 
 ```
 app_mentions:read
+channels:read
 chat:write
 chat:write.public
 commands
