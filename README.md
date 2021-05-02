@@ -12,6 +12,10 @@ SLACK_VERIFICATION_TOKEN=<SLACKVERIFICATIONTOKEN>
 SLACK_SIGNING_SECRET=<SLACKSIGNINGSECRET>
 POST_TO_CHANNEL=<False or True>
 CHANNEL=<USER or THE_AO or channel-id>
+
+EMAIL_TO=<randomized-wordpress-email@post.wordpress.com>
+GMAIL_USER=<someone@gmail.com>
+GMAIL_PWD=<someone-app-specific-gmail-password>
 ```
 
 set `SLACK_BOT_TOKEN` from the token on the oath page in the slack app
