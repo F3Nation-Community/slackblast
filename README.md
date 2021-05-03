@@ -60,11 +60,17 @@ users:read.email
 
 # deployment
 
-main_slackblast contains the code to deploy on Azure via github repository. However, this will be unique to your own installation.
+main*slackblast.yml or main*<your-app-name>.yml contains the code to deploy on Azure via github repository. However, this will be unique to your own installation and is gitignored by default since you shouldn't need to change this as Azure sets it for you.
+
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
+# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
 # notes
 
-Use vscode locally with a `.env` file with the above variables. With vscode Azure extension you can right-click on 'Application Settings' and it will upload your `.env` variables right into the AppService.
+Use vscode locally with a `.env` file with the above variables. With vscode Azure extension, you can right-click on 'Application Settings' and it will upload your `.env` variables right into the AppService.
 
 Pushing to the github repo should trigger a new deployment to Azure if you set up the AppService correct.
 
