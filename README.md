@@ -23,6 +23,9 @@ set `POST_TO_CHANNEL` equal to `True` or `False`. Set to true if you are using p
 set `CHANNEL=channel-id` to the channel id (ID such as C01DB7S04KH -> NOT THE NAME) you want the modal results to post to by default.
 set `CHANNEL=THE_AO` to post to the channel that was selected in the modal by default.
 set `CHANNEL=USER` to post a DM from the slackblast to you with the results (testing) by default.
+if `CHANNEL` is blank or missing, then the default channel will be the channel the user typed the slashcommand.
+NOTE: In the modal, the user can choose the "destination" and where to post to.
+
 NOTE: In the modal, the user can choose where to post to.
 
 See .env-f3nation-community file for help on local development
