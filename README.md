@@ -62,11 +62,9 @@ users:read.email
 
 main*slackblast.yml or main*<your-app-name>.yml contains the code to deploy on Azure via github repository. However, this will be unique to your own installation and is gitignored by default since you shouldn't need to change this as Azure sets it for you.
 
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
+- Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+- More GitHub Actions for Azure: https://github.com/Azure/actions
+- More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
 # notes
 
