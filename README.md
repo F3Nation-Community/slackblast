@@ -60,7 +60,7 @@ users:read.email
 
 # deployment
 
-main*slackblast.yml or main*<your-app-name>.yml contains the code to deploy on Azure via github repository. However, this will be unique to your own installation and is gitignored by default since you shouldn't need to change this as Azure sets it for you.
+main_slackblast.yml or main\_<your-app-name>.yml contains the code to deploy on Azure via github repository. However, this will be unique to your own installation and is gitignored by default since you shouldn't need to change this as Azure sets it for you.
 
 - Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 - More GitHub Actions for Azure: https://github.com/Azure/actions
