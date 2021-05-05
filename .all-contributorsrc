@@ -28,6 +28,18 @@
         "code",
         "review"
       ]
+    },
+    {
+      "login": "willhlaw",
+      "name": "willhlaw",
+      "avatar_url": "https://avatars.githubusercontent.com/u/943510?v=4",
+      "profile": "https://github.com/willhlaw",
+      "contributions": [
+        "ideas",
+        "code",
+        "doc",
+        "projectManagement"
+      ]
     }
   ],
   "contributorsPerLine": 7,
