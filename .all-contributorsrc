@@ -1,0 +1,51 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "wolfpackt99",
+      "name": "Trent",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2165251?v=4",
+      "profile": "https://github.com/wolfpackt99",
+      "contributions": [
+        "ideas",
+        "code",
+        "doc",
+        "mentoring",
+        "review"
+      ]
+    },
+    {
+      "login": "yankeestom",
+      "name": "yankeestom",
+      "avatar_url": "https://avatars.githubusercontent.com/u/34582097?v=4",
+      "profile": "https://github.com/yankeestom",
+      "contributions": [
+        "ideas",
+        "code",
+        "review"
+      ]
+    },
+    {
+      "login": "willhlaw",
+      "name": "willhlaw",
+      "avatar_url": "https://avatars.githubusercontent.com/u/943510?v=4",
+      "profile": "https://github.com/willhlaw",
+      "contributions": [
+        "ideas",
+        "code",
+        "doc",
+        "projectManagement"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "slackblast",
+  "projectOwner": "F3Nation-Community",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}

@@ -1,5 +1,11 @@
 # slackblast
 
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
+[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
+
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
+
 Python web application needed to utilize modal window inside slack to make posting backblasts easier for PAX.
 
 # getting started
@@ -91,3 +97,26 @@ ngrok http 8000
 ```
 
 See .env-f3nation-community file for more details on local development
+See .env-f3nation-community file for help on local development
+
+## contributors ✨
+
+Thanks goes to these awesome PAX ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/wolfpackt99"><img src="https://avatars.githubusercontent.com/u/2165251?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Trent</b></sub></a><br /><a href="#ideas-wolfpackt99" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=wolfpackt99" title="Code">💻</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=wolfpackt99" title="Documentation">📖</a> <a href="#mentoring-wolfpackt99" title="Mentoring">🧑‍🏫</a> <a href="https://github.com/F3Nation-Community/slackblast/pulls?q=is%3Apr+reviewed-by%3Awolfpackt99" title="Reviewed Pull Requests">👀</a></td>
+    <td align="center"><a href="https://github.com/yankeestom"><img src="https://avatars.githubusercontent.com/u/34582097?v=4?s=100" width="100px;" alt=""/><br /><sub><b>yankeestom</b></sub></a><br /><a href="#ideas-yankeestom" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=yankeestom" title="Code">💻</a> <a href="https://github.com/F3Nation-Community/slackblast/pulls?q=is%3Apr+reviewed-by%3Ayankeestom" title="Reviewed Pull Requests">👀</a></td>
+    <td align="center"><a href="https://github.com/willhlaw"><img src="https://avatars.githubusercontent.com/u/943510?v=4?s=100" width="100px;" alt=""/><br /><sub><b>willhlaw</b></sub></a><br /><a href="#ideas-willhlaw" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=willhlaw" title="Code">💻</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=willhlaw" title="Documentation">📖</a> <a href="#projectManagement-willhlaw" title="Project Management">📆</a></td>
+  </tr>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
