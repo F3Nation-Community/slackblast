@@ -84,37 +84,49 @@ async def command(ack, body, respond, client, logger):
     datestring = today.strftime("%Y-%m-%d")
     user_id = body.get("user_id")
 
-    channel_id, channel_name = get_channel_id_and_name(body, logger)
+    # Figure out where user sent slashcommand from to set current channel id and name
+    is_direct_message = body.get("channel_name") == 'directmessage'
+    current_channel_id = user_id if is_direct_message else body.get("channel_id")
+    current_channel_name = "Me" if is_direct_message else body.get("channel_id")
     
+    # The channel where user submitted the slashcommand 
+    current_channel_option = {
+        "text": {
+            "type": "plain_text",
+            "text": "Current Channel"
+        },
+        "value": current_channel_id
+    }
 
     # In .env, CHANNEL=USER
     channel_me_option =  {
         "text": {
-        "type": "plain_text",
-        "text": "Me"
+            "type": "plain_text",
+            "text": "Me"
         },
         "value": user_id
     }
     # In .env, CHANNEL=THE_AO
     channel_the_ao_option = {
         "text": {
-        "type": "plain_text",
-        "text": "The AO Channel"
+            "type": "plain_text",
+            "text": "The AO Channel"
         },
         "value": "THE_AO"
     }
     # In .env, CHANNEL=<channel-id>
     channel_configured_ao_option = {
         "text": {
-        "type": "plain_text",
-        "text": "Preconfigured Backblast Channel"
+            "type": "plain_text",
+            "text": "Preconfigured Backblast Channel"
         },
-        "value": config('CHANNEL')
+        "value": config('CHANNEL', default=current_channel_id) 
     }
-    # User typed /slackblast #<channel-name> AND
+    # User may have typed /slackblast #<channel-name> AND
     # slackblast slashcommand is checked to escape channels.
     #   Escape channels, users, and links sent to your app
     #   Escaped: <#C1234|general>
+    channel_id, channel_name = get_channel_id_and_name(body, logger)
     channel_user_specified_channel_option = {
         "text": {
         "type": "plain_text",
@@ -129,21 +141,31 @@ async def command(ack, body, respond, client, logger):
     if channel_id:
         initial_channel_option = channel_user_specified_channel_option
         channel_options.append(channel_user_specified_channel_option)
+        channel_options.append(current_channel_option)
         channel_options.append(channel_me_option)
         channel_options.append(channel_the_ao_option) 
         channel_options.append(channel_configured_ao_option)
-    elif config('CHANNEL') == 'USER':
+    elif config('CHANNEL', default=current_channel_id) == 'USER':
         initial_channel_option = channel_me_option
         channel_options.append(channel_me_option)
+        channel_options.append(current_channel_option)
         channel_options.append(channel_the_ao_option) 
-    elif config('CHANNEL') == 'THE_AO':
+    elif config('CHANNEL', default=current_channel_id) == 'THE_AO':
         initial_channel_option = channel_the_ao_option
-        channel_options.append(channel_the_ao_option) 
+        channel_options.append(channel_the_ao_option)
+        channel_options.append(current_channel_option) 
         channel_options.append(channel_me_option)
+    elif config('CHANNEL', default=current_channel_id) == current_channel_id:
+        # if there is no .env CHANNEL value, use default of current channel
+        initial_channel_option = current_channel_option
+        channel_options.append(current_channel_option)
+        channel_options.append(channel_me_option)
+        channel_options.append(channel_the_ao_option) 
     else:
-        # Default to using the required .env CHANNEL value which at this point must be a channel id
+        # Default to using the .env CHANNEL value which at this point must be a channel id 
         initial_channel_option = channel_configured_ao_option
         channel_options.append(channel_configured_ao_option)
+        channel_options.append(current_channel_option)
         channel_options.append(channel_me_option)
         channel_options.append(channel_the_ao_option) 
 
