@@ -97,7 +97,6 @@ ngrok http 8000
 ```
 
 See .env-f3nation-community file for more details on local development
-See .env-f3nation-community file for help on local development
 
 ## contributors ✨
 
