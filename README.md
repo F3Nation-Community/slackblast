@@ -39,6 +39,9 @@ set `POST_TO_CHANNEL` equal to `True` or `False`. Set to true if you are using p
 set `CHANNEL=channel-id` to the channel id (ID such as C01DB7S04KH -> NOT THE NAME) you want the modal results to post to by default.
 set `CHANNEL=THE_AO` to post to the channel that was selected in the modal by default.
 set `CHANNEL=USER` to post a DM from the slackblast to you with the results (testing) by default.
+if `CHANNEL` is blank or missing, then the default channel will be the channel the user typed the slashcommand.
+NOTE: In the modal, the user can choose the "destination" and where to post to.
+
 NOTE: In the modal, the user can choose where to post to.
 
 See .env-f3nation-community file for help on local development
@@ -73,11 +76,15 @@ users:read.email
 
 # deployment
 
-main_slackblast contains the code to deploy on Azure via github repository. However, this will be unique to your own installation.
+main_slackblast.yml or main\_<your-app-name>.yml contains the code to deploy on Azure via github repository. However, this will be unique to your own installation and is gitignored by default since you shouldn't need to change this as Azure sets it for you.
+
+- Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+- More GitHub Actions for Azure: https://github.com/Azure/actions
+- More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
 # notes
 
-Use vscode locally with a `.env` file with the above variables. With vscode Azure extension you can right-click on 'Application Settings' and it will upload your `.env` variables right into the AppService.
+Use vscode locally with a `.env` file with the above variables. With vscode Azure extension, you can right-click on 'Application Settings' and it will upload your `.env` variables right into the AppService.
 
 Pushing to the github repo should trigger a new deployment to Azure if you set up the AppService correct.
 
