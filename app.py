@@ -29,6 +29,8 @@ import sendmail
 #         opts.append(x)
 #     return opts
 
+OPTIONAL_INPUT_VALUE="None"
+
 
 logging.basicConfig(level=logging.DEBUG)
 #categories = []
@@ -364,18 +366,22 @@ async def command(ack, body, respond, client, logger):
         }
     ]
 
-    if config('EMAIL_TO', default=''):
+    if config('GMAIL_USER', default=''):
         blocks.append({
             "type": "input",
             "block_id": "email",
             "element": {
                 "type": "plain_text_input",
                 "action_id": "email-action",
-                "initial_value": config('EMAIL_TO', default='')
+                "initial_value": config('EMAIL_TO', default=OPTIONAL_INPUT_VALUE),
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Type an email address or {}".format(OPTIONAL_INPUT_VALUE)
+                }
             },
             "label": {
                 "type": "plain_text",
-                "text": "Email"
+                "text": "Send Email"
             }
         })
 
@@ -454,7 +460,7 @@ async def view_submission(ack, body, logger, client):
         # Try again and bomb out without attempting to send email
         await client.chat_postMessage(channel=chan, text='There was an error with your submission: {}'.format(slack_bolt_err))
     try: 
-        if config('GMAIL_USER'):
+        if email_to and email_to != OPTIONAL_INPUT_VALUE:
             subject = title
 
             date_msg = f"DATE: " + the_date
