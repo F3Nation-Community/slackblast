@@ -29,7 +29,7 @@ import sendmail
 #         opts.append(x)
 #     return opts
 
-OPTIONAL_INPUT_VALUE="None"
+OPTIONAL_INPUT_VALUE = "None"
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -60,6 +60,7 @@ async def event_test(body, say, logger):
 async def handle_message():
     pass
 
+
 def safeget(dct, *keys):
     for key in keys:
         try:
@@ -67,6 +68,7 @@ def safeget(dct, *keys):
         except KeyError:
             return None
     return dct
+
 
 def get_channel_id_and_name(body, logger):
     # returns channel_iid, channel_name if it exists as an escaped parameter of slashcommand
@@ -86,13 +88,15 @@ def get_channel_id_and_name(body, logger):
         logger.error('User did not pass in any input')
     return channel_id, channel_name
 
+
 async def get_channel_name(id, logger, client):
     channel_info_dict = await client.conversations_info(
         channel=id
     )
-    channel_name = safeget(channel_info_dict, 'channel', 'name') or None 
+    channel_name = safeget(channel_info_dict, 'channel', 'name') or None
     logger.info('channel_name is {}'.format(channel_name))
     return channel_name
+
 
 async def get_user_names(array_of_user_ids, logger, client):
     names = []
@@ -100,28 +104,32 @@ async def get_user_names(array_of_user_ids, logger, client):
         user_info_dict = await client.users_info(
             user=user_id
         )
-        user_name = safeget(user_info_dict, 'user', 'profile', 'display_name') or  safeget(user_info_dict, 'user', 'profile', 'real_name') or None
+        user_name = safeget(user_info_dict, 'user', 'profile', 'display_name') or safeget(
+            user_info_dict, 'user', 'profile', 'real_name') or None
         if user_name:
             names.append(user_name)
         logger.info('user_name is {}'.format(user_name))
     logger.info('names are {}'.format(names))
     return names
 
+
 @slack_app.command("/slackblast")
 @slack_app.command("/backblast")
 async def command(ack, body, respond, client, logger):
     await ack()
     today = datetime.now(timezone.utc).astimezone()
-    today = today - timedelta(hours = 6)
+    today = today - timedelta(hours=6)
     datestring = today.strftime("%Y-%m-%d")
     user_id = body.get("user_id")
 
     # Figure out where user sent slashcommand from to set current channel id and name
     is_direct_message = body.get("channel_name") == 'directmessage'
-    current_channel_id = user_id if is_direct_message else body.get("channel_id")
-    current_channel_name = "Me" if is_direct_message else body.get("channel_id")
-    
-    # The channel where user submitted the slashcommand 
+    current_channel_id = user_id if is_direct_message else body.get(
+        "channel_id")
+    current_channel_name = "Me" if is_direct_message else body.get(
+        "channel_id")
+
+    # The channel where user submitted the slashcommand
     current_channel_option = {
         "text": {
             "type": "plain_text",
@@ -131,7 +139,7 @@ async def command(ack, body, respond, client, logger):
     }
 
     # In .env, CHANNEL=USER
-    channel_me_option =  {
+    channel_me_option = {
         "text": {
             "type": "plain_text",
             "text": "Me"
@@ -152,7 +160,7 @@ async def command(ack, body, respond, client, logger):
             "type": "plain_text",
             "text": "Preconfigured Backblast Channel"
         },
-        "value": config('CHANNEL', default=current_channel_id) 
+        "value": config('CHANNEL', default=current_channel_id)
     }
     # User may have typed /slackblast #<channel-name> AND
     # slackblast slashcommand is checked to escape channels.
@@ -161,8 +169,8 @@ async def command(ack, body, respond, client, logger):
     channel_id, channel_name = get_channel_id_and_name(body, logger)
     channel_user_specified_channel_option = {
         "text": {
-        "type": "plain_text",
-        "text": '# ' + channel_name
+            "type": "plain_text",
+            "text": '# ' + channel_name
         },
         "value": channel_id
     }
@@ -175,31 +183,31 @@ async def command(ack, body, respond, client, logger):
         channel_options.append(channel_user_specified_channel_option)
         channel_options.append(current_channel_option)
         channel_options.append(channel_me_option)
-        channel_options.append(channel_the_ao_option) 
+        channel_options.append(channel_the_ao_option)
         channel_options.append(channel_configured_ao_option)
     elif config('CHANNEL', default=current_channel_id) == 'USER':
         initial_channel_option = channel_me_option
         channel_options.append(channel_me_option)
         channel_options.append(current_channel_option)
-        channel_options.append(channel_the_ao_option) 
+        channel_options.append(channel_the_ao_option)
     elif config('CHANNEL', default=current_channel_id) == 'THE_AO':
         initial_channel_option = channel_the_ao_option
         channel_options.append(channel_the_ao_option)
-        channel_options.append(current_channel_option) 
+        channel_options.append(current_channel_option)
         channel_options.append(channel_me_option)
     elif config('CHANNEL', default=current_channel_id) == current_channel_id:
         # if there is no .env CHANNEL value, use default of current channel
         initial_channel_option = current_channel_option
         channel_options.append(current_channel_option)
         channel_options.append(channel_me_option)
-        channel_options.append(channel_the_ao_option) 
+        channel_options.append(channel_the_ao_option)
     else:
-        # Default to using the .env CHANNEL value which at this point must be a channel id 
+        # Default to using the .env CHANNEL value which at this point must be a channel id
         initial_channel_option = channel_configured_ao_option
         channel_options.append(channel_configured_ao_option)
         channel_options.append(current_channel_option)
         channel_options.append(channel_me_option)
-        channel_options.append(channel_the_ao_option) 
+        channel_options.append(channel_the_ao_option)
 
     blocks = [
         {
@@ -356,17 +364,17 @@ async def command(ack, body, respond, client, logger):
             "accessory": {
                 "action_id": "destination-action",
                 "type": "static_select",
-            "placeholder": {
-                "type": "plain_text",
-                "text": "Choose where"
-            },
-            "initial_option": initial_channel_option,
-            "options": channel_options
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Choose where"
+                },
+                "initial_option": initial_channel_option,
+                "options": channel_options
             }
         }
     ]
 
-    if config('GMAIL_USER', default=''):
+    if config('GMAIL_USER', default='') and config('EMAIL_HIDDEN', default=False) != False:
         blocks.append({
             "type": "input",
             "block_id": "email",
@@ -428,7 +436,8 @@ async def view_submission(ack, body, logger, client):
     if chan == 'THE_AO':
         chan = the_ao
 
-    logger.info('Channel to post to will be {} because the selected destination value was {} while the selected AO in the modal was {}'.format(chan, destination, the_ao))
+    logger.info('Channel to post to will be {} because the selected destination value was {} while the selected AO in the modal was {}'.format(
+        chan, destination, the_ao))
 
     ao_name = await get_channel_name(the_ao, logger, client)
     q_name = (await get_user_names([the_q], logger, client) or [''])[0]
@@ -439,44 +448,48 @@ async def view_submission(ack, body, logger, client):
         # formatting a message
         # todo: change to use json object
         header_msg = f"*Slackblast*: "
-        title_msg =  f"*" + title + "*"
+        title_msg = f"*" + title + "*"
 
         date_msg = f"*DATE*: " + the_date
         ao_msg = f"*AO*: <#" + the_ao + ">"
         q_msg = f"*Q*: <@" + the_q + ">"
-        pax_msg =  f"*PAX*: " + pax_formatted
+        pax_msg = f"*PAX*: " + pax_formatted
         fngs_msg = f"*FNGs*: " + fngs
         count_msg = f"*COUNT*: " + count
         moleskine_msg = moleskine
 
         # Message the user via the app/bot name
         if config('POST_TO_CHANNEL', cast=bool):
-            body = make_body(date_msg, ao_msg, q_msg, pax_msg, fngs_msg, count_msg, moleskine_msg)
+            body = make_body(date_msg, ao_msg, q_msg, pax_msg,
+                             fngs_msg, count_msg, moleskine_msg)
             msg = header_msg + "\n" + title_msg + "\n" + body
             await client.chat_postMessage(channel=chan, text=msg)
             logger.info('\nMessage posted to Slack! \n{}'.format(msg))
     except Exception as slack_bolt_err:
-        logger.error('Error with posting Slack message with chat_postMessage: {}'.format(slack_bolt_err))
+        logger.error('Error with posting Slack message with chat_postMessage: {}'.format(
+            slack_bolt_err))
         # Try again and bomb out without attempting to send email
         await client.chat_postMessage(channel=chan, text='There was an error with your submission: {}'.format(slack_bolt_err))
-    try: 
+    try:
         if email_to and email_to != OPTIONAL_INPUT_VALUE:
             subject = title
 
             date_msg = f"DATE: " + the_date
-            ao_msg = f"AO: " + (ao_name or '').replace('the','').title()
+            ao_msg = f"AO: " + (ao_name or '').replace('the', '').title()
             q_msg = f"Q: " + q_name
-            pax_msg =  f"PAX: " + pax_names
+            pax_msg = f"PAX: " + pax_names
             fngs_msg = f"FNGs: " + fngs
             count_msg = f"COUNT: " + count
             moleskine_msg = moleskine
 
-            body_email = make_body(date_msg, ao_msg, q_msg, pax_msg, fngs_msg, count_msg, moleskine_msg)
+            body_email = make_body(
+                date_msg, ao_msg, q_msg, pax_msg, fngs_msg, count_msg, moleskine_msg)
             sendmail.send(subject=subject, recipient=email_to, body=body_email)
-            
+
             logger.info('\nEmail Sent! \n{}'.format(body_email))
     except UndefinedValueError as gmail_not_configured_error:
-        logger.info('Skipping sending email since no GMAIL_USER or GMAIL_PWD found. {}'.format(gmail_not_configured_error))
+        logger.info('Skipping sending email since no GMAIL_USER or GMAIL_PWD found. {}'.format(
+            gmail_not_configured_error))
     except Exception as sendmail_err:
         logger.error('Error with sendmail: {}'.format(sendmail_err))
 
@@ -515,7 +528,7 @@ app = FastAPI()
 
 @app.post("/slack/events")
 async def endpoint(req: Request):
-    logging.debug('[In app.post("/slack/events")]');
+    logging.debug('[In app.post("/slack/events")]')
     return await app_handler.handle(req)
 
 
