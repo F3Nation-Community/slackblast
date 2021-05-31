@@ -1,4 +1,4 @@
-# slackblast
+# Slackblast
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 
@@ -8,7 +8,7 @@
 
 Python web application needed to utilize modal window inside slack to make posting backblasts easier for PAX.
 
-# getting started
+# Getting started
 
 Go to https://api.slack.com/start/overview#creating to read up on how to create a slack app. Click their `Create a Slack app` while signed into your F3 region's Slack. The main idea is that you will set up a slashcommand, e.g. `/slackblast` or `/backblast`, that will send the request to your server that is running this web application (we recommend using a free Azure App Service) that will respond with a command to tell Slack to open up a modal with the fields to fill out a backblast post. When the user hits submit on the modal, the information will be sent to your server where it will then format it and post to the designated Slack channel!
 
@@ -20,64 +20,27 @@ Go to https://azure.microsoft.com/en-us/services/app-service/ to create a Free A
 
 When you finish setting up and installing the slackblast app in Slack, you will get a bot token also available under the OAuth & Permissions settings. You'll also get a verification token and signing secret on the Basic Information settings. You will plug that information into your own .env file. When you finish creating the Azure app, you will need to get the URL and add it (with `/slack/events` added to it) into three locations within the slackblast app settings. Lastly, you will need to add several Scopes to the Bot Token Scopes on the OAth & Permissions settings. Read on for the nitty gritty details.
 
-# environment variables
+# All environment variables
 
 slackblast requires the following environment variables:
 
-```
-SLACK_BOT_TOKEN=<YOURTOKEN>
-SLACK_VERIFICATION_TOKEN=<SLACKVERIFICATIONTOKEN>
-SLACK_SIGNING_SECRET=<SLACKSIGNINGSECRET>
-POST_TO_CHANNEL=<False or True>
-CHANNEL=<USER or THE_AO or channel-id>
+| Variable                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SLACK_BOT_TOKEN              | A value from the token on the oath page in the slack app                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| SLACK_VERIFICATION_TOKEN     | A value from the Basic Information -> Verification Token field in the settings for your slack app.                                                                                                                                                                                                                                                                                                                                                                                           |
+| SLACK_SIGNING_SECRET         | Secret from the App Credentials page for your app in Slack.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| POST_TO_CHANNEL              | a boolean value `True` or `False` that indicates whether or not to take the modal data and post to a channel in slack                                                                                                                                                                                                                                                                                                                                                                        |
+| CHANNEL                      | Tthe channel id (such as C01DB7S04KH -> NOT THE NAME) you want the modal results to post to by default. other values supported. set to `THE_AO` to post to the channel that was selected in the modal by default. Set to `USER` to post a DM from the slackblast to you with the results (testing) by default. If blank or missing, then the default channel will be the channel the user typed the slash command. In the modal, the user can choose the "destination" and where to post to. |
+| EMAIL_SERVER                 | SMTP Server to use to send the email                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| EMAIL_SERVER_PORT            | Email server port. default is `465`                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| EMAIL_USER                   | Email account to send on behalf of                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| EMAIL_PASSWORD               | Email account password                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| EMAIL_TO                     | to send the post to an email address. This will default the choice in the modal but can be changed by user. set `EMAIL_OPTION_HIDDEN_IN_MODAL` to prevent user from changing it.                                                                                                                                                                                                                                                                                                             |
+| EMAIL_OPTION_HIDDEN_IN_MODAL | Hide the option from the PAX on sending an email in the modal                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
-# EMAIL_OPTION_HIDDEN_IN_MODAL=<False or True>
-EMAIL_TO=<randomized-wordpress-email@post.wordpress.com>
+<br><br>
 
-GMAIL_USER=<someone@gmail.com>
-GMAIL_PWD=<app-password>
-
-# optional, overrides using gmail
-# EMAIL_SERVER=<your-server.com>
-# EMAIL_SERVER_PORT=<port number>
-# EMAIL_USER=<address@not-gmail.com>
-# EMAIL_PASSWORD=<password>
-```
-
-set `SLACK_BOT_TOKEN` from the token on the oath page in the slack app
-
-set `SLACK_VERIFICATION_TOKEN` from the Basic Information -> Verification Token field in the settings for your slack app.
-
-set `POST_TO_CHANNEL` equal to `True` or `False`. Set to true if you are using paxminer. Indicates whether or not to take the modal data and post to a channel in slack.
-
-set `CHANNEL=channel-id` to the channel id (ID such as C01DB7S04KH -> NOT THE NAME) you want the modal results to post to by default.
-set `CHANNEL=THE_AO` to post to the channel that was selected in the modal by default.
-set `CHANNEL=USER` to post a DM from the slackblast to you with the results (testing) by default.
-if `CHANNEL` is blank or missing, then the default channel will be the channel the user typed the slashcommand.
-NOTE: In the modal, the user can choose the "destination" and where to post to.
-
-NOTE: In the modal, the user can choose where to post to.
-
-# email configuration
-
-set `EMAIL_OPTION_HIDDEN_IN_MODAL` to `True` to not show the email option in the modal. The default is to show the option in the modal. Email will still send if others options are set.
-
-set `EMAIL_TO`, `GMAIL_USER`, and `GMAIL_PWD` to send the post to an email address. You must set up the gmail account app password, see here: https://stackabuse.com/how-to-send-emails-with-gmail-using-python/ which refers to https://support.google.com/accounts/answer/185833. To automatically send the post into Wordpress, set the `EMAIL_TO` address to the random Wordpress email generated by Wordpress, see here: https://wordpress.com/support/post-by-email/#:~:text=Go%20to%20My%20Site(s,posts%20by%20sending%20an%20email%E2%80%9D.
-
-## use custom email server
-
-set the following four variables to a correct values to use them over gmail for sending email:
-
-```
-EMAIL_SERVER=<your-server.com>
-EMAIL_SERVER_PORT=<port number>
-EMAIL_USER=<address@not-gmail.com>
-EMAIL_PASSWORD=<password>
-```
-
-See .env-f3nation-community file for help on local development
-
-# slack app configuration
+# Slack App Configuration
 
 The url for your deployed app needs to be placed in three locations in the slackblast app in Slack:
 
@@ -106,7 +69,24 @@ users:read
 users:read.email
 ```
 
-# deployment
+<br>
+
+# Email
+
+All of the email variables will need to be set in order to send an email with the modal contents to the address specified.
+
+## Create Posts by email
+
+Wordpress allows you to send a post to a special address via email and it will convert it to a post.
+
+If you are using hosted wordpress set the `EMAIL_TO` address to the random Wordpress email generated by Wordpress, [more information](<https://wordpress.com/support/post-by-email/#:~:text=Go%20to%20My%20Site(s,posts%20by%20sending%20an%20email%E2%80%9D)>).
+
+If you are not using hosted wordpress you can create a dedicated gmail or other account and use this address.
+
+See .env-f3nation-community file for help on local development
+<br><br>
+
+# Deployment
 
 main_slackblast.yml or main\_<your-app-name>.yml contains the code to deploy on Azure via github repository. However, this will be unique to your own installation and is gitignored by default since you shouldn't need to change this as Azure sets it for you.
 
@@ -114,13 +94,14 @@ main_slackblast.yml or main\_<your-app-name>.yml contains the code to deploy on 
 - More GitHub Actions for Azure: https://github.com/Azure/actions
 - More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-# notes
+# Notes
 
 Use vscode locally with a `.env` file with the above variables. With vscode Azure extension, you can right-click on 'Application Settings' and it will upload your `.env` variables right into the AppService.
 
 Pushing to the github repo should trigger a new deployment to Azure if you set up the AppService correct.
+<br><br>
 
-# startup command(s)
+# Startup command(s)
 
 To run locally:
 
@@ -136,8 +117,9 @@ ngrok http 8000
 ```
 
 See .env-f3nation-community file for more details on local development
+<br><br>
 
-## contributors ✨
+# Contributors ✨
 
 Thanks goes to these awesome PAX ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
 
