@@ -2,7 +2,8 @@
 # https://hub.docker.com/_/python
 FROM python:3.9-slim
 
-#RUN pip install gunicorn slack_bolt aiohttp python-decouple fastapi uvicorn uvloop httptools
+# gunicorn is required to run this.  But Azure (where this was written to run) provides it already so i didn't want to add it to the requirements.txt file
+RUN pip install gunicorn
 
 # Copy local code to the container image.
 WORKDIR /app
@@ -11,5 +12,4 @@ COPY . .
 # Install production dependencies.
 RUN pip install -r ./requirements.txt
 
-#ENTRYPOINT ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--bind 0.0.0.0:8000", "app:app"]
 CMD exec gunicorn -k uvicorn.workers.UvicornWorker --bind "0.0.0.0:8000" --log-level debug app:app
