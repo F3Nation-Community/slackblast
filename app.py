@@ -332,6 +332,23 @@ async def command(ack, body, respond, client, logger):
                 "text": "Count"
             }
         },
+        
+        {
+            "type": "input",
+            "block_id": "conditions",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "conditions-action",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Conditions"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Conditions"
+            }
+        },
         {
             "type": "input",
             "block_id": "moleskine",
@@ -339,7 +356,7 @@ async def command(ack, body, respond, client, logger):
                 "type": "plain_text_input",
                 "multiline": True,
                 "action_id": "plain_text_input-action",
-                "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: ",
+                "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: \nNAKED-MAN MOLESKIN",
                 "placeholder": {
                     "type": "plain_text",
                     "text": "Tell us what happened\n\n"
@@ -423,6 +440,7 @@ async def view_submission(ack, body, logger, client):
     pax = result["the_pax"]["multi_users_select-action"]["selected_users"]
     fngs = result["fngs"]["fng-action"]["value"]
     count = result["count"]["count-action"]["value"]
+    conditions = result["conditions"]["conditions-action"]["value"]
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
     destination = result["destination"]["destination-action"]["selected_option"]["value"]
     email_to = safeget(result, "email", "email-action", "value")
@@ -456,12 +474,13 @@ async def view_submission(ack, body, logger, client):
         pax_msg = f"*PAX*: " + pax_formatted
         fngs_msg = f"*FNGs*: " + fngs
         count_msg = f"*COUNT*: " + count
+        conditions_msg = f"*CONDITIONS*: + conditions
         moleskine_msg = moleskine
 
         # Message the user via the app/bot name
         if config('POST_TO_CHANNEL', cast=bool):
             body = make_body(date_msg, ao_msg, q_msg, pax_msg,
-                             fngs_msg, count_msg, moleskine_msg)
+                             fngs_msg, count_msg, conditions_msg, moleskine_msg)
             msg = header_msg + "\n" + title_msg + "\n" + body
             await client.chat_postMessage(channel=chan, text=msg)
             logger.info('\nMessage posted to Slack! \n{}'.format(msg))
@@ -480,10 +499,11 @@ async def view_submission(ack, body, logger, client):
             pax_msg = f"PAX: " + pax_names
             fngs_msg = f"FNGs: " + fngs
             count_msg = f"COUNT: " + count
+            conditions_msg = f"CONDITIONS: " + conditions
             moleskine_msg = moleskine
 
             body_email = make_body(
-                date_msg, ao_msg, q_msg, pax_msg, fngs_msg, count_msg, moleskine_msg)
+                date_msg, ao_msg, q_msg, pax_msg, fngs_msg, count_msg, conditions_msg, moleskine_msg)
             sendmail.send(subject=subject, recipient=email_to, body=body_email)
 
             logger.info('\nEmail Sent! \n{}'.format(body_email))
@@ -494,13 +514,14 @@ async def view_submission(ack, body, logger, client):
         logger.error('Error with sendmail: {}'.format(sendmail_err))
 
 
-def make_body(date, ao, q, pax, fngs, count, moleskine):
+def make_body(date, ao, q, pax, fngs, count, conditions, moleskine):
     return date + \
         "\n" + ao + \
         "\n" + q + \
         "\n" + pax + \
         "\n" + fngs + \
         "\n" + count + \
+        "\n" + conditions + \
         "\n" + moleskine
 
 
