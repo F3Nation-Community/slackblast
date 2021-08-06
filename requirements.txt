@@ -2,7 +2,6 @@ slack_bolt
 aiohttp
 python-decouple
 fastapi<1
-gunicorn
 uvicorn<1
 uvloop
 httptools
