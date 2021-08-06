@@ -474,7 +474,7 @@ async def view_submission(ack, body, logger, client):
         pax_msg = f"*PAX*: " + pax_formatted
         fngs_msg = f"*FNGs*: " + fngs
         count_msg = f"*COUNT*: " + count
-        conditions_msg = f"*CONDITIONS*: + conditions
+        conditions_msg = f"*CONDITIONS*: " + conditions
         moleskine_msg = moleskine
 
         # Message the user via the app/bot name
