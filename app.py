@@ -341,7 +341,7 @@ async def command(ack, body, respond, client, logger):
                 "action_id": "conditions-action",
                 "placeholder": {
                     "type": "plain_text",
-                    "text": "Conditions"
+                    "text": "Describe the weather and conditions at the AO"
                 }
             },
             "label": {
@@ -356,7 +356,7 @@ async def command(ack, body, respond, client, logger):
                 "type": "plain_text_input",
                 "multiline": True,
                 "action_id": "plain_text_input-action",
-                "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: \nNAKED-MAN MOLESKIN: ",
+                "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: \nNAKED-MAN MOLESKIN:
                 "placeholder": {
                     "type": "plain_text",
                     "text": "Tell us what happened\n\n"
