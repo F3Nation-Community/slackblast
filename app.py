@@ -356,7 +356,7 @@ async def command(ack, body, respond, client, logger):
                 "type": "plain_text_input",
                 "multiline": True,
                 "action_id": "plain_text_input-action",
-                "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: \nNAKED-MAN MOLESKIN: ",
+                "initial_value": "WARMUP: \n\nTHE THANG: \n\nMARY: \n\nANNOUNCEMENTS: \n\nCOT: \n\nNAKED-MAN MOLESKIN: ",
                 "placeholder": {
                     "type": "plain_text",
                     "text": "Tell us what happened\n\n"
@@ -477,12 +477,12 @@ async def view_submission(ack, body, logger, client):
         conditions_msg = f"*CONDITIONS*: " + conditions
         moleskine_msg = moleskine
 
-        # Message the user via the app/bot name
+        # Message the channel as the user submitting
         if config('POST_TO_CHANNEL', cast=bool):
             body = make_body(date_msg, ao_msg, q_msg, pax_msg,
                              fngs_msg, count_msg, conditions_msg, moleskine_msg)
             msg = header_msg + "\n" + title_msg + "\n" + body
-            await client.chat_postMessage(channel=chan, text=msg)
+            await client.chat_postMessage(channel=chan, text=msg, as_user=True)
             logger.info('\nMessage posted to Slack! \n{}'.format(msg))
     except Exception as slack_bolt_err:
         logger.error('Error with posting Slack message with chat_postMessage: {}'.format(
