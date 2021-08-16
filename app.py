@@ -329,7 +329,7 @@ async def command(ack, body, respond, client, logger):
             },
             "label": {
                 "type": "plain_text",
-                "text": "Count"
+                "text": "Total"
             }
         },
         
@@ -356,7 +356,7 @@ async def command(ack, body, respond, client, logger):
                 "type": "plain_text_input",
                 "multiline": True,
                 "action_id": "plain_text_input-action",
-                "initial_value": "WARMUP: \n\nTHE THANG: \n\nMARY: \n\nANNOUNCEMENTS: \n\nCOT: \n\nNAKED-MAN MOLESKIN: ",
+                "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: \nNAKED-MAN MOLESKIN: ",
                 "placeholder": {
                     "type": "plain_text",
                     "text": "Tell us what happened\n\n"
@@ -473,7 +473,7 @@ async def view_submission(ack, body, logger, client):
         q_msg = f"*Q*: <@" + the_q + ">"
         pax_msg = f"*PAX*: " + pax_formatted
         fngs_msg = f"*FNGs*: " + fngs
-        count_msg = f"*COUNT*: " + count
+        count_msg = f"*TOTAL*: " + count
         conditions_msg = f"*CONDITIONS*: " + conditions
         moleskine_msg = moleskine
 
@@ -498,7 +498,7 @@ async def view_submission(ack, body, logger, client):
             q_msg = f"Q: " + q_name
             pax_msg = f"PAX: " + pax_names
             fngs_msg = f"FNGs: " + fngs
-            count_msg = f"COUNT: " + count
+            count_msg = f"TOTAL: " + count
             conditions_msg = f"CONDITIONS: " + conditions
             moleskine_msg = moleskine
 
