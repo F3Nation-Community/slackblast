@@ -356,7 +356,7 @@ async def command(ack, body, respond, client, logger):
                 "type": "plain_text_input",
                 "multiline": True,
                 "action_id": "plain_text_input-action",
-                "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: \nNAKED-MAN MOLESKIN: ",
+                "initial_value": "Warm-Up: \nThe Thang: \nMary: \nAnnouncements: \nCOT: \nNaked-Man Moleskine: ",
                 "placeholder": {
                     "type": "plain_text",
                     "text": "Tell us what happened\n\n"
@@ -465,16 +465,16 @@ async def view_submission(ack, body, logger, client):
     try:
         # formatting a message
         # todo: change to use json object
-        header_msg = f"*Backblast*: "
+        header_msg = f"*Backblast!*: "
         title_msg = f"*" + title + "*"
 
-        date_msg = f"*DATE*: " + the_date
+        date_msg = f"*Date*: " + the_date
         ao_msg = f"*AO*: <#" + the_ao + ">"
-        q_msg = f"*Q*: <@" + the_q + ">"
         pax_msg = f"*PAX*: " + pax_formatted
         fngs_msg = f"*FNGs*: " + fngs
-        count_msg = f"*TOTAL*: " + count
-        conditions_msg = f"*CONDITIONS*: " + conditions
+        q_msg = f"*Q*: <@" + the_q + ">"
+        count_msg = f"*Total*: " + count
+        conditions_msg = f"*Conditions*: " + conditions
         moleskine_msg = moleskine
 
         # Message the channel as the user submitting
