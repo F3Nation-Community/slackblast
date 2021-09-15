@@ -16,11 +16,17 @@ Bonus: the post will be in a format friendly for Paxminer to mine and gather sta
 
 Bonus 2: the post can be emailed to automatically post to Wordpress
 
+_TODO: Get rid of the Azure specific stuff here_
+
 Go to https://azure.microsoft.com/en-us/services/app-service/ to create a Free Azure App Service to host this web application. The [VSCode Azure Extensions](https://code.visualstudio.com/docs/azure/extensions) will be helpful to upload your own .env file with your region's specific Slack and opinionated settings. See how to [integrate your Azure App Service with Github](https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/app-service/deploy-continuous-deployment.md) for easy deployments.
 
 When you finish setting up and installing the slackblast app in Slack, you will get a bot token also available under the OAuth & Permissions settings. You'll also get a verification token and signing secret on the Basic Information settings. You will plug that information into your own .env file. When you finish creating the Azure app, you will need to get the URL and add it (with `/slack/events` added to it) into three locations within the slackblast app settings. Lastly, you will need to add several Scopes to the Bot Token Scopes on the OAth & Permissions settings. Read on for the nitty gritty details.
 
-# environment variables
+
+# configuration
+The slackblast application needs to be configured both in the deployed service (via environment variables) and in the [slack api](https://api.slack.com/apps).  
+
+## environment variables
 
 slackblast requires the following environment variables:
 
@@ -51,7 +57,7 @@ NOTE: In the modal, the user can choose the "destination" and where to post to.
 
 NOTE: In the modal, the user can choose where to post to.
 
-# email configuration
+## email configuration
 
 set `EMAIL_OPTION_HIDDEN_IN_MODAL` to `True` to not show the email option in the modal. The default is to show the option in the modal. Email will still send if others options are set.
 
@@ -59,7 +65,7 @@ set `EMAIL_TO`, `GMAIL_USER`, and `GMAIL_PWD` to send the post to an email addre
 
 See .env-f3nation-community file for help on local development
 
-# slack app configuration
+## slack app configuration
 
 The url for your deployed app needs to be placed in three locations in the slackblast app in Slack:
 
@@ -72,11 +78,11 @@ The url for your deployed app needs to be placed in three locations in the slack
 **Format of the URL to be used**
 
 ```
-https://<YOUR-AZURE-APP-NAME>/slack/events
+https://<YOUR-APP-URL>/slack/events
 ```
 
-**Scopes**
-
+**Scopes**  
+Under `OAuth & Permissions` you need to add the following scopes
 ```
 app_mentions:read
 channels:read
@@ -89,23 +95,40 @@ users:read.email
 ```
 
 # deployment
+You can choose to deploy the slackblast to any of the major cloud providers or to any server that is running docker.  The steps for each of the deployment options are outlined below.
 
-main_slackblast.yml or main\_<your-app-name>.yml contains the code to deploy on Azure via github repository. However, this will be unique to your own installation and is gitignored by default since you shouldn't need to change this as Azure sets it for you.
+## Azure AppService
+main_slackblast.yml or main\_\<your-app-name\>.yml contains the code to deploy on Azure via github repository. However, this will be unique to your own installation and is gitignored by default since you shouldn't need to change this as Azure sets it for you.
+
+**notes**
+
+Use vscode locally with a `.env` file with the above variables. With vscode Azure extension, you can right-click on 'Application Settings' and it will upload your `.env` variables right into the AppService.
+
+Pushing to the github repo should trigger a new deployment to Azure if you set up the AppService correctly.
+
+**further reading**
 
 - Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 - More GitHub Actions for Azure: https://github.com/Azure/actions
 - More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-# notes
+## Google Cloud Function (or Cloud Runner?)
 
-Use vscode locally with a `.env` file with the above variables. With vscode Azure extension, you can right-click on 'Application Settings' and it will upload your `.env` variables right into the AppService.
+Coming Soon
 
-Pushing to the github repo should trigger a new deployment to Azure if you set up the AppService correct.
+## Amazon Lambda (or App Runner)
+
+Coming Soon
+
+## Docker Compose
+
+Coming Soon
 
 # startup command(s)
 
 To run locally:
 
+## python
 ```
 pip install -r requirements.txt
 gunicorn -k uvicorn.workers.UvicornWorker --bind "0.0.0.0:8000" --log-level debug app:app
@@ -116,8 +139,21 @@ In another console, use the url output by ngrok to update your slackblast app se
 ```
 ngrok http 8000
 ```
-
 See .env-f3nation-community file for more details on local development
+
+## docker
+If you have docker installed you can build and run locally by taking advantage of containerization.  The built image could potentially be deployed and started remotely as well.
+
+You can build a local docker container by executing 
+```
+docker build -t slackblast:latest .
+``` 
+ 
+Once you have built and installed the docker container locally you can run the following command to start the container.
+
+```
+docker run -d -p 8000:8000 --env-file /path/to/your/.env --name slackblast --restart unless-stopped slackblast:latest
+```
 
 ## contributors ✨
 
