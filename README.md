@@ -6,7 +6,7 @@
 
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-Python web application needed to utilize modal window inside slack to make posting backblasts easier for PAX.
+Python web application needed to utilize modal window inside slack to make posting backblasts easier for PAX!
 
 # getting started
 
