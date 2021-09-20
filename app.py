@@ -458,7 +458,7 @@ async def view_submission(ack, body, logger, client):
         count_msg = f"*Count*: " + count
         moleskine_msg = moleskine
 
-        # Message the channel as the user submitting
+        # Message the channel as the app/bot name
         if config('POST_TO_CHANNEL', cast=bool):
             body = make_body(date_msg, ao_msg, q_msg, pax_msg,
                              fngs_msg, count_msg, moleskine_msg)
