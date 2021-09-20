@@ -374,7 +374,7 @@ async def command(ack, body, respond, client, logger):
         }
     ]
 
-    if config('GMAIL_USER', default='') and config('EMAIL_HIDDEN', default=False) != False:
+    if config('EMAIL_TO', default='') and not config('EMAIL_OPTION_HIDDEN_IN_MODAL', default=False, cast=bool):
         blocks.append({
             "type": "input",
             "block_id": "email",
