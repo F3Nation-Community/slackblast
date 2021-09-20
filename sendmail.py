@@ -4,14 +4,10 @@ from decouple import config
 
 
 def send(subject, recipient, body):
-    email_server = config('EMAIL_SERVER')
+    email_server = config('EMAIL_SERVER', 'smtp.gmail.com')
     email_server_port = config('EMAIL_SERVER_PORT', 465)
     email_user = config('EMAIL_USER')
     email_password = config('EMAIL_PASSWORD')
-
-    if not email_server:
-        email_server = 'smtp.gmail.com'
-        email_server_port = 465
 
     msg = EmailMessage()
     msg.set_content(body)
