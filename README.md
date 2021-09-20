@@ -6,9 +6,18 @@
 
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-Python web application needed to utilize modal window inside slack to make posting backblasts easier for PAX.
+Slackblast is a simple application you can get up and running in your Slack environment that will pop up a simple Backblast form for someone to fill out in the Slack UI when they type /slackblast.  The advantage of slackblast is that it puts the backblast in a format that is compatible with Paxminer, which makes it easier to compile stats on users each month.
+
+When the user types the /slackblast command and hits send, a window like the one below will pop up:
+
+![Screenshot](https://raw.githubusercontent.com/F3Nation-Community/slackblast/main/SlackBlast%20Modal.png)
+
+For a short tutorial on how to use the app, go to https://www.loom.com/share/705b67bfd30f40ae902fae7a6c1a7421
+
+
 
 # getting started
+From a technical perspective, Slackblast is a Python web application that utilizes the modal window inside slack to make posting backblasts easier for PAX.
 
 Go to https://api.slack.com/start/overview#creating to read up on how to create a slack app. Click their `Create a Slack app` while signed into your F3 region's Slack. The main idea is that you will set up a slashcommand, e.g. `/slackblast` or `/backblast`, that will send the request to your server that is running this web application (we recommend using a free Azure App Service) that will respond with a command to tell Slack to open up a modal with the fields to fill out a backblast post. When the user hits submit on the modal, the information will be sent to your server where it will then format it and post to the designated Slack channel!
 
