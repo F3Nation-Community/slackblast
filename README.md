@@ -1,9 +1,7 @@
 # Slackblast
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-
-[![All Contributors](https://img.shields.io/badge/all_contributors-3-orange.svg?style=flat-square)](#contributors-)
-
+[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Slackblast is a simple application you can get up and running in your Slack environment that will pop up a simple Backblast form for someone to fill out in the Slack UI when they type /slackblast. The advantage of slackblast is that it puts the backblast in a format that is compatible with Paxminer, which makes it easier to compile stats on users each month.
@@ -139,6 +137,7 @@ Thanks goes to these awesome PAX ([emoji key](https://allcontributors.org/docs/e
     <td align="center"><a href="https://github.com/wolfpackt99"><img src="https://avatars.githubusercontent.com/u/2165251?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Trent</b></sub></a><br /><a href="#ideas-wolfpackt99" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=wolfpackt99" title="Code">💻</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=wolfpackt99" title="Documentation">📖</a> <a href="#mentoring-wolfpackt99" title="Mentoring">🧑‍🏫</a> <a href="https://github.com/F3Nation-Community/slackblast/pulls?q=is%3Apr+reviewed-by%3Awolfpackt99" title="Reviewed Pull Requests">👀</a></td>
     <td align="center"><a href="https://github.com/yankeestom"><img src="https://avatars.githubusercontent.com/u/34582097?v=4?s=100" width="100px;" alt=""/><br /><sub><b>yankeestom</b></sub></a><br /><a href="#ideas-yankeestom" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=yankeestom" title="Code">💻</a> <a href="https://github.com/F3Nation-Community/slackblast/pulls?q=is%3Apr+reviewed-by%3Ayankeestom" title="Reviewed Pull Requests">👀</a></td>
     <td align="center"><a href="https://github.com/willhlaw"><img src="https://avatars.githubusercontent.com/u/943510?v=4?s=100" width="100px;" alt=""/><br /><sub><b>willhlaw</b></sub></a><br /><a href="#ideas-willhlaw" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=willhlaw" title="Code">💻</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=willhlaw" title="Documentation">📖</a> <a href="#projectManagement-willhlaw" title="Project Management">📆</a></td>
+    <td align="center"><a href="https://github.com/jim-muzzall"><img src="https://avatars.githubusercontent.com/u/88450074?v=4?s=100" width="100px;" alt=""/><br /><sub><b>jim-muzzall</b></sub></a><br /><a href="#ideas-jim-muzzall" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=jim-muzzall" title="Documentation">📖</a></td>
   </tr>
 </table>
 
