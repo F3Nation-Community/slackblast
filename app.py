@@ -374,7 +374,7 @@ async def command(ack, body, respond, client, logger):
         }
     ]
 
-    if config('GMAIL_USER', default='') and config('EMAIL_HIDDEN', default=False) != False:
+    if config('EMAIL_TO', default='') and not config('EMAIL_OPTION_HIDDEN_IN_MODAL', default=False, cast=bool):
         blocks.append({
             "type": "input",
             "block_id": "email",
@@ -487,9 +487,9 @@ async def view_submission(ack, body, logger, client):
             sendmail.send(subject=subject, recipient=email_to, body=body_email)
 
             logger.info('\nEmail Sent! \n{}'.format(body_email))
-    except UndefinedValueError as gmail_not_configured_error:
-        logger.info('Skipping sending email since no GMAIL_USER or GMAIL_PWD found. {}'.format(
-            gmail_not_configured_error))
+    except UndefinedValueError as email_not_configured_error:
+        logger.info('Skipping sending email since no EMAIL_USER or EMAIL_PWD found. {}'.format(
+            email_not_configured_error))
     except Exception as sendmail_err:
         logger.error('Error with sendmail: {}'.format(sendmail_err))
 
