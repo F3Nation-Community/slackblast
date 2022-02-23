@@ -61,11 +61,11 @@ The url for your deployed app needs to be placed in three locations in the slack
 **Format of the URL to be used**
 
 ```
-https://<YOUR-AZURE-APP-NAME>/slack/events
+https://<YOUR-APP-URL>/slack/events
 ```
 
-**Scopes**
-
+**Scopes**  
+Under `OAuth & Permissions` you need to add the following scopes
 ```
 app_mentions:read
 channels:read
@@ -115,6 +115,7 @@ Pushing to the github repo should trigger a new deployment to Azure if you set u
 
 To run locally:
 
+## python
 ```
 pip install -r requirements.txt
 gunicorn -k uvicorn.workers.UvicornWorker --bind "0.0.0.0:8000" --log-level debug app:app
@@ -125,9 +126,22 @@ In another console, use the url output by ngrok to update your slackblast app se
 ```
 ngrok http 8000
 ```
-
 See .env-f3nation-community file for more details on local development
 <br><br>
+
+## docker
+If you have docker installed you can build and run locally by taking advantage of containerization.  The built image could potentially be deployed and started remotely as well.
+
+You can build a local docker container by executing 
+```
+docker build -t slackblast:latest .
+``` 
+ 
+Once you have built and installed the docker container locally you can run the following command to start the container.
+
+```
+docker run -d -p 8000:8000 --env-file /path/to/your/.env --name slackblast --restart unless-stopped slackblast:latest
+```
 
 # Contributors ✨
 
