@@ -29,6 +29,15 @@ Go to https://azure.microsoft.com/en-us/services/app-service/ to create a Free A
 When you finish setting up and installing the slackblast app in Slack, you will get a bot token also available under the OAuth & Permissions settings. You'll also get a verification token and signing secret on the Basic Information settings. You will plug that information into your own .env file. When you finish creating the Azure app, you will need to get the URL and add it (with `/slack/events` added to it) into three locations within the slackblast app settings. Lastly, you will need to add several Scopes to the Bot Token Scopes on the OAuth & Permissions settings. Read on for the nitty gritty details.
 
 # All environment variables
+The azure application requires a startup command to be added.  
+Add 
+```
+gunicorn --config gunicorn.conf.py app:app
+``` 
+to `Settings -> Configuration -> General Settings -> Startup Command` in your Azure Portal 
+
+https://docs.microsoft.com/en-us/azure/developer/python/media/deploy-azure/enter-startup-file-for-app-service-in-the-azure-portal.png
+
 
 slackblast requires the following environment variables:
 
