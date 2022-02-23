@@ -9,7 +9,6 @@ import json
 
 import sendmail
 
-
 # def get_categories():
 #     with open('categories.json') as c:
 #         data = json.load(c)
