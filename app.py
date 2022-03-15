@@ -1,13 +1,14 @@
 import logging
-from decouple import config, UndefinedValueError
-from fastapi import FastAPI, Request
-from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
-from slack_bolt.async_app import AsyncApp
+import json
+import os
 import datetime
 from datetime import datetime, timezone, timedelta
-import json
 
-import sendmail
+from slack_bolt import App
+from slack_bolt.adapter.aws_lambda import SlackRequestHandler
+from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
+
+# import sendmail
 
 
 # def get_categories():
@@ -35,29 +36,29 @@ OPTIONAL_INPUT_VALUE = "None"
 logging.basicConfig(level=logging.DEBUG)
 #categories = []
 
-slack_app = AsyncApp(
-    token=config('SLACK_BOT_TOKEN'),
-    signing_secret=config('SLACK_SIGNING_SECRET')
+# process_before_response must be True when running on FaaS
+slack_app = App(
+    process_before_response=True,
+    oauth_flow=LambdaS3OAuthFlow(),
 )
-app_handler = AsyncSlackRequestHandler(slack_app)
 
 #categories = get_categories()
 
 
 @slack_app.middleware  # or app.use(log_request)
-async def log_request(logger, body, next):
+def log_request(logger, body, next):
     logger.debug(body)
-    return await next()
+    return next()
 
 
 @slack_app.event("app_mention")
-async def event_test(body, say, logger):
+def event_test(body, say, logger):
     logger.info(body)
-    await say("What's up yo?")
+    say("What's up yo?")
 
 
 @slack_app.event("message")
-async def handle_message():
+def handle_message():
     pass
 
 
@@ -89,8 +90,8 @@ def get_channel_id_and_name(body, logger):
     return channel_id, channel_name
 
 
-async def get_channel_name(id, logger, client):
-    channel_info_dict = await client.conversations_info(
+def get_channel_name(id, logger, client):
+    channel_info_dict = client.conversations_info(
         channel=id
     )
     channel_name = safeget(channel_info_dict, 'channel', 'name') or None
@@ -98,10 +99,10 @@ async def get_channel_name(id, logger, client):
     return channel_name
 
 
-async def get_user_names(array_of_user_ids, logger, client):
+def get_user_names(array_of_user_ids, logger, client):
     names = []
     for user_id in array_of_user_ids:
-        user_info_dict = await client.users_info(
+        user_info_dict = client.users_info(
             user=user_id
         )
         user_name = safeget(user_info_dict, 'user', 'profile', 'display_name') or safeget(
@@ -115,8 +116,8 @@ async def get_user_names(array_of_user_ids, logger, client):
 
 @slack_app.command("/slackblast")
 @slack_app.command("/backblast")
-async def command(ack, body, respond, client, logger):
-    await ack()
+def command(ack, body, respond, client, logger):
+    ack()
     today = datetime.now(timezone.utc).astimezone()
     today = today - timedelta(hours=6)
     datestring = today.strftime("%Y-%m-%d")
@@ -160,7 +161,8 @@ async def command(ack, body, respond, client, logger):
             "type": "plain_text",
             "text": "Preconfigured Backblast Channel"
         },
-        "value": config('CHANNEL', default=current_channel_id)
+        # "value": config('CHANNEL', default=current_channel_id)
+        "value": current_channel_id
     }
     # User may have typed /slackblast #<channel-name> AND
     # slackblast slashcommand is checked to escape channels.
@@ -185,17 +187,20 @@ async def command(ack, body, respond, client, logger):
         channel_options.append(channel_me_option)
         channel_options.append(channel_the_ao_option)
         channel_options.append(channel_configured_ao_option)
-    elif config('CHANNEL', default=current_channel_id) == 'USER':
+    # elif config('CHANNEL', default=current_channel_id) == 'USER':
+    elif current_channel_id == 'USER':
         initial_channel_option = channel_me_option
         channel_options.append(channel_me_option)
         channel_options.append(current_channel_option)
         channel_options.append(channel_the_ao_option)
-    elif config('CHANNEL', default=current_channel_id) == 'THE_AO':
+    # elif config('CHANNEL', default=current_channel_id) == 'THE_AO':
+    elif current_channel_id == 'USER':
         initial_channel_option = channel_the_ao_option
         channel_options.append(channel_the_ao_option)
         channel_options.append(current_channel_option)
         channel_options.append(channel_me_option)
-    elif config('CHANNEL', default=current_channel_id) == current_channel_id:
+    # elif config('CHANNEL', default=current_channel_id) == current_channel_id:
+    elif current_channel_id == current_channel_id:
         # if there is no .env CHANNEL value, use default of current channel
         initial_channel_option = current_channel_option
         channel_options.append(current_channel_option)
@@ -374,26 +379,28 @@ async def command(ack, body, respond, client, logger):
         }
     ]
 
-    if config('EMAIL_TO', default='') and not config('EMAIL_OPTION_HIDDEN_IN_MODAL', default=False, cast=bool):
-        blocks.append({
-            "type": "input",
-            "block_id": "email",
-            "element": {
-                "type": "plain_text_input",
-                "action_id": "email-action",
-                "initial_value": config('EMAIL_TO', default=OPTIONAL_INPUT_VALUE),
-                "placeholder": {
-                    "type": "plain_text",
-                    "text": "Type an email address or {}".format(OPTIONAL_INPUT_VALUE)
-                }
-            },
-            "label": {
-                "type": "plain_text",
-                "text": "Send Email"
-            }
-        })
+    # if config('EMAIL_TO', default='') and not config('EMAIL_OPTION_HIDDEN_IN_MODAL', default=False, cast=bool):
+    # if os.environ['EMAIL_TO'] and (not os.environ['EMAIL_OPTION_HIDDEN_IN_MODAL']=='True'):
+    #     blocks.append({
+    #         "type": "input",
+    #         "block_id": "email",
+    #         "element": {
+    #             "type": "plain_text_input",
+    #             "action_id": "email-action",
+    #             # "initial_value": config('EMAIL_TO', default=OPTIONAL_INPUT_VALUE),
+    #             "initial_value": os.environ['EMAIL_TO'],
+    #             "placeholder": {
+    #                 "type": "plain_text",
+    #                 "text": "Type an email address or {}".format(OPTIONAL_INPUT_VALUE)
+    #             }
+    #         },
+    #         "label": {
+    #             "type": "plain_text",
+    #             "text": "Send Email"
+    #         }
+    #     })
 
-    res = await client.views_open(
+    res = client.views_open(
         trigger_id=body["trigger_id"],
         view={
             "type": "modal",
@@ -413,8 +420,8 @@ async def command(ack, body, respond, client, logger):
 
 
 @slack_app.view("backblast-id")
-async def view_submission(ack, body, logger, client):
-    await ack()
+def view_submission(ack, body, logger, client):
+    ack()
     result = body["view"]["state"]["values"]
     title = result["title"]["title"]["value"]
     date = result["date"]["datepicker-action"]["selected_date"]
@@ -428,7 +435,7 @@ async def view_submission(ack, body, logger, client):
     email_to = safeget(result, "email", "email-action", "value")
     the_date = result["date"]["datepicker-action"]["selected_date"]
 
-    pax_formatted = await get_pax(pax)
+    pax_formatted = get_pax(pax)
 
     logger.info(result)
 
@@ -439,9 +446,9 @@ async def view_submission(ack, body, logger, client):
     logger.info('Channel to post to will be {} because the selected destination value was {} while the selected AO in the modal was {}'.format(
         chan, destination, the_ao))
 
-    ao_name = await get_channel_name(the_ao, logger, client)
-    q_name = (await get_user_names([the_q], logger, client) or [''])[0]
-    pax_names = ', '.join(await get_user_names(pax, logger, client) or [''])
+    ao_name = get_channel_name(the_ao, logger, client)
+    q_name = (get_user_names([the_q], logger, client) or [''])[0]
+    pax_names = ', '.join(get_user_names(pax, logger, client) or [''])
 
     msg = ""
     try:
@@ -459,17 +466,17 @@ async def view_submission(ack, body, logger, client):
         moleskine_msg = moleskine
 
         # Message the user via the app/bot name
-        if config('POST_TO_CHANNEL', cast=bool):
-            body = make_body(date_msg, ao_msg, q_msg, pax_msg,
-                             fngs_msg, count_msg, moleskine_msg)
-            msg = header_msg + "\n" + title_msg + "\n" + body
-            await client.chat_postMessage(channel=chan, text=msg)
-            logger.info('\nMessage posted to Slack! \n{}'.format(msg))
+        # if config('POST_TO_CHANNEL', cast=bool):
+        body = make_body(date_msg, ao_msg, q_msg, pax_msg,
+                            fngs_msg, count_msg, moleskine_msg)
+        msg = header_msg + "\n" + title_msg + "\n" + body
+        client.chat_postMessage(channel=chan, text=msg)
+        logger.info('\nMessage posted to Slack! \n{}'.format(msg))
     except Exception as slack_bolt_err:
         logger.error('Error with posting Slack message with chat_postMessage: {}'.format(
             slack_bolt_err))
         # Try again and bomb out without attempting to send email
-        await client.chat_postMessage(channel=chan, text='There was an error with your submission: {}'.format(slack_bolt_err))
+        client.chat_postMessage(channel=chan, text='There was an error with your submission: {}'.format(slack_bolt_err))
     try:
         if email_to and email_to != OPTIONAL_INPUT_VALUE:
             subject = title
@@ -484,12 +491,12 @@ async def view_submission(ack, body, logger, client):
 
             body_email = make_body(
                 date_msg, ao_msg, q_msg, pax_msg, fngs_msg, count_msg, moleskine_msg)
-            sendmail.send(subject=subject, recipient=email_to, body=body_email)
+            # sendmail.send(subject=subject, recipient=email_to, body=body_email)
 
             logger.info('\nEmail Sent! \n{}'.format(body_email))
-    except UndefinedValueError as email_not_configured_error:
-        logger.info('Skipping sending email since no EMAIL_USER or EMAIL_PWD found. {}'.format(
-            email_not_configured_error))
+    # except UndefinedValueError as email_not_configured_error:
+    #     logger.info('Skipping sending email since no EMAIL_USER or EMAIL_PWD found. {}'.format(
+    #         email_not_configured_error))
     except Exception as sendmail_err:
         logger.error('Error with sendmail: {}'.format(sendmail_err))
 
@@ -505,34 +512,30 @@ def make_body(date, ao, q, pax, fngs, count, moleskine):
 
 
 # @slack_app.options("es_categories")
-# async def show_categories(ack, body, logger):
-#     await ack()
+# def show_categories(ack, body, logger):
+#     ack()
 #     lookup = body["value"]
 #     filtered = [x for x in categories if lookup.lower() in x["name"].lower()]
 #     output = formatted_categories(filtered)
 #     options = output
 #     logger.info(options)
 
-#     await ack(options=options)
+#     ack(options=options)
 
 
-async def get_pax(pax):
+def get_pax(pax):
     p = ""
     for x in pax:
         p += "<@" + x + "> "
     return p
 
 
-app = FastAPI()
+def handler(event, context):
+    print(f'Original event: {event}')
+    print(f'Original context: {context}')
+    # parsed_event = json.loads(event['body'])
+    # team_id = parsed_event['team_id']
+    # print(f'Team ID: {team_id}')
+    slack_handler = SlackRequestHandler(app=slack_app)
+    return slack_handler.handle(event, context)
 
-
-@app.post("/slack/events")
-async def endpoint(req: Request):
-    logging.debug('[In app.post("/slack/events")]')
-    return await app_handler.handle(req)
-
-
-@app.get("/")
-async def status_ok():
-    logging.debug('[In app.get("/")]')
-    return "ok"

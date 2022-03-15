@@ -1,7 +1,3 @@
+slack_sdk
 slack_bolt
-aiohttp
-python-decouple
-fastapi<1
-uvicorn<1
-uvloop
-httptools
+datetime

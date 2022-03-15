@@ -1,0 +1,34 @@
+region: us-east-2
+
+function_name: slackblast_lambda
+handler: app.handler
+description: AWS Lambda deployment of Slackblast (aws:states:opt-out)
+runtime: python3.8
+# role: lambda_basic_execution
+role: bolt_python_s3_storage
+
+# S3 upload requires appropriate role with s3:PutObject permission
+# (ex. basic_s3_upload), a destination bucket, and the key prefix
+# bucket_name: 'example-bucket'
+# s3_key_prefix: 'path/to/file/'
+
+# if access key and secret are left blank, boto will use the credentials
+# defined in the [default] section of ~/.aws/credentials.
+aws_access_key_id:
+aws_secret_access_key:
+
+# dist_directory: dist
+# timeout: 15
+# memory_size: 512
+# concurrency: 500
+#
+
+# Experimental Environment variables
+environment_variables:
+    SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
+    SLACK_CLIENT_ID: ${SLACK_CLIENT_ID}
+    SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET}
+    SLACK_SCOPES: ${SLACK_SCOPES}
+    SLACK_INSTALLATION_S3_BUCKET_NAME: ${SLACK_INSTALLATION_S3_BUCKET_NAME}
+    SLACK_STATE_S3_BUCKET_NAME: ${SLACK_STATE_S3_BUCKET_NAME}
+
