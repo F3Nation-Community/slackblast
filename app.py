@@ -116,6 +116,7 @@ def get_user_names(array_of_user_ids, logger, client):
 
 @slack_app.command("/slackblast")
 @slack_app.command("/backblast")
+@slack_app.command("/preblast")
 def command(ack, body, respond, client, logger):
     ack()
     today = datetime.now(timezone.utc).astimezone()
@@ -194,7 +195,7 @@ def command(ack, body, respond, client, logger):
         channel_options.append(current_channel_option)
         channel_options.append(channel_the_ao_option)
     # elif config('CHANNEL', default=current_channel_id) == 'THE_AO':
-    elif current_channel_id == 'USER':
+    elif current_channel_id == 'THE_AO':
         initial_channel_option = channel_the_ao_option
         channel_options.append(channel_the_ao_option)
         channel_options.append(current_channel_option)
@@ -214,181 +215,391 @@ def command(ack, body, respond, client, logger):
         channel_options.append(channel_me_option)
         channel_options.append(channel_the_ao_option)
 
-    blocks = [
-        {
-            "type": "input",
-            "block_id": "title",
-            "element": {
-                "type": "plain_text_input",
-                "action_id": "title",
-                "placeholder": {
+    # determine if backblast or preblast
+    is_preblast = body.get("command") == '/preblast'
+
+    if is_preblast:
+        blocks = [
+            {
+                "type": "input",
+                "block_id": "title",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "title",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Snarky Title?"
+                    }
+                },
+                "label": {
                     "type": "plain_text",
-                    "text": "Snarky Title?"
+                    "text": "Title"
                 }
             },
-            "label": {
-                "type": "plain_text",
-                "text": "Title"
-            }
-        },
-        {
-            "type": "input",
-            "block_id": "the_ao",
-            "element": {
-                "type": "channels_select",
-                "placeholder": {
-                    "type": "plain_text",
-                    "text": "Select the AO",
-                    "emoji": True
+            {
+                "type": "input",
+                "block_id": "the_ao",
+                "element": {
+                    "type": "channels_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Select the AO",
+                        "emoji": True
+                    },
+                    "action_id": "channels_select-action"
                 },
-                "action_id": "channels_select-action"
-            },
-            "label": {
-                "type": "plain_text",
-                "text": "The AO",
-                "emoji": True
-            }
-        },
-        {
-            "type": "input",
-            "block_id": "date",
-            "element": {
-                "type": "datepicker",
-                "initial_date": datestring,
-                "placeholder": {
+                "label": {
                     "type": "plain_text",
-                    "text": "Select a date",
+                    "text": "The AO",
                     "emoji": True
-                },
-                "action_id": "datepicker-action"
+                }
             },
-            "label": {
-                "type": "plain_text",
-                "text": "Workout Date",
-                "emoji": True
-            }
-        },
-        {
-            "type": "input",
-            "block_id": "the_q",
-            "element": {
-                "type": "users_select",
-                "placeholder": {
+            {
+                "type": "input",
+                "block_id": "date",
+                "element": {
+                    "type": "datepicker",
+                    "initial_date": datestring,
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Select a date",
+                        "emoji": True
+                    },
+                    "action_id": "datepicker-action"
+                },
+                "label": {
                     "type": "plain_text",
-                    "text": "Tag the Q",
+                    "text": "Workout Date",
                     "emoji": True
-                },
-                "action_id": "users_select-action"
+                }
             },
-            "label": {
-                "type": "plain_text",
-                "text": "The Q",
-                "emoji": True
-            }
-        },
-        {
-            "type": "input",
-            "block_id": "the_pax",
-            "element": {
-                "type": "multi_users_select",
-                "placeholder": {
+            {
+                "type": "input",
+                "block_id": "time",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "time-action",
+                    "initial_value": "None",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Workout time"
+                    }
+                },
+                "label": {
                     "type": "plain_text",
-                    "text": "Tag the PAX",
-                    "emoji": True
-                },
-                "action_id": "multi_users_select-action"
+                    "text": "Workout Time"
+                }
             },
-            "label": {
-                "type": "plain_text",
-                "text": "The PAX",
-                "emoji": True
-            }
-        },
-        {
-            "type": "input",
-            "block_id": "fngs",
-            "element": {
-                "type": "plain_text_input",
-                "action_id": "fng-action",
-                "initial_value": "None",
-                "placeholder": {
+            {
+                "type": "input",
+                "block_id": "the_q",
+                "element": {
+                    "type": "users_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Tag the Q",
+                        "emoji": True
+                    },
+                    "action_id": "users_select-action"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "The Q",
+                    "emoji": True
+                }
+            },
+            {
+                "type": "input",
+                "block_id": "why",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "why-action",
+                    "initial_value": "None",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Explain the why"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "The Why"
+                }
+            },
+            {
+                "type": "input",
+                "block_id": "coupon",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "coupon-action",
+                    "initial_value": "None",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Coupons or not?"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Coupons"
+                }
+            },
+            {
+                "type": "input",
+                "block_id": "fngs",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "fng-action",
+                    "initial_value": "None",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Any message for FNGs?"
+                    }
+                },
+                "label": {
                     "type": "plain_text",
                     "text": "FNGs"
                 }
             },
-            "label": {
-                "type": "plain_text",
-                "text": "List untaggable names separated by commas (FNGs, Willy Lomans, etc.)"
-            }
-        },
-        {
-            "type": "input",
-            "block_id": "count",
-            "element": {
-                "type": "plain_text_input",
-                "action_id": "count-action",
-                "placeholder": {
-                    "type": "plain_text",
-                    "text": "Total PAX count including FNGs"
-                }
-            },
-            "label": {
-                "type": "plain_text",
-                "text": "Count"
-            }
-        },
-        {
-            "type": "input",
-            "block_id": "moleskine",
-            "element": {
-                "type": "plain_text_input",
-                "multiline": True,
-                "action_id": "plain_text_input-action",
-                "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: ",
-                "placeholder": {
-                    "type": "plain_text",
-                    "text": "Tell us what happened\n\n"
-                }
-            },
-            "label": {
-                "type": "plain_text",
-                "text": "The Moleskine",
-                "emoji": True
-            }
-        },
-        {
-            "type": "divider"
-        },
-        {
-            "type": "section",
-            "block_id": "destination",
-            "text": {
-                "type": "plain_text",
-                "text": "Choose where to post this"
-            },
-            "accessory": {
-                "action_id": "destination-action",
-                "type": "static_select",
-                "placeholder": {
-                    "type": "plain_text",
-                    "text": "Choose where"
+            {
+                "type": "input",
+                "block_id": "moleskine",
+                "element": {
+                    "type": "plain_text_input",
+                    "multiline": True,
+                    "action_id": "plain_text_input-action",
+                    "initial_value": "None",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Any additional beatdown detail, announcements, etc.\n\n"
+                    }
                 },
-                "initial_option": initial_channel_option,
-                "options": channel_options
+                "label": {
+                    "type": "plain_text",
+                    "text": "The Moleskine",
+                    "emoji": True
+                }
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "block_id": "destination",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Choose where to post this"
+                },
+                "accessory": {
+                    "action_id": "destination-action",
+                    "type": "static_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Choose where"
+                    },
+                    "initial_option": initial_channel_option,
+                    "options": channel_options
+                }
             }
+        ]
+        view = {
+            "type": "modal",
+            "callback_id": "preblast-id",
+            "title": {
+                "type": "plain_text",
+                "text": "Create a Preblast"
+            },
+            "submit": {
+                "type": "plain_text",
+                "text": "Submit"
+            },
+            "blocks": blocks
         }
-    ]
+    else:
+        blocks = [
+            {
+                "type": "input",
+                "block_id": "title",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "title",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Snarky Title?"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Title"
+                }
+            },
+            {
+                "type": "input",
+                "block_id": "the_ao",
+                "element": {
+                    "type": "channels_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Select the AO",
+                        "emoji": True
+                    },
+                    "action_id": "channels_select-action"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "The AO",
+                    "emoji": True
+                }
+            },
+            {
+                "type": "input",
+                "block_id": "date",
+                "element": {
+                    "type": "datepicker",
+                    "initial_date": datestring,
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Select a date",
+                        "emoji": True
+                    },
+                    "action_id": "datepicker-action"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Workout Date",
+                    "emoji": True
+                }
+            },
+            {
+                "type": "input",
+                "block_id": "the_q",
+                "element": {
+                    "type": "users_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Tag the Q",
+                        "emoji": True
+                    },
+                    "action_id": "users_select-action"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "The Q",
+                    "emoji": True
+                }
+            },
+            {
+                "type": "input",
+                "block_id": "the_pax",
+                "element": {
+                    "type": "multi_users_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Tag the PAX",
+                        "emoji": True
+                    },
+                    "action_id": "multi_users_select-action"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "The PAX",
+                    "emoji": True
+                }
+            },
+            {
+                "type": "input",
+                "block_id": "fngs",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "fng-action",
+                    "initial_value": "None",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "FNGs"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "List untaggable names separated by commas (FNGs, Willy Lomans, etc.)"
+                }
+            },
+            {
+                "type": "input",
+                "block_id": "count",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "count-action",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Total PAX count including FNGs"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Count"
+                }
+            },
+            {
+                "type": "input",
+                "block_id": "moleskine",
+                "element": {
+                    "type": "plain_text_input",
+                    "multiline": True,
+                    "action_id": "plain_text_input-action",
+                    "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: ",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Tell us what happened\n\n"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "The Moleskine",
+                    "emoji": True
+                }
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "block_id": "destination",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Choose where to post this"
+                },
+                "accessory": {
+                    "action_id": "destination-action",
+                    "type": "static_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Choose where"
+                    },
+                    "initial_option": initial_channel_option,
+                    "options": channel_options
+                }
+            }
+        ]
+        view = {
+            "type": "modal",
+            "callback_id": "backblast-id",
+            "title": {
+                "type": "plain_text",
+                "text": "Create a Backblast"
+            },
+            "submit": {
+                "type": "plain_text",
+                "text": "Submit"
+            },
+            "blocks": blocks
+        }
 
     # if config('EMAIL_TO', default='') and not config('EMAIL_OPTION_HIDDEN_IN_MODAL', default=False, cast=bool):
-    # if os.environ['EMAIL_TO'] and (not os.environ['EMAIL_OPTION_HIDDEN_IN_MODAL']=='True'):
     #     blocks.append({
     #         "type": "input",
     #         "block_id": "email",
     #         "element": {
     #             "type": "plain_text_input",
     #             "action_id": "email-action",
-    #             # "initial_value": config('EMAIL_TO', default=OPTIONAL_INPUT_VALUE),
-    #             "initial_value": os.environ['EMAIL_TO'],
+    #             "initial_value": config('EMAIL_TO', default=OPTIONAL_INPUT_VALUE),
     #             "placeholder": {
     #                 "type": "plain_text",
     #                 "text": "Type an email address or {}".format(OPTIONAL_INPUT_VALUE)
@@ -402,19 +613,7 @@ def command(ack, body, respond, client, logger):
 
     res = client.views_open(
         trigger_id=body["trigger_id"],
-        view={
-            "type": "modal",
-            "callback_id": "backblast-id",
-            "title": {
-                "type": "plain_text",
-                "text": "Create a Backblast"
-            },
-            "submit": {
-                "type": "plain_text",
-                "text": "Submit"
-            },
-            "blocks": blocks
-        },
+        view=view,
     )
     logger.info(res)
 
@@ -508,6 +707,97 @@ def make_body(date, ao, q, pax, fngs, count, moleskine):
         "\n" + pax + \
         "\n" + fngs + \
         "\n" + count + \
+        "\n" + moleskine
+
+@slack_app.view("preblast-id")
+def view_preblast_submission(ack, body, logger, client):
+    ack()
+    result = body["view"]["state"]["values"]
+    title = result["title"]["title"]["value"]
+    date = result["date"]["datepicker-action"]["selected_date"]
+    the_time = result["time"]["time-action"]["value"]
+    the_ao = result["the_ao"]["channels_select-action"]["selected_channel"]
+    the_q = result["the_q"]["users_select-action"]["selected_user"]
+    the_why = result["why"]["why-action"]["value"]
+    coupon = result["coupon"]["coupon-action"]["value"]
+    fngs = result["fngs"]["fng-action"]["value"]
+
+    moleskine = result["moleskine"]["plain_text_input-action"]["value"]
+    destination = result["destination"]["destination-action"]["selected_option"]["value"]
+    email_to = safeget(result, "email", "email-action", "value")
+    the_date = result["date"]["datepicker-action"]["selected_date"]
+
+    logger.info(result)
+
+    chan = destination
+    if chan == 'THE_AO':
+        chan = the_ao
+
+    logger.info('Channel to post to will be {} because the selected destination value was {} while the selected AO in the modal was {}'.format(
+        chan, destination, the_ao))
+
+    ao_name = get_channel_name(the_ao, logger, client)
+    q_name = (get_user_names([the_q], logger, client) or [''])[0]
+
+    msg = ""
+    try:
+        # formatting a message
+        # todo: change to use json object
+        header_msg = f"*Preblast: " + title + "*"
+        date_msg = f"*Date*: " + the_date
+        time_msg = f"*Time*: " + the_time
+        ao_msg = f"*Where*: <#" + the_ao + ">"
+        q_msg = f"*Q*: <@" + the_q + ">"
+        why_msg = f"*Why*: " + the_why
+        coupon_msg = f"*Coupon*: " + coupon
+        fngs_msg = f"*FNGs*: " + fngs
+        moleskine_msg = moleskine
+
+        # Message the user via the app/bot name
+        # if config('POST_TO_CHANNEL', cast=bool):
+        body = make_preblast_body(date_msg, time_msg, ao_msg, q_msg, why_msg, coupon_msg,
+                            fngs_msg, moleskine_msg)
+        msg = header_msg + "\n" + body
+        client.chat_postMessage(channel=chan, text=msg)
+        logger.info('\nMessage posted to Slack! \n{}'.format(msg))
+    except Exception as slack_bolt_err:
+        logger.error('Error with posting Slack message with chat_postMessage: {}'.format(
+            slack_bolt_err))
+        # Try again and bomb out without attempting to send email
+        client.chat_postMessage(channel=chan, text='There was an error with your submission: {}'.format(slack_bolt_err))
+    # try:
+    #     if email_to and email_to != OPTIONAL_INPUT_VALUE:
+    #         subject = title
+
+    #         date_msg = f"DATE: " + the_date
+    #         time_msg = f"TIME: " + the_time
+    #         ao_msg = f"AO: " + (ao_name or '').replace('the', '').title()
+    #         q_msg = f"Q: " + q_name
+    #         why_msg = f"Why: " + pax_names
+    #         coupon_msg = f"Coupon: " + coupon
+    #         fngs_msg = f"FNGs: " + fngs
+    #         moleskine_msg = moleskine
+
+    #         body_email = make_preblast_body(date_msg, time_msg, ao_msg, q_msg, why_msg, coupon_msg,
+    #                          fngs_msg, moleskine_msg)
+    #         sendmail.send(subject=subject, recipient=email_to, body=body_email)
+
+    #         logger.info('\nEmail Sent! \n{}'.format(body_email))
+    # except UndefinedValueError as email_not_configured_error:
+    #     logger.info('Skipping sending email since no EMAIL_USER or EMAIL_PWD found. {}'.format(
+    #         email_not_configured_error))
+    # except Exception as sendmail_err:
+    #     logger.error('Error with sendmail: {}'.format(sendmail_err))
+
+
+def make_preblast_body(date, time, ao, q, why, coupon, fngs, moleskine):
+    return date + \
+        "\n" + time + \
+        "\n" + ao + \
+        "\n" + q + \
+        "\n" + why + \
+        "\n" + coupon + \
+        "\n" + fngs + \
         "\n" + moleskine
 
 
