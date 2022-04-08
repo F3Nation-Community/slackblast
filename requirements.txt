@@ -1,3 +1,4 @@
 slack_sdk
 slack_bolt
 datetime
+pandas

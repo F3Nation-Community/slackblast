@@ -3,11 +3,12 @@ import json
 import os
 import datetime
 from datetime import datetime, timezone, timedelta
+import re
+import pandas as pd
 
 from slack_bolt import App
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
-
 # import sendmail
 
 
@@ -32,8 +33,9 @@ from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
 
 OPTIONAL_INPUT_VALUE = "None"
 
-
-logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+# logging.basicConfig(level=logging.DEBUG)
 #categories = []
 
 # process_before_response must be True when running on FaaS
@@ -112,6 +114,34 @@ def get_user_names(array_of_user_ids, logger, client):
         logger.info('user_name is {}'.format(user_name))
     logger.info('names are {}'.format(names))
     return names
+
+def get_user_ids(user_names, client):
+    member_list = pd.DataFrame(client.users_list()['members'])
+    member_list = member_list.drop('profile', axis=1).join(pd.DataFrame(member_list.profile.values.tolist()), rsuffix='_profile')
+    member_list['display_name2'] = member_list['display_name']
+    member_list.loc[(member_list['display_name']==''), ('display_name2')] = member_list['real_name']
+    member_list['display_name2'] = member_list['display_name2'].str.lower()
+    member_list['display_name2'].replace('\s\(([\s\S]*?\))','',regex=True, inplace=True)
+    
+    user_ids = []
+    for user_name in user_names:
+        user_name = user_name.replace('_', ' ').lower()
+        try:
+            user = f"<@{member_list.loc[(member_list['display_name2']==user_name), ('id')].iloc[0]}>"
+            print(f'Found {user_name}: {user}')
+        except:
+            user = user_name
+        user_ids.append(user)
+    
+    return user_ids
+
+def parse_moleskin_users(msg, client):
+    pattern = "@([A-Za-z0-9-']+)"
+    user_ids = get_user_ids(re.findall(pattern, msg), client)
+
+    msg2 = re.sub(pattern, '{}', msg).format(*user_ids)
+    return msg2
+
 
 
 @slack_app.command("/slackblast")
@@ -279,7 +309,7 @@ def command(ack, body, respond, client, logger):
                 "element": {
                     "type": "plain_text_input",
                     "action_id": "time-action",
-                    "initial_value": "None",
+                    "initial_value": "0530",
                     "placeholder": {
                         "type": "plain_text",
                         "text": "Workout time"
@@ -506,6 +536,23 @@ def command(ack, body, respond, client, logger):
             },
             {
                 "type": "input",
+                "block_id": "non_slack_pax",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "non_slack_pax-action",
+                    "initial_value": "None",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Non-Slackers"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "List untaggable PAX separated by commas"
+                }
+            },
+            {
+                "type": "input",
                 "block_id": "fngs",
                 "element": {
                     "type": "plain_text_input",
@@ -518,7 +565,7 @@ def command(ack, body, respond, client, logger):
                 },
                 "label": {
                     "type": "plain_text",
-                    "text": "List untaggable names separated by commas (FNGs, Willy Lomans, etc.)"
+                    "text": "List FNGs separated by commas"
                 }
             },
             {
@@ -544,7 +591,7 @@ def command(ack, body, respond, client, logger):
                     "type": "plain_text_input",
                     "multiline": True,
                     "action_id": "plain_text_input-action",
-                    "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: ",
+                    "initial_value": "\n*WARMUP:* \n*THE THANG:* \n*MARY:* \n*ANNOUNCEMENTS:* \n*COT:* ",
                     "placeholder": {
                         "type": "plain_text",
                         "text": "Tell us what happened\n\n"
@@ -556,6 +603,16 @@ def command(ack, body, respond, client, logger):
                     "emoji": True
                 }
             },
+            {
+			"type": "context",
+                "elements": [
+                    {
+                        "type": "plain_text",
+                        "text": "If trying to tag PAX in here, substitute _ for spaces and do not include titles in parenthesis (ie, @Moneyball not @Moneyball_(F3_STC)). Spelling is important, capitalization is not!",
+                        "emoji": True
+                    }
+                ]
+		    },
             {
                 "type": "divider"
             },
@@ -627,6 +684,7 @@ def view_submission(ack, body, logger, client):
     the_ao = result["the_ao"]["channels_select-action"]["selected_channel"]
     the_q = result["the_q"]["users_select-action"]["selected_user"]
     pax = result["the_pax"]["multi_users_select-action"]["selected_users"]
+    non_slack_pax = result["non_slack_pax"]["non_slack_pax-action"]["value"]
     fngs = result["fngs"]["fng-action"]["value"]
     count = result["count"]["count-action"]["value"]
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
@@ -635,6 +693,16 @@ def view_submission(ack, body, logger, client):
     the_date = result["date"]["datepicker-action"]["selected_date"]
 
     pax_formatted = get_pax(pax)
+    pax_full_list = [pax_formatted]
+    fngs_formatted = fngs
+    if non_slack_pax != 'None':
+        pax_full_list.append(non_slack_pax)
+    if fngs != 'None':
+        pax_full_list.append(fngs)
+        fngs_formatted = str(fngs.count(',') + 1) + ' ' + fngs
+    pax_formatted = ', '.join(pax_full_list)
+
+    moleskine_formatted = parse_moleskin_users(moleskine, client)
 
     logger.info(result)
 
@@ -660,9 +728,9 @@ def view_submission(ack, body, logger, client):
         ao_msg = f"*AO*: <#" + the_ao + ">"
         q_msg = f"*Q*: <@" + the_q + ">"
         pax_msg = f"*PAX*: " + pax_formatted
-        fngs_msg = f"*FNGs*: " + fngs
+        fngs_msg = f"*FNGs*: " + fngs_formatted
         count_msg = f"*COUNT*: " + count
-        moleskine_msg = moleskine
+        moleskine_msg = moleskine_formatted
 
         # Message the user via the app/bot name
         # if config('POST_TO_CHANNEL', cast=bool):
@@ -749,14 +817,25 @@ def view_preblast_submission(ack, body, logger, client):
         ao_msg = f"*Where*: <#" + the_ao + ">"
         q_msg = f"*Q*: <@" + the_q + ">"
         why_msg = f"*Why*: " + the_why
-        coupon_msg = f"*Coupon*: " + coupon
+        coupon_msg = f"*Coupons*: " + coupon
         fngs_msg = f"*FNGs*: " + fngs
         moleskine_msg = moleskine
 
         # Message the user via the app/bot name
         # if config('POST_TO_CHANNEL', cast=bool):
-        body = make_preblast_body(date_msg, time_msg, ao_msg, q_msg, why_msg, coupon_msg,
-                            fngs_msg, moleskine_msg)
+        body_list = [date_msg, time_msg, ao_msg, q_msg]
+        if the_why != 'None':
+            body_list.append(why_msg)
+        if coupon != 'None':
+            body_list.append(coupon_msg)
+        if fngs != 'None':
+            body_list.append(fngs_msg)
+        if moleskine != 'None':
+            body_list.append(moleskine_msg)
+
+        body = "\n".join(body_list)
+        # body = make_preblast_body(date_msg, time_msg, ao_msg, q_msg, why_msg, coupon_msg,
+        #                     fngs_msg, moleskine_msg)
         msg = header_msg + "\n" + body
         client.chat_postMessage(channel=chan, text=msg)
         logger.info('\nMessage posted to Slack! \n{}'.format(msg))
