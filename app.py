@@ -142,13 +142,10 @@ def parse_moleskin_users(msg, client):
     msg2 = re.sub(pattern, '{}', msg).format(*user_ids)
     return msg2
 
-
-
-@slack_app.command("/slackblast")
-@slack_app.command("/backblast")
-@slack_app.command("/preblast")
-def command(ack, body, respond, client, logger):
+def respond_to_slack_within_3_seconds(body, ack):
     ack()
+
+def command(ack, body, respond, client, logger):
     today = datetime.now(timezone.utc).astimezone()
     today = today - timedelta(hours=6)
     datestring = today.strftime("%Y-%m-%d")
@@ -673,6 +670,21 @@ def command(ack, body, respond, client, logger):
         view=view,
     )
     logger.info(res)
+
+slack_app.command("/slackblast")(
+    ack=respond_to_slack_within_3_seconds,
+    lazy=[command]
+)
+
+slack_app.command("/backblast")(
+    ack=respond_to_slack_within_3_seconds,
+    lazy=[command]
+)
+
+slack_app.command("/preblast")(
+    ack=respond_to_slack_within_3_seconds,
+    lazy=[command]
+)
 
 
 @slack_app.view("backblast-id")
