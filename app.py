@@ -101,8 +101,9 @@ def get_channel_name(id, logger, client):
     return channel_name
 
 
-def get_user_names(array_of_user_ids, logger, client):
+def get_user_names(array_of_user_ids, logger, client, return_urls = False):
     names = []
+    urls = []
     for user_id in array_of_user_ids:
         user_info_dict = client.users_info(
             user=user_id
@@ -112,8 +113,15 @@ def get_user_names(array_of_user_ids, logger, client):
         if user_name:
             names.append(user_name)
         logger.info('user_name is {}'.format(user_name))
+
+        user_icon_url = user_info_dict['user']['profile']['image_192']
+        urls.append(user_icon_url)
     logger.info('names are {}'.format(names))
-    return names
+
+    if return_urls:
+        return names, urls
+    else:
+        return names
 
 def get_user_ids(user_names, client):
     member_list = pd.DataFrame(client.users_list()['members'])
@@ -817,7 +825,9 @@ def view_preblast_submission(ack, body, logger, client):
         chan, destination, the_ao))
 
     ao_name = get_channel_name(the_ao, logger, client)
-    q_name = (get_user_names([the_q], logger, client) or [''])[0]
+    q_name, q_url = (get_user_names([the_q], logger, client, return_urls=True))
+    q_name = (q_name or [''])[0]
+    q_url = q_url[0]
 
     msg = ""
     try:
@@ -849,7 +859,7 @@ def view_preblast_submission(ack, body, logger, client):
         # body = make_preblast_body(date_msg, time_msg, ao_msg, q_msg, why_msg, coupon_msg,
         #                     fngs_msg, moleskine_msg)
         msg = header_msg + "\n" + body
-        client.chat_postMessage(channel=chan, text=msg, as_user=True)
+        client.chat_postMessage(channel=chan, text=msg, username=q_name, icon_url=q_url)
         logger.info('\nMessage posted to Slack! \n{}'.format(msg))
     except Exception as slack_bolt_err:
         logger.error('Error with posting Slack message with chat_postMessage: {}'.format(
