@@ -143,7 +143,7 @@ def parse_moleskin_users(msg, client):
     return msg2
 
 def respond_to_slack_within_3_seconds(body, ack):
-    ack()
+    ack("Opening form...")
 
 def command(ack, body, respond, client, logger):
     today = datetime.now(timezone.utc).astimezone()
@@ -849,7 +849,7 @@ def view_preblast_submission(ack, body, logger, client):
         # body = make_preblast_body(date_msg, time_msg, ao_msg, q_msg, why_msg, coupon_msg,
         #                     fngs_msg, moleskine_msg)
         msg = header_msg + "\n" + body
-        client.chat_postMessage(channel=chan, text=msg)
+        client.chat_postMessage(channel=chan, text=msg, as_user=True)
         logger.info('\nMessage posted to Slack! \n{}'.format(msg))
     except Exception as slack_bolt_err:
         logger.error('Error with posting Slack message with chat_postMessage: {}'.format(
