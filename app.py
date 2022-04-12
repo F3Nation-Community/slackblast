@@ -734,8 +734,10 @@ def view_submission(ack, body, logger, client):
         chan, destination, the_ao))
 
     ao_name = get_channel_name(the_ao, logger, client)
-    q_name = (get_user_names([the_q], logger, client) or [''])[0]
-    pax_names = ', '.join(get_user_names(pax, logger, client) or [''])
+    q_name, q_url = (get_user_names([the_q], logger, client, return_urls=True))
+    q_name = (q_name or [''])[0]
+    q_url = q_url[0]
+    pax_names = ', '.join(get_user_names(pax, logger, client, return_urls=False) or [''])
 
     msg = ""
     try:
@@ -757,7 +759,7 @@ def view_submission(ack, body, logger, client):
         body = make_body(date_msg, ao_msg, q_msg, pax_msg,
                             fngs_msg, count_msg, moleskine_msg)
         msg = header_msg + "\n" + title_msg + "\n" + body
-        client.chat_postMessage(channel=chan, text=msg)
+        client.chat_postMessage(channel=chan, text=msg, username=f'{q_name} (via Slackblast)', icon_url=q_url)
         logger.info('\nMessage posted to Slack! \n{}'.format(msg))
     except Exception as slack_bolt_err:
         logger.error('Error with posting Slack message with chat_postMessage: {}'.format(
@@ -859,7 +861,7 @@ def view_preblast_submission(ack, body, logger, client):
         # body = make_preblast_body(date_msg, time_msg, ao_msg, q_msg, why_msg, coupon_msg,
         #                     fngs_msg, moleskine_msg)
         msg = header_msg + "\n" + body
-        client.chat_postMessage(channel=chan, text=msg, username=q_name, icon_url=q_url)
+        client.chat_postMessage(channel=chan, text=msg, username=f'{q_name} (via Slackblast)', icon_url=q_url)
         logger.info('\nMessage posted to Slack! \n{}'.format(msg))
     except Exception as slack_bolt_err:
         logger.error('Error with posting Slack message with chat_postMessage: {}'.format(
