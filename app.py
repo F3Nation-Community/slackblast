@@ -417,23 +417,35 @@ def command(ack, body, respond, client, logger):
                 "type": "divider"
             },
             {
-                "type": "section",
+                "type": "input",
                 "block_id": "destination",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Choose where to post this"
-                },
-                "accessory": {
-                    "action_id": "destination-action",
+                "element": {
                     "type": "static_select",
                     "placeholder": {
                         "type": "plain_text",
-                        "text": "Choose where"
+                        "text": "Select an item",
+                        "emoji": True
                     },
+                    "options": channel_options,
                     "initial_option": initial_channel_option,
-                    "options": channel_options
+                    "action_id": "destination-input"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Choose where to post this",
+                    "emoji": True
                 }
-            }
+            },
+            {
+			"type": "context",
+                "elements": [
+                    {
+                        "type": "plain_text",
+                        "text": "Please wait after hitting Submit!",
+                        "emoji": True
+                    }
+                ]
+		    }
         ]
         view = {
             "type": "modal",
@@ -553,7 +565,7 @@ def command(ack, body, respond, client, logger):
                 },
                 "label": {
                     "type": "plain_text",
-                    "text": "List untaggable PAX separated by commas"
+                    "text": "List untaggable PAX separated by commas (not including FNGs)"
                 }
             },
             {
@@ -621,24 +633,54 @@ def command(ack, body, respond, client, logger):
             {
                 "type": "divider"
             },
+            # {
+            #     "type": "section",
+            #     "block_id": "destination",
+            #     "text": {
+            #         "type": "plain_text",
+            #         "text": "Choose where to post this"
+            #     },
+            #     "accessory": {
+            #         "action_id": "destination-action",
+            #         "type": "static_select",
+            #         "placeholder": {
+            #             "type": "plain_text",
+            #             "text": "Choose where"
+            #         },
+            #         "initial_option": initial_channel_option,
+            #         "options": channel_options
+            #     }
+            # },
             {
-                "type": "section",
+                "type": "input",
                 "block_id": "destination",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Choose where to post this"
-                },
-                "accessory": {
-                    "action_id": "destination-action",
+                "element": {
                     "type": "static_select",
                     "placeholder": {
                         "type": "plain_text",
-                        "text": "Choose where"
+                        "text": "Select an item",
+                        "emoji": True
                     },
+                    "options": channel_options,
                     "initial_option": initial_channel_option,
-                    "options": channel_options
+                    "action_id": "destination-input"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Choose where to post this",
+                    "emoji": True
                 }
-            }
+            },
+            {
+			"type": "context",
+                "elements": [
+                    {
+                        "type": "plain_text",
+                        "text": "Please wait after hitting Submit!",
+                        "emoji": True
+                    }
+                ]
+		    }
         ]
         view = {
             "type": "modal",
@@ -708,7 +750,7 @@ def view_submission(ack, body, logger, client):
     fngs = result["fngs"]["fng-action"]["value"]
     count = result["count"]["count-action"]["value"]
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
-    destination = result["destination"]["destination-action"]["selected_option"]["value"]
+    destination = result["destination"]["destination-input"]["selected_option"]["value"]
     email_to = safeget(result, "email", "email-action", "value")
     the_date = result["date"]["datepicker-action"]["selected_date"]
 
@@ -813,7 +855,7 @@ def view_preblast_submission(ack, body, logger, client):
     fngs = result["fngs"]["fng-action"]["value"]
 
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
-    destination = result["destination"]["destination-action"]["selected_option"]["value"]
+    destination = result["destination"]["destination-input"]["selected_option"]["value"]
     email_to = safeget(result, "email", "email-action", "value")
     the_date = result["date"]["datepicker-action"]["selected_date"]
 
