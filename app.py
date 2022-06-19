@@ -572,6 +572,16 @@ def command(ack, body, respond, client, logger):
                 "optional": True
             },
             {
+			"type": "context",
+                "elements": [
+                    {
+                        "type": "plain_text",
+                        "text": "Note, only the first CoQ is tracked by PAXMiner",
+                        "emoji": True
+                    }
+                ]
+		    },
+            {
                 "type": "input",
                 "block_id": "the_pax",
                 "element": {
@@ -803,7 +813,7 @@ def view_submission(ack, body, logger, client):
         fngs_formatted = str(fngs.count(',') + 1) + ' ' + fngs
     pax_formatted = ', '.join(pax_full_list)
 
-    if (the_coq is None) or (the_coq == ''):
+    if the_coq == []:
         the_coqs_formatted = ''
     else:
         the_coqs_formatted = get_pax(the_coq)
@@ -824,7 +834,7 @@ def view_submission(ack, body, logger, client):
     ao_name = get_channel_name(the_ao, logger, client)
     q_name, q_url = (get_user_names([the_q], logger, client, return_urls=True))
     q_name = (q_name or [''])[0]
-    print(f'CoQ: {the_coq}')
+    # print(f'CoQ: {the_coq}')
     q_url = q_url[0]
     pax_names = ', '.join(get_user_names(pax, logger, client, return_urls=False) or [''])
 
@@ -921,7 +931,7 @@ def view_preblast_submission(ack, body, logger, client):
     q_name = (q_name or [''])[0]
     q_url = q_url[0]
 
-    if (the_coq is None) or (the_coq == ''):
+    if the_coq == []:
         the_coqs_formatted = ''
     else:
         the_coqs_formatted = get_pax(the_coq)
