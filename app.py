@@ -343,24 +343,25 @@ def command(ack, body, respond, client, logger):
                     "emoji": True
                 }
             },
-            # {
-            #     "type": "input",
-            #     "block_id": "the_coq",
-            #     "element": {
-            #         "type": "users_select",
-            #         "placeholder": {
-            #             "type": "plain_text",
-            #             "text": "Tag the CoQ",
-            #             "emoji": True
-            #         },
-            #         "action_id": "users_select-action-coq"
-            #     },
-            #     "label": {
-            #         "type": "plain_text",
-            #         "text": "The CoQ (if applicable)",
-            #         "emoji": True
-            #     }
-            # },
+            {
+                "type": "input",
+                "block_id": "the_coq",
+                "element": {
+                    "type": "users_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Tag the CoQ(s)",
+                        "emoji": True
+                    },
+                    "action_id": "multi_users_select-action"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "The CoQs, if applicable",
+                    "emoji": True
+                },
+                "optional": True
+            },
             {
                 "type": "input",
                 "block_id": "why",
@@ -551,24 +552,25 @@ def command(ack, body, respond, client, logger):
                     "emoji": True
                 }
             },
-            # {
-            #     "type": "input",
-            #     "block_id": "the_coq",
-            #     "element": {
-            #         "type": "users_select",
-            #         "placeholder": {
-            #             "type": "plain_text",
-            #             "text": "Tag the CoQ",
-            #             "emoji": True
-            #         },
-            #         "action_id": "users_select-action-coq"
-            #     },
-            #     "label": {
-            #         "type": "plain_text",
-            #         "text": "The CoQ (if applicable)",
-            #         "emoji": True
-            #     }
-            # },
+            {
+                "type": "input",
+                "block_id": "the_coq",
+                "element": {
+                    "type": "multi_users_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Tag the CoQ(s)",
+                        "emoji": True
+                    },
+                    "action_id": "multi_users_select-action"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "The CoQ(s), if applicable",
+                    "emoji": True
+                },
+                "optional": True
+            },
             {
                 "type": "input",
                 "block_id": "the_pax",
@@ -781,7 +783,7 @@ def view_submission(ack, body, logger, client):
     date = result["date"]["datepicker-action"]["selected_date"]
     the_ao = result["the_ao"]["channels_select-action"]["selected_channel"]
     the_q = result["the_q"]["users_select-action"]["selected_user"]
-    # the_coq = result["the_coq"]["users_select-action-coq"]["selected_user"]
+    the_coq = result["the_coq"]["multi_users_select-action"]["selected_users"]
     pax = result["the_pax"]["multi_users_select-action"]["selected_users"]
     non_slack_pax = result["non_slack_pax"]["non_slack_pax-action"]["value"]
     fngs = result["fngs"]["fng-action"]["value"]
@@ -801,6 +803,13 @@ def view_submission(ack, body, logger, client):
         fngs_formatted = str(fngs.count(',') + 1) + ' ' + fngs
     pax_formatted = ', '.join(pax_full_list)
 
+    if (the_coq is None) or (the_coq == ''):
+        the_coqs_formatted = ''
+    else:
+        the_coqs_formatted = get_pax(the_coq)
+        the_coqs_full_list = [the_coqs_formatted]
+        the_coqs_formatted = ', ' + ', '.join(the_coqs_full_list)
+
     moleskine_formatted = parse_moleskin_users(moleskine, client)
 
     logger.info(result)
@@ -815,7 +824,7 @@ def view_submission(ack, body, logger, client):
     ao_name = get_channel_name(the_ao, logger, client)
     q_name, q_url = (get_user_names([the_q], logger, client, return_urls=True))
     q_name = (q_name or [''])[0]
-    # print(f'CoQ: {the_coq}')
+    print(f'CoQ: {the_coq}')
     q_url = q_url[0]
     pax_names = ', '.join(get_user_names(pax, logger, client, return_urls=False) or [''])
 
@@ -828,7 +837,7 @@ def view_submission(ack, body, logger, client):
 
         date_msg = f"*DATE*: " + the_date
         ao_msg = f"*AO*: <#" + the_ao + ">"
-        q_msg = f"*Q*: <@" + the_q + ">"
+        q_msg = f"*Q*: <@" + the_q + ">" + the_coqs_formatted
         pax_msg = f"*PAX*: " + pax_formatted
         fngs_msg = f"*FNGs*: " + fngs_formatted
         count_msg = f"*COUNT*: " + count
@@ -888,7 +897,7 @@ def view_preblast_submission(ack, body, logger, client):
     the_time = result["time"]["time-action"]["value"]
     the_ao = result["the_ao"]["channels_select-action"]["selected_channel"]
     the_q = result["the_q"]["users_select-action"]["selected_user"]
-    # the_coq = result["the_coq"]["users_select-action-coq"]["selected_user"]
+    the_coq = result["the_coq"]["multi_users_select-action"]["selected_user"]
     the_why = result["why"]["why-action"]["value"]
     coupon = result["coupon"]["coupon-action"]["value"]
     fngs = result["fngs"]["fng-action"]["value"]
@@ -912,6 +921,13 @@ def view_preblast_submission(ack, body, logger, client):
     q_name = (q_name or [''])[0]
     q_url = q_url[0]
 
+    if (the_coq is None) or (the_coq == ''):
+        the_coqs_formatted = ''
+    else:
+        the_coqs_formatted = get_pax(the_coq)
+        the_coqs_full_list = [the_coqs_formatted]
+        the_coqs_formatted = ', ' + ', '.join(the_coqs_full_list)
+
     msg = ""
     try:
         # formatting a message
@@ -920,7 +936,7 @@ def view_preblast_submission(ack, body, logger, client):
         date_msg = f"*Date*: " + the_date
         time_msg = f"*Time*: " + the_time
         ao_msg = f"*Where*: <#" + the_ao + ">"
-        q_msg = f"*Q*: <@" + the_q + ">"
+        q_msg = f"*Q*: <@" + the_q + ">" + the_coqs_formatted
         why_msg = f"*Why*: " + the_why
         coupon_msg = f"*Coupons*: " + coupon
         fngs_msg = f"*FNGs*: " + fngs
