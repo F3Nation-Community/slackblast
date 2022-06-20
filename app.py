@@ -787,7 +787,7 @@ def config_slackblast(body, client, context):
 							"text": "Enable email",
 							"emoji": True
 						},
-						"value": True
+						"value": "enable"
 					},
 					{
 						"text": {
@@ -795,7 +795,7 @@ def config_slackblast(body, client, context):
 							"text": "Disable email",
 							"emoji": True
 						},
-						"value": False
+						"value": "disable"
 					},                    
 				],
 				"action_id": "email_enable"
@@ -862,8 +862,8 @@ def config_slackblast(body, client, context):
             "type": "input",
             "block_id": "email_to",
             "element": {
-                "type": "email_to",
-                "action_id": "email_password",
+                "type": "plain_text_input",
+                "action_id": "email_to",
                 "initial_value": "example_destination@gmail.com"
             },
             "label": {
