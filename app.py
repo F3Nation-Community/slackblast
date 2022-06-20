@@ -877,7 +877,7 @@ def config_slackblast(body, client, context):
         "callback_id": "config-slackblast",
         "title": {
             "type": "plain_text",
-            "text": "Configure your region's slackblast settings"
+            "text": "Configure settings"
         },
         "submit": {
             "type": "plain_text",
