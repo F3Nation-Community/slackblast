@@ -456,7 +456,7 @@ def command(ack, body, respond, client, logger):
                 }
             },
             {
-			"type": "context",
+            "type": "context",
                 "elements": [
                     {
                         "type": "plain_text",
@@ -464,7 +464,7 @@ def command(ack, body, respond, client, logger):
                         "emoji": True
                     }
                 ]
-		    }
+            }
         ]
         view = {
             "type": "modal",
@@ -572,7 +572,7 @@ def command(ack, body, respond, client, logger):
                 "optional": True
             },
             {
-			"type": "context",
+                "type": "context",
                 "elements": [
                     {
                         "type": "plain_text",
@@ -580,7 +580,7 @@ def command(ack, body, respond, client, logger):
                         "emoji": True
                     }
                 ]
-		    },
+            },
             {
                 "type": "input",
                 "block_id": "the_pax",
@@ -669,7 +669,7 @@ def command(ack, body, respond, client, logger):
                 }
             },
             {
-			"type": "context",
+                "type": "context",
                 "elements": [
                     {
                         "type": "plain_text",
@@ -677,7 +677,7 @@ def command(ack, body, respond, client, logger):
                         "emoji": True
                     }
                 ]
-		    },
+            },
             {
                 "type": "divider"
             },
@@ -720,7 +720,7 @@ def command(ack, body, respond, client, logger):
                 }
             },
             {
-			"type": "context",
+            "type": "context",
                 "elements": [
                     {
                         "type": "plain_text",
@@ -728,7 +728,7 @@ def command(ack, body, respond, client, logger):
                         "emoji": True
                     }
                 ]
-		    }
+            }
         ]
         view = {
             "type": "modal",
@@ -768,6 +768,134 @@ def command(ack, body, respond, client, logger):
         view=view,
     )
     logger.info(res)
+        
+
+def config_slackblast(body, client, context):
+    team_id = context['team_id']
+    bot_token = context['bot_token']
+    
+    blocks = [
+		{
+			"type": "input",
+            "block_id": "email_enable",
+			"element": {
+				"type": "radio_buttons",
+				"options": [
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "Enable email",
+							"emoji": True
+						},
+						"value": True
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "Disable email",
+							"emoji": True
+						},
+						"value": False
+					},                    
+				],
+				"action_id": "email_enable"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Slackblast Email",
+				"emoji": True
+			}
+		},
+        {
+            "type": "input",
+            "block_id": "email_server",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "email_server",
+                "initial_value": "smtp.gmail.com"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Email Server"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "email_port",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "email_port",
+                "initial_value": "465"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Email Server Port"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "email_user",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "email_user",
+                "initial_value": "example_sender@gmail.com"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Email From Address"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "email_password",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "email_password",
+                "initial_value": "example_pwd_123"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Email Password"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "email_to",
+            "element": {
+                "type": "email_to",
+                "action_id": "email_password",
+                "initial_value": "example_destination@gmail.com"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Email To Address"
+            }
+        }
+    ]
+    view = {
+        "type": "modal",
+        "callback_id": "config-slackblast",
+        "title": {
+            "type": "plain_text",
+            "text": "Configure your region's slackblast settings"
+        },
+        "submit": {
+            "type": "plain_text",
+            "text": "Submit"
+        },
+        "blocks": blocks
+    }
+
+    res = client.views_open(
+        trigger_id=body["trigger_id"],
+        view=view,
+    )
+    logger.info(res)
+
+slack_app.command("/config-slackblast")(
+    ack=respond_to_slack_within_3_seconds,
+    lazy=[config_slackblast]
+)
 
 slack_app.command("/slackblast")(
     ack=respond_to_slack_within_3_seconds,
