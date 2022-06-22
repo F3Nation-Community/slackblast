@@ -9,6 +9,9 @@ import pandas as pd
 from slack_bolt import App
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
+
+import mysql.connector
+from contextlib import ContextDecorator
 # import sendmail
 
 
@@ -45,6 +48,25 @@ slack_app = App(
 )
 
 #categories = get_categories()
+
+# Construct class for connecting to the db
+# Takes team_id as an input, pulls schema name from paxminer.regions
+class my_connect(ContextDecorator):
+    def __init__(self):
+        self.conn = ''
+
+    def __enter__(self):
+        self.conn = mysql.connector.connect(
+            host=os.environ['DATABASE_HOST'],
+            user=os.environ['ADMIN_DATABASE_USER'],
+            passwd=os.environ['ADMIN_DATABASE_PASSWORD'],
+            database=os.environ['ADMIN_DATABASE_SCHEMA']
+        )
+        return self
+
+    def __exit__(self, *exc):
+        self.conn.close()
+        return False
 
 
 @slack_app.middleware  # or app.use(log_request)
@@ -343,25 +365,25 @@ def command(ack, body, respond, client, logger):
                     "emoji": True
                 }
             },
-            {
-                "type": "input",
-                "block_id": "the_coq",
-                "element": {
-                    "type": "users_select",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Tag the CoQ(s)",
-                        "emoji": True
-                    },
-                    "action_id": "multi_users_select-action"
-                },
-                "label": {
-                    "type": "plain_text",
-                    "text": "The CoQs, if applicable",
-                    "emoji": True
-                },
-                "optional": True
-            },
+            # {
+            #     "type": "input",
+            #     "block_id": "the_coq",
+            #     "element": {
+            #         "type": "users_select",
+            #         "placeholder": {
+            #             "type": "plain_text",
+            #             "text": "Tag the CoQ(s)",
+            #             "emoji": True
+            #         },
+            #         "action_id": "multi_users_select-action"
+            #     },
+            #     "label": {
+            #         "type": "plain_text",
+            #         "text": "The CoQs, if applicable",
+            #         "emoji": True
+            #     },
+            #     "optional": True
+            # },
             {
                 "type": "input",
                 "block_id": "why",
@@ -892,6 +914,43 @@ def config_slackblast(body, client, context):
     )
     logger.info(res)
 
+@slack_app.view("config-slackblast")
+def view_submission(ack, body, logger, client, context):
+    ack()
+    team_id = context['team_id']
+    bot_token = context['bot_token']
+
+    # gather inputs
+    result = body["view"]["state"]["values"]
+    email_enable = result['email_enable']['email_enable']['selected_option'] == "enable"
+    email_server = result['email_server']['email_server']['value']
+    email_port = result['email_port']['email_port']['value']
+    email_user = result['email_user']['email_user']['value']
+    email_password = result['email_password']['email_password']['value']
+    email_to = result['email_to']['email_to']['value']
+
+    # build SQL insert / update statement
+    sql_insert = f"""
+    INSERT INTO regions 
+    SET team_id='{team_id}', bot_token='{bot_token}', email_enable={email_enable}, email_server='{email_server}', 
+        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password}', email_to='{email_to}'
+    ON DUPLICATE KEY UPDATE
+        team_id='{team_id}', bot_token='{bot_token}', email_enable={email_enable}, email_server='{email_server}', 
+        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password}', email_to='{email_to}'
+    ;
+    """
+
+    # attempt update
+    logging.info(f"Attempting SQL insert / update: {sql_insert}")
+    try:
+        with my_connect(team_id) as mydb:
+            mycursor = mydb.conn.cursor()
+            mycursor.execute(sql_insert)
+            mycursor.execute("COMMIT;")
+    except Exception as e:
+        logging.error(f"Error writing to db: {e}")
+        error_msg = e
+
 slack_app.command("/config-slackblast")(
     ack=respond_to_slack_within_3_seconds,
     lazy=[config_slackblast]
@@ -1035,7 +1094,7 @@ def view_preblast_submission(ack, body, logger, client):
     the_time = result["time"]["time-action"]["value"]
     the_ao = result["the_ao"]["channels_select-action"]["selected_channel"]
     the_q = result["the_q"]["users_select-action"]["selected_user"]
-    the_coq = result["the_coq"]["multi_users_select-action"]["selected_user"]
+    # the_coq = result["the_coq"]["multi_users_select-action"]["selected_user"]
     the_why = result["why"]["why-action"]["value"]
     coupon = result["coupon"]["coupon-action"]["value"]
     fngs = result["fngs"]["fng-action"]["value"]
@@ -1059,12 +1118,12 @@ def view_preblast_submission(ack, body, logger, client):
     q_name = (q_name or [''])[0]
     q_url = q_url[0]
 
-    if the_coq == []:
-        the_coqs_formatted = ''
-    else:
-        the_coqs_formatted = get_pax(the_coq)
-        the_coqs_full_list = [the_coqs_formatted]
-        the_coqs_formatted = ', ' + ', '.join(the_coqs_full_list)
+    # if the_coq == []:
+    #     the_coqs_formatted = ''
+    # else:
+    #     the_coqs_formatted = get_pax(the_coq)
+    #     the_coqs_full_list = [the_coqs_formatted]
+    #     the_coqs_formatted = ', ' + ', '.join(the_coqs_full_list)
 
     msg = ""
     try:
@@ -1074,7 +1133,7 @@ def view_preblast_submission(ack, body, logger, client):
         date_msg = f"*Date*: " + the_date
         time_msg = f"*Time*: " + the_time
         ao_msg = f"*Where*: <#" + the_ao + ">"
-        q_msg = f"*Q*: <@" + the_q + ">" + the_coqs_formatted
+        q_msg = f"*Q*: <@" + the_q + ">" # + the_coqs_formatted
         why_msg = f"*Why*: " + the_why
         coupon_msg = f"*Coupons*: " + coupon
         fngs_msg = f"*FNGs*: " + fngs
