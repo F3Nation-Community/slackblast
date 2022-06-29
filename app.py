@@ -12,7 +12,10 @@ from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
 
 import mysql.connector
 from contextlib import ContextDecorator
-# import sendmail
+
+from cryptography.fernet import Fernet
+
+import sendmail
 
 
 # def get_categories():
@@ -881,6 +884,16 @@ def config_slackblast(body, client, context):
             }
         },
         {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "plain_text",
+                    "text": "Your password will be stored encrypted. However, it is STRONGLY recommended that you use a non-personal email address and password for this purpose, as security cannot be guaranteed.",
+                    "emoji": True
+                }
+            ]
+        },
+        {
             "type": "input",
             "block_id": "email_to",
             "element": {
@@ -926,17 +939,21 @@ def view_submission(ack, body, logger, client, context):
     email_server = result['email_server']['email_server']['value']
     email_port = result['email_port']['email_port']['value']
     email_user = result['email_user']['email_user']['value']
-    email_password = result['email_password']['email_password']['value']
+    email_password_raw = result['email_password']['email_password']['value']
     email_to = result['email_to']['email_to']['value']
+
+    # encrypt password
+    fernet = Fernet(os.environ['PASSWORD_ENCRYPT_KEY'].encode())
+    email_password_encrypted = fernet.encrypt(email_password_raw.encode())
 
     # build SQL insert / update statement
     sql_insert = f"""
     INSERT INTO regions 
     SET team_id='{team_id}', bot_token='{bot_token}', email_enable={email_enable}, email_server='{email_server}', 
-        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password}', email_to='{email_to}'
+        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password_encrypted}', email_to='{email_to}'
     ON DUPLICATE KEY UPDATE
         team_id='{team_id}', bot_token='{bot_token}', email_enable={email_enable}, email_server='{email_server}', 
-        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password}', email_to='{email_to}'
+        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password_encrypted}', email_to='{email_to}'
     ;
     """
 

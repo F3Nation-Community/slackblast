@@ -3,3 +3,6 @@ slack_bolt
 datetime
 pandas
 mysql.connector
+cryptography
+email
+smtplib
