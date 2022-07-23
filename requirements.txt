@@ -4,5 +4,5 @@ datetime
 pandas
 mysql.connector
 cryptography
-email
-smtplib
+# email
+# smtplib
