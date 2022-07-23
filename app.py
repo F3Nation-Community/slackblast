@@ -776,12 +776,13 @@ def command(ack, body, respond, client, logger, context):
         try:
             with my_connect() as mydb:
                 mycursor = mydb.conn.cursor()
-                mycursor.execute(f'SELECT email_enabled FROM regions WHERE team_id = "{team_id}";')
-                email_enabled = mycursor.fetchone()
+                mycursor.execute(f'SELECT email_enabled, email_option_show FROM regions WHERE team_id = "{team_id}";')
+                email_enabled, email_option_show = mycursor.fetchone()
+                print(f'email_enabled: {email_enabled}')
         except Exception as e:
             logging.error(f"Error pulling user db email info: {e}")
     
-        if email_enabled == (1,):
+        if (email_enabled == 1) & (email_option_show == 1):
             blocks.append({
                 "type": "input",
                 "block_id": "email_send",
@@ -888,6 +889,37 @@ def config_slackblast(body, client, context):
 			"label": {
 				"type": "plain_text",
 				"text": "Slackblast Email",
+				"emoji": True
+			}
+		},
+        {
+			"type": "input",
+            "block_id": "email_option_show",
+			"element": {
+				"type": "radio_buttons",
+				"options": [
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "Show",
+							"emoji": True
+						},
+						"value": "yes"
+					},
+					{
+						"text": {
+							"type": "plain_text",
+							"text": "Don't show",
+							"emoji": True
+						},
+						"value": "no"
+					},                    
+				],
+				"action_id": "email_option_show"
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Show email option in form?",
 				"emoji": True
 			}
 		},
@@ -1002,6 +1034,7 @@ def view_submission(ack, body, logger, client, context):
     # gather inputs
     result = body["view"]["state"]["values"]
     email_enable = result['email_enable']['email_enable']['selected_option']['value'] == "enable"
+    email_option_show = result['email_option_show']['email_option_show']['selected_option']['value'] == "yes"
     email_server = result['email_server']['email_server']['value']
     email_port = result['email_port']['email_port']['value']
     email_user = result['email_user']['email_user']['value']
@@ -1016,10 +1049,10 @@ def view_submission(ack, body, logger, client, context):
     sql_insert = f"""
     INSERT INTO regions 
     SET team_id='{team_id}', workspace_name='{workspace_name}', bot_token='{bot_token}', email_enabled={email_enable}, email_server='{email_server}', 
-        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password_encrypted}', email_to='{email_to}'
+        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password_encrypted}', email_to='{email_to}', email_option_show={email_option_show}
     ON DUPLICATE KEY UPDATE
         team_id='{team_id}', workspace_name='{workspace_name}', bot_token='{bot_token}', email_enabled={email_enable}, email_server='{email_server}', 
-        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password_encrypted}', email_to='{email_to}'
+        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password_encrypted}', email_to='{email_to}', email_option_show={email_option_show}
     ;
     """
 
