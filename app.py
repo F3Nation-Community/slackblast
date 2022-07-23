@@ -1,3 +1,4 @@
+import email
 import logging
 import json
 import os
@@ -17,6 +18,10 @@ from cryptography.fernet import Fernet
 
 import sendmail
 
+# def email_test2():
+#     sendmail.send(subject='testing', recipient='evan.petzoldt@protonmail.com', body='this is a test', email_server='smtp.gmail.com', email_server_port=587, email_user='f3.qsignups@gmail.com', email_password='fqeunnunlfefrinw')
+
+# email_test2()
 
 # def get_categories():
 #     with open('categories.json') as c:
@@ -64,6 +69,24 @@ class my_connect(ContextDecorator):
             user=os.environ['ADMIN_DATABASE_USER'],
             passwd=os.environ['ADMIN_DATABASE_PASSWORD'],
             database=os.environ['ADMIN_DATABASE_SCHEMA']
+        )
+        return self
+
+    def __exit__(self, *exc):
+        self.conn.close()
+        return False
+
+
+class my_connect(ContextDecorator):
+    def __init__(self):
+        self.conn = ''
+
+    def __enter__(self):
+        self.conn = mysql.connector.connect(
+            host="f3stlouis.cac36jsyb5ss.us-east-2.rds.amazonaws.com",
+            user="moneyball",
+            passwd="AyeF3smartypants!",
+            database="slackblast"
         )
         return self
 
@@ -178,11 +201,14 @@ def parse_moleskin_users(msg, client):
 def respond_to_slack_within_3_seconds(body, ack):
     ack("Opening form...")
 
-def command(ack, body, respond, client, logger):
+def command(ack, body, respond, client, logger, context):
     today = datetime.now(timezone.utc).astimezone()
     today = today - timedelta(hours=6)
     datestring = today.strftime("%Y-%m-%d")
     user_id = body.get("user_id")
+
+    team_id = context['team_id']
+    bot_token = context['bot_token']
 
     # Figure out where user sent slashcommand from to set current channel id and name
     is_direct_message = body.get("channel_name") == 'directmessage'
@@ -743,18 +769,69 @@ def command(ack, body, respond, client, logger):
                     "text": "Choose where to post this",
                     "emoji": True
                 }
-            },
-            {
+            }
+        ]
+
+        # Check to see if email is enabled for the region
+        try:
+            with my_connect() as mydb:
+                mycursor = mydb.conn.cursor()
+                mycursor.execute(f'SELECT email_enabled FROM regions WHERE team_id = "{team_id}";')
+                email_enabled = mycursor.fetchone()
+        except Exception as e:
+            logging.error(f"Error pulling user db email info: {e}")
+    
+        if email_enabled == (1,):
+            blocks.append({
+                "type": "input",
+                "block_id": "email_send",
+                "element": {
+                    "type": "radio_buttons",
+                    "options": [
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Send email",
+                                "emoji": True
+                            },
+                            "value": "yes"
+                        },
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Don't send email",
+                                "emoji": True
+                            },
+                            "value": "no"
+                        },                    
+                    ],
+                    "action_id": "email_send",
+                    "initial_option": {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Don't send email",
+                            "emoji": True
+                        },
+                        "value": "no"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Email Backblast (to Wordpress, etc.)",
+                    "emoji": True
+                }
+            })
+
+        blocks.append({
             "type": "context",
                 "elements": [
                     {
-                        "type": "plain_text",
-                        "text": "Please wait after hitting Submit!",
-                        "emoji": True
+                        "type": "mrkdwn",
+                        "text": "*Do not hit Submit more than once!* Even if you get a timeout error, the backblast has likely already been posted. If using email, this can take time and this form may not automatically close."
                     }
                 ]
-            }
-        ]
+        })
+
         view = {
             "type": "modal",
             "callback_id": "backblast-id",
@@ -769,31 +846,14 @@ def command(ack, body, respond, client, logger):
             "blocks": blocks
         }
 
-    # if config('EMAIL_TO', default='') and not config('EMAIL_OPTION_HIDDEN_IN_MODAL', default=False, cast=bool):
-    #     blocks.append({
-    #         "type": "input",
-    #         "block_id": "email",
-    #         "element": {
-    #             "type": "plain_text_input",
-    #             "action_id": "email-action",
-    #             "initial_value": config('EMAIL_TO', default=OPTIONAL_INPUT_VALUE),
-    #             "placeholder": {
-    #                 "type": "plain_text",
-    #                 "text": "Type an email address or {}".format(OPTIONAL_INPUT_VALUE)
-    #             }
-    #         },
-    #         "label": {
-    #             "type": "plain_text",
-    #             "text": "Send Email"
-    #         }
-    #     })
-
     res = client.views_open(
         trigger_id=body["trigger_id"],
         view=view,
     )
     logger.info(res)
         
+# def email_test(body, client, context):
+#     sendmail.send(subject='testing', recipient='evan.petzoldt@protonmail.com', body='this is a test', email_server='smtp.gmail.com', email_server_port=587, email_user='f3.qsignups@gmail.com', email_password='p24RoaZzBW#Q!L')
 
 def config_slackblast(body, client, context):
     team_id = context['team_id']
@@ -850,7 +910,7 @@ def config_slackblast(body, client, context):
             "element": {
                 "type": "plain_text_input",
                 "action_id": "email_port",
-                "initial_value": "465"
+                "initial_value": "587"
             },
             "label": {
                 "type": "plain_text",
@@ -887,9 +947,8 @@ def config_slackblast(body, client, context):
             "type": "context",
             "elements": [
                 {
-                    "type": "plain_text",
-                    "text": "Your password will be stored encrypted. However, it is STRONGLY recommended that you use a non-personal email address and password for this purpose, as security cannot be guaranteed.",
-                    "emoji": True
+                    "type": "mrkdwn",
+                    "text": "If using gmail, you must use an App Password (https://support.google.com/accounts/answer/185833). Your password will be stored encrypted - however, it is STRONGLY recommended that you use a non-personal email address and password for this purpose, as security cannot be guaranteed.",
                 }
             ]
         },
@@ -932,10 +991,17 @@ def view_submission(ack, body, logger, client, context):
     ack()
     team_id = context['team_id']
     bot_token = context['bot_token']
+    # logging.info(body)
+    # logging.info(client.team_info())
+    try:
+        team_info = client.team_info()
+        workspace_name = team_info['team']['name']
+    except:
+        workspace_name = ''
 
     # gather inputs
     result = body["view"]["state"]["values"]
-    email_enable = result['email_enable']['email_enable']['selected_option'] == "enable"
+    email_enable = result['email_enable']['email_enable']['selected_option']['value'] == "enable"
     email_server = result['email_server']['email_server']['value']
     email_port = result['email_port']['email_port']['value']
     email_user = result['email_user']['email_user']['value']
@@ -944,15 +1010,15 @@ def view_submission(ack, body, logger, client, context):
 
     # encrypt password
     fernet = Fernet(os.environ['PASSWORD_ENCRYPT_KEY'].encode())
-    email_password_encrypted = fernet.encrypt(email_password_raw.encode())
+    email_password_encrypted = fernet.encrypt(email_password_raw.encode()).decode()
 
     # build SQL insert / update statement
     sql_insert = f"""
     INSERT INTO regions 
-    SET team_id='{team_id}', bot_token='{bot_token}', email_enable={email_enable}, email_server='{email_server}', 
+    SET team_id='{team_id}', workspace_name='{workspace_name}', bot_token='{bot_token}', email_enabled={email_enable}, email_server='{email_server}', 
         email_server_port={email_port}, email_user='{email_user}', email_password='{email_password_encrypted}', email_to='{email_to}'
     ON DUPLICATE KEY UPDATE
-        team_id='{team_id}', bot_token='{bot_token}', email_enable={email_enable}, email_server='{email_server}', 
+        team_id='{team_id}', workspace_name='{workspace_name}', bot_token='{bot_token}', email_enabled={email_enable}, email_server='{email_server}', 
         email_server_port={email_port}, email_user='{email_user}', email_password='{email_password_encrypted}', email_to='{email_to}'
     ;
     """
@@ -960,7 +1026,7 @@ def view_submission(ack, body, logger, client, context):
     # attempt update
     logging.info(f"Attempting SQL insert / update: {sql_insert}")
     try:
-        with my_connect(team_id) as mydb:
+        with my_connect() as mydb:
             mycursor = mydb.conn.cursor()
             mycursor.execute(sql_insert)
             mycursor.execute("COMMIT;")
@@ -972,6 +1038,11 @@ slack_app.command("/config-slackblast")(
     ack=respond_to_slack_within_3_seconds,
     lazy=[config_slackblast]
 )
+
+# slack_app.command("/email-test")(
+#     ack=respond_to_slack_within_3_seconds,
+#     lazy=[email_test]
+# )
 
 slack_app.command("/slackblast")(
     ack=respond_to_slack_within_3_seconds,
@@ -990,8 +1061,11 @@ slack_app.command("/preblast")(
 
 
 @slack_app.view("backblast-id")
-def view_submission(ack, body, logger, client):
+def view_submission(ack, body, logger, client, context):
     ack()
+    team_id = context['team_id']
+    bot_token = context['bot_token']
+
     result = body["view"]["state"]["values"]
     title = result["title"]["title"]["value"]
     date = result["date"]["datepicker-action"]["selected_date"]
@@ -1004,25 +1078,32 @@ def view_submission(ack, body, logger, client):
     count = result["count"]["count-action"]["value"]
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
     destination = result["destination"]["destination-input"]["selected_option"]["value"]
-    email_to = safeget(result, "email", "email-action", "value")
+    email_send = safeget(result, "email_send", "email_send", "selected_option", "value")
     the_date = result["date"]["datepicker-action"]["selected_date"]
 
+    pax_names_list = get_user_names(pax, logger, client, return_urls=False) or ['']
     pax_formatted = get_pax(pax)
     pax_full_list = [pax_formatted]
     fngs_formatted = fngs
     if non_slack_pax != 'None':
         pax_full_list.append(non_slack_pax)
+        pax_names_list.append(non_slack_pax)
     if fngs != 'None':
         pax_full_list.append(fngs)
+        pax_names_list.append(fngs)
         fngs_formatted = str(fngs.count(',') + 1) + ' ' + fngs
     pax_formatted = ', '.join(pax_full_list)
+    pax_names = ', '.join(pax_names_list)
 
     if the_coq == []:
         the_coqs_formatted = ''
+        the_coqs_names = ''
     else:
         the_coqs_formatted = get_pax(the_coq)
         the_coqs_full_list = [the_coqs_formatted]
+        the_coqs_names_list = get_user_names(the_coq, logger, client, return_urls=False)
         the_coqs_formatted = ', ' + ', '.join(the_coqs_full_list)
+        the_coqs_names = ', ' + ', '.join(the_coqs_names_list)
 
     moleskine_formatted = parse_moleskin_users(moleskine, client)
 
@@ -1040,7 +1121,6 @@ def view_submission(ack, body, logger, client):
     q_name = (q_name or [''])[0]
     # print(f'CoQ: {the_coq}')
     q_url = q_url[0]
-    pax_names = ', '.join(get_user_names(pax, logger, client, return_urls=False) or [''])
 
     msg = ""
     try:
@@ -1070,20 +1150,35 @@ def view_submission(ack, body, logger, client):
         # Try again and bomb out without attempting to send email
         client.chat_postMessage(channel=chan, text='There was an error with your submission: {}'.format(slack_bolt_err))
     try:
-        if email_to and email_to != OPTIONAL_INPUT_VALUE:
+        if email_send and email_send == "yes":
             subject = title
 
             date_msg = f"DATE: " + the_date
             ao_msg = f"AO: " + (ao_name or '').replace('the', '').title()
-            q_msg = f"Q: " + q_name
+            q_msg = f"Q: " + q_name + the_coqs_names
             pax_msg = f"PAX: " + pax_names
-            fngs_msg = f"FNGs: " + fngs
+            fngs_msg = f"FNGs: " + fngs_formatted
             count_msg = f"COUNT: " + count
-            moleskine_msg = moleskine
+            moleskine_msg = moleskine.replace('*','')
 
             body_email = make_body(
-                date_msg, ao_msg, q_msg, pax_msg, fngs_msg, count_msg, moleskine_msg)
-            # sendmail.send(subject=subject, recipient=email_to, body=body_email)
+                date_msg, ao_msg, q_msg, pax_msg, fngs_msg, count_msg, moleskine_msg
+            )
+
+            # Pull email settings
+            try:
+                with my_connect() as mydb:
+                    mycursor = mydb.conn.cursor()
+                    mycursor.execute(f'SELECT email_server, email_server_port, email_user, email_password, email_to FROM regions WHERE team_id = "{team_id}";')
+                    email_server, email_server_port, email_user, email_password, email_to = mycursor.fetchone()
+            except Exception as e:
+                logging.error(f"Error pulling user db email info: {e}")
+
+            # Decrypt password
+            fernet = Fernet(os.environ['PASSWORD_ENCRYPT_KEY'].encode())
+            email_password_decrypted = fernet.decrypt(email_password.encode()).decode()
+
+            sendmail.send(subject=subject, body=body_email, email_server=email_server, email_server_port=email_server_port, email_user=email_user, email_password=email_password_decrypted, email_to=email_to)
 
             logger.info('\nEmail Sent! \n{}'.format(body_email))
     # except UndefinedValueError as email_not_configured_error:
