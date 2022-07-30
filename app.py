@@ -267,39 +267,40 @@ def command(ack, body, respond, client, logger, context):
     channel_options = []
 
     # figure out which channel should be default/initial and then remaining operations
-    if channel_id:
-        initial_channel_option = channel_user_specified_channel_option
-        channel_options.append(channel_user_specified_channel_option)
-        channel_options.append(current_channel_option)
-        channel_options.append(channel_me_option)
-        channel_options.append(channel_the_ao_option)
-        channel_options.append(channel_configured_ao_option)
-    # elif config('CHANNEL', default=current_channel_id) == 'USER':
-    elif current_channel_id == 'USER':
-        initial_channel_option = channel_me_option
-        channel_options.append(channel_me_option)
-        channel_options.append(current_channel_option)
-        channel_options.append(channel_the_ao_option)
-    # elif config('CHANNEL', default=current_channel_id) == 'THE_AO':
-    elif current_channel_id == 'THE_AO':
-        initial_channel_option = channel_the_ao_option
-        channel_options.append(channel_the_ao_option)
-        channel_options.append(current_channel_option)
-        channel_options.append(channel_me_option)
-    # elif config('CHANNEL', default=current_channel_id) == current_channel_id:
-    elif current_channel_id == current_channel_id:
-        # if there is no .env CHANNEL value, use default of current channel
-        initial_channel_option = current_channel_option
-        channel_options.append(current_channel_option)
-        channel_options.append(channel_me_option)
-        channel_options.append(channel_the_ao_option)
-    else:
-        # Default to using the .env CHANNEL value which at this point must be a channel id
-        initial_channel_option = channel_configured_ao_option
-        channel_options.append(channel_configured_ao_option)
-        channel_options.append(current_channel_option)
-        channel_options.append(channel_me_option)
-        channel_options.append(channel_the_ao_option)
+    # now going with a default of the AO channel
+    # if channel_id:
+    #     initial_channel_option = channel_user_specified_channel_option
+    #     channel_options.append(channel_user_specified_channel_option)
+    #     channel_options.append(current_channel_option)
+    #     channel_options.append(channel_me_option)
+    #     channel_options.append(channel_the_ao_option)
+    #     channel_options.append(channel_configured_ao_option)
+    # # elif config('CHANNEL', default=current_channel_id) == 'USER':
+    # elif current_channel_id == 'USER':
+    #     initial_channel_option = channel_me_option
+    #     channel_options.append(channel_me_option)
+    #     channel_options.append(current_channel_option)
+    #     channel_options.append(channel_the_ao_option)
+    # # elif config('CHANNEL', default=current_channel_id) == 'THE_AO':
+    # elif current_channel_id == 'THE_AO':
+    initial_channel_option = channel_the_ao_option
+    channel_options.append(channel_the_ao_option)
+    channel_options.append(current_channel_option)
+    channel_options.append(channel_me_option)
+    # # elif config('CHANNEL', default=current_channel_id) == current_channel_id:
+    # elif current_channel_id == current_channel_id:
+    #     # if there is no .env CHANNEL value, use default of current channel
+    #     initial_channel_option = current_channel_option
+    #     channel_options.append(current_channel_option)
+    #     channel_options.append(channel_me_option)
+    #     channel_options.append(channel_the_ao_option)
+    # else:
+    #     # Default to using the .env CHANNEL value which at this point must be a channel id
+    #     initial_channel_option = channel_configured_ao_option
+    #     channel_options.append(channel_configured_ao_option)
+    #     channel_options.append(current_channel_option)
+    #     channel_options.append(channel_me_option)
+    #     channel_options.append(channel_the_ao_option)
 
     # determine if backblast or preblast
     is_preblast = body.get("command") == '/preblast'
@@ -782,46 +783,49 @@ def command(ack, body, respond, client, logger, context):
         except Exception as e:
             logging.error(f"Error pulling user db email info: {e}")
     
-        if (email_enabled == 1) & (email_option_show == 1):
-            blocks.append({
-                "type": "input",
-                "block_id": "email_send",
-                "element": {
-                    "type": "radio_buttons",
-                    "options": [
-                        {
+        try:
+            if (email_enabled == 1) & (email_option_show == 1):
+                blocks.append({
+                    "type": "input",
+                    "block_id": "email_send",
+                    "element": {
+                        "type": "radio_buttons",
+                        "options": [
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Send email",
+                                    "emoji": True
+                                },
+                                "value": "yes"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Don't send email",
+                                    "emoji": True
+                                },
+                                "value": "no"
+                            },                    
+                        ],
+                        "action_id": "email_send",
+                        "initial_option": {
                             "text": {
                                 "type": "plain_text",
                                 "text": "Send email",
                                 "emoji": True
                             },
                             "value": "yes"
-                        },
-                        {
-                            "text": {
-                                "type": "plain_text",
-                                "text": "Don't send email",
-                                "emoji": True
-                            },
-                            "value": "no"
-                        },                    
-                    ],
-                    "action_id": "email_send",
-                    "initial_option": {
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Don't send email",
-                            "emoji": True
-                        },
-                        "value": "no"
+                        }
+                    },
+                    "label": {
+                        "type": "plain_text",
+                        "text": "Email Backblast (to Wordpress, etc.)",
+                        "emoji": True
                     }
-                },
-                "label": {
-                    "type": "plain_text",
-                    "text": "Email Backblast (to Wordpress, etc.)",
-                    "emoji": True
-                }
-            })
+                })
+        except Exception as e:
+            logging.error(f"{e}")
 
         blocks.append({
             "type": "context",
@@ -1114,6 +1118,16 @@ def view_submission(ack, body, logger, client, context):
     email_send = safeget(result, "email_send", "email_send", "selected_option", "value")
     the_date = result["date"]["datepicker-action"]["selected_date"]
 
+    # Check to see if email is enabled for the region
+    try:
+        with my_connect() as mydb:
+            mycursor = mydb.conn.cursor()
+            mycursor.execute(f'SELECT email_enabled, email_option_show FROM regions WHERE team_id = "{team_id}";')
+            email_enabled, email_option_show = mycursor.fetchone()
+            print(f'email_enabled: {email_enabled}')
+    except Exception as e:
+        logging.error(f"Error pulling user db email info: {e}")
+
     pax_names_list = get_user_names(pax, logger, client, return_urls=False) or ['']
     pax_formatted = get_pax(pax)
     pax_full_list = [pax_formatted]
@@ -1183,7 +1197,7 @@ def view_submission(ack, body, logger, client, context):
         # Try again and bomb out without attempting to send email
         client.chat_postMessage(channel=chan, text='There was an error with your submission: {}'.format(slack_bolt_err))
     try:
-        if email_send and email_send == "yes":
+        if (email_send and email_send == "yes") or (email_send is None and email_enabled == 1):
             subject = title
 
             date_msg = f"DATE: " + the_date
