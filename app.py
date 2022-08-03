@@ -863,32 +863,115 @@ def command(ack, body, respond, client, logger, context):
 def config_slackblast(body, client, context):
     team_id = context['team_id']
     bot_token = context['bot_token']
+
+    # Pull current settings
+    try:
+        with my_connect() as mydb:
+            region_df = pd.read_sql(f'SELECT * FROM regions WHERE team_id = "{team_id}";', mydb.conn)
+    except Exception as e:
+        logging.error(f"Error pulling user db email info: {e}")
     
+
+    email_enable_options = [
+        {
+            "text": {
+                "type": "plain_text",
+                "text": "Enable email",
+                "emoji": True
+            },
+            "value": "enable"
+        },
+        {
+            "text": {
+                "type": "plain_text",
+                "text": "Disable email",
+                "emoji": True
+            },
+            "value": "disable"
+        },                    
+    ]
+
+    email_option_show_options = [
+        {
+            "text": {
+                "type": "plain_text",
+                "text": "Show",
+                "emoji": True
+            },
+            "value": "yes"
+        },
+        {
+            "text": {
+                "type": "plain_text",
+                "text": "Don't show",
+                "emoji": True
+            },
+            "value": "no"
+        },                    
+    ]
+
+    postie_format_options = [
+        {
+            "text": {
+                "type": "plain_text",
+                "text": "Yes",
+                "emoji": True
+            },
+            "value": "yes"
+        },
+        {
+            "text": {
+                "type": "plain_text",
+                "text": "No",
+                "emoji": True
+            },
+            "value": "no"
+        },                    
+    ]
+
+    # build out starting defaults
+    if len(region_df) > 0:
+        #TODO: what if these are null?
+        if region_df['email_enable'] == 1:
+            email_enable_initial = email_enable_options[0]
+        else:
+            email_enable_initial = email_enable_options[1]
+
+        if region_df['email_option_show'] == 1:
+            email_option_show_initial = email_option_show_options[0]
+        else:
+            email_option_show_initial = email_option_show_options[1]
+
+        if region_df['postie_format'] == 1:
+            postie_format_initial = postie_format_options[0]
+        else:
+            postie_format_initial = postie_format_options[1]
+
+        email_server_initial = region_df['email_server']
+        email_port_initial = region_df['email_port']
+        email_user_initial = region_df['email_user']
+        fernet = Fernet(os.environ['PASSWORD_ENCRYPT_KEY'].encode())
+        email_password_initial = fernet.decrypt(region_df['email_password'].encode()).decode()
+        email_to_initial = region_df['email_to']
+    else:
+        email_enable_initial = email_enable_options[1]
+        email_option_show_initial = email_option_show_options[1]
+        postie_format_initial = postie_format_options[1]
+        email_server_initial = 'smtp.gmail.com'
+        email_port_initial = '587'
+        email_user_initial = 'example_sender@gmail.com'
+        email_password_initial = 'example_pwd_123'
+        email_to_initial = 'example_destination@gmail.com'
+
     blocks = [
 		{
 			"type": "input",
             "block_id": "email_enable",
 			"element": {
 				"type": "radio_buttons",
-				"options": [
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Enable email",
-							"emoji": True
-						},
-						"value": "enable"
-					},
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Disable email",
-							"emoji": True
-						},
-						"value": "disable"
-					},                    
-				],
-				"action_id": "email_enable"
+				"options": email_enable_options,
+				"action_id": "email_enable",
+                "initial_option": email_enable_initial
 			},
 			"label": {
 				"type": "plain_text",
@@ -901,25 +984,9 @@ def config_slackblast(body, client, context):
             "block_id": "email_option_show",
 			"element": {
 				"type": "radio_buttons",
-				"options": [
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Show",
-							"emoji": True
-						},
-						"value": "yes"
-					},
-					{
-						"text": {
-							"type": "plain_text",
-							"text": "Don't show",
-							"emoji": True
-						},
-						"value": "no"
-					},                    
-				],
-				"action_id": "email_option_show"
+				"options": email_option_show_options,
+				"action_id": "email_option_show",
+                "initial_option": email_option_show_initial
 			},
 			"label": {
 				"type": "plain_text",
@@ -933,7 +1000,7 @@ def config_slackblast(body, client, context):
             "element": {
                 "type": "plain_text_input",
                 "action_id": "email_server",
-                "initial_value": "smtp.gmail.com"
+                "initial_value": email_server_initial
             },
             "label": {
                 "type": "plain_text",
@@ -946,7 +1013,7 @@ def config_slackblast(body, client, context):
             "element": {
                 "type": "plain_text_input",
                 "action_id": "email_port",
-                "initial_value": "587"
+                "initial_value": email_port_initial
             },
             "label": {
                 "type": "plain_text",
@@ -959,7 +1026,7 @@ def config_slackblast(body, client, context):
             "element": {
                 "type": "plain_text_input",
                 "action_id": "email_user",
-                "initial_value": "example_sender@gmail.com"
+                "initial_value": email_user_initial
             },
             "label": {
                 "type": "plain_text",
@@ -972,7 +1039,7 @@ def config_slackblast(body, client, context):
             "element": {
                 "type": "plain_text_input",
                 "action_id": "email_password",
-                "initial_value": "example_pwd_123"
+                "initial_value": email_password_initial
             },
             "label": {
                 "type": "plain_text",
@@ -994,12 +1061,36 @@ def config_slackblast(body, client, context):
             "element": {
                 "type": "plain_text_input",
                 "action_id": "email_to",
-                "initial_value": "example_destination@gmail.com"
+                "initial_value": email_to_initial
             },
             "label": {
                 "type": "plain_text",
                 "text": "Email To Address"
             }
+        },
+        {
+			"type": "input",
+            "block_id": "postie_format",
+			"element": {
+				"type": "radio_buttons",
+				"options": postie_format_options,
+				"action_id": "postie_format",
+                "initial_option": postie_format_initial
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "Use Postie formatting for categories, tags?",
+				"emoji": True
+			}
+		},
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": "This will put the AO name as a category for the post, and will put PAX names at the end as tags.",
+                }
+            ]
         }
     ]
     view = {
@@ -1044,6 +1135,7 @@ def view_submission(ack, body, logger, client, context):
     email_user = result['email_user']['email_user']['value']
     email_password_raw = result['email_password']['email_password']['value']
     email_to = result['email_to']['email_to']['value']
+    postie_format = result['postie_format']['postie_format']['selected_option']['value'] == "yes"
 
     # encrypt password
     fernet = Fernet(os.environ['PASSWORD_ENCRYPT_KEY'].encode())
@@ -1053,10 +1145,10 @@ def view_submission(ack, body, logger, client, context):
     sql_insert = f"""
     INSERT INTO regions 
     SET team_id='{team_id}', workspace_name='{workspace_name}', bot_token='{bot_token}', email_enabled={email_enable}, email_server='{email_server}', 
-        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password_encrypted}', email_to='{email_to}', email_option_show={email_option_show}
+        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password_encrypted}', email_to='{email_to}', email_option_show={email_option_show}, postie_format={postie_format}
     ON DUPLICATE KEY UPDATE
         team_id='{team_id}', workspace_name='{workspace_name}', bot_token='{bot_token}', email_enabled={email_enable}, email_server='{email_server}', 
-        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password_encrypted}', email_to='{email_to}', email_option_show={email_option_show}
+        email_server_port={email_port}, email_user='{email_user}', email_password='{email_password_encrypted}', email_to='{email_to}', email_option_show={email_option_show}, postie_format={postie_format}
     ;
     """
 
@@ -1198,7 +1290,16 @@ def view_submission(ack, body, logger, client, context):
         client.chat_postMessage(channel=chan, text='There was an error with your submission: {}'.format(slack_bolt_err))
     try:
         if (email_send and email_send == "yes") or (email_send is None and email_enabled == 1):
-            subject = title
+            # Pull email settings
+            try:
+                with my_connect() as mydb:
+                    mycursor = mydb.conn.cursor()
+                    mycursor.execute(f'SELECT email_server, email_server_port, email_user, email_password, email_to, postie_format FROM regions WHERE team_id = "{team_id}";')
+                    email_server, email_server_port, email_user, email_password, email_to, postie_format = mycursor.fetchone()
+            except Exception as e:
+                logging.error(f"Error pulling user db email info: {e}")
+            
+            ao_title = (ao_name or '').replace('the', '').title()
 
             date_msg = f"DATE: " + the_date
             ao_msg = f"AO: " + (ao_name or '').replace('the', '').title()
@@ -1208,18 +1309,15 @@ def view_submission(ack, body, logger, client, context):
             count_msg = f"COUNT: " + count
             moleskine_msg = moleskine.replace('*','')
 
+            if postie_format:
+                subject = f'[{ao_name}] {title}'
+                moleskine_msg += f'\n\nTags: {pax_names}'
+            else:
+                subject = title
+
             body_email = make_body(
                 date_msg, ao_msg, q_msg, pax_msg, fngs_msg, count_msg, moleskine_msg
             )
-
-            # Pull email settings
-            try:
-                with my_connect() as mydb:
-                    mycursor = mydb.conn.cursor()
-                    mycursor.execute(f'SELECT email_server, email_server_port, email_user, email_password, email_to FROM regions WHERE team_id = "{team_id}";')
-                    email_server, email_server_port, email_user, email_password, email_to = mycursor.fetchone()
-            except Exception as e:
-                logging.error(f"Error pulling user db email info: {e}")
 
             # Decrypt password
             fernet = Fernet(os.environ['PASSWORD_ENCRYPT_KEY'].encode())
