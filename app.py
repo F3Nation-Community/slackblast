@@ -930,30 +930,32 @@ def config_slackblast(body, client, context):
     ]
 
     # build out starting defaults
-    if len(region_df) > 0:
-        #TODO: what if these are null?
-        if region_df['email_enable'] == 1:
+    try:
+        region_info = region_df.loc[0,] # will fail if team not on the regions table
+        if region_info['email_enabled'] == 1:
             email_enable_initial = email_enable_options[0]
         else:
             email_enable_initial = email_enable_options[1]
 
-        if region_df['email_option_show'] == 1:
+        if region_info['email_option_show'] == 1:
             email_option_show_initial = email_option_show_options[0]
         else:
             email_option_show_initial = email_option_show_options[1]
 
-        if region_df['postie_format'] == 1:
+        if region_info['postie_format'] == 1:
             postie_format_initial = postie_format_options[0]
         else:
             postie_format_initial = postie_format_options[1]
 
-        email_server_initial = region_df['email_server']
-        email_port_initial = region_df['email_port']
-        email_user_initial = region_df['email_user']
+        email_server_initial = region_info['email_server']
+        email_port_initial = str(region_info['email_server_port'])
+        email_user_initial = region_info['email_user']
         fernet = Fernet(os.environ['PASSWORD_ENCRYPT_KEY'].encode())
-        email_password_initial = fernet.decrypt(region_df['email_password'].encode()).decode()
-        email_to_initial = region_df['email_to']
-    else:
+        email_password_initial = fernet.decrypt(region_info['email_password'].encode()).decode()
+        email_to_initial = region_info['email_to']
+    except Exception as e:
+        # if the pull does not return anything
+        print(f'Hit error: {e}')
         email_enable_initial = email_enable_options[1]
         email_option_show_initial = email_option_show_options[1]
         postie_format_initial = postie_format_options[1]
