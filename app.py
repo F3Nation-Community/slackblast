@@ -856,6 +856,432 @@ def command(ack, body, respond, client, logger, context):
         view=view,
     )
     logger.info(res)
+
+def command_labs(ack, body, respond, client, logger, context):
+    today = datetime.now(timezone.utc).astimezone()
+    today = today - timedelta(hours=6)
+    datestring = today.strftime("%Y-%m-%d")
+    user_id = body.get("user_id")
+
+    team_id = context['team_id']
+    bot_token = context['bot_token']
+
+    # Figure out where user sent slashcommand from to set current channel id and name
+    is_direct_message = body.get("channel_name") == 'directmessage'
+    current_channel_id = user_id if is_direct_message else body.get(
+        "channel_id")
+    current_channel_name = "Me" if is_direct_message else body.get(
+        "channel_id")
+
+    # The channel where user submitted the slashcommand
+    current_channel_option = {
+        "text": {
+            "type": "plain_text",
+            "text": "Current Channel"
+        },
+        "value": current_channel_id
+    }
+
+    # In .env, CHANNEL=USER
+    channel_me_option = {
+        "text": {
+            "type": "plain_text",
+            "text": "Me"
+        },
+        "value": user_id
+    }
+    # In .env, CHANNEL=THE_AO
+    channel_the_ao_option = {
+        "text": {
+            "type": "plain_text",
+            "text": "The AO Channel"
+        },
+        "value": "THE_AO"
+    }
+    # In .env, CHANNEL=<channel-id>
+    channel_configured_ao_option = {
+        "text": {
+            "type": "plain_text",
+            "text": "Preconfigured Backblast Channel"
+        },
+        # "value": config('CHANNEL', default=current_channel_id)
+        "value": current_channel_id
+    }
+    # User may have typed /slackblast #<channel-name> AND
+    # slackblast slashcommand is checked to escape channels.
+    #   Escape channels, users, and links sent to your app
+    #   Escaped: <#C1234|general>
+    channel_id, channel_name = get_channel_id_and_name(body, logger)
+    channel_user_specified_channel_option = {
+        "text": {
+            "type": "plain_text",
+            "text": '# ' + channel_name
+        },
+        "value": channel_id
+    }
+
+    channel_options = []
+
+    # figure out which channel should be default/initial and then remaining operations
+    # now going with a default of the AO channel
+    # if channel_id:
+    #     initial_channel_option = channel_user_specified_channel_option
+    #     channel_options.append(channel_user_specified_channel_option)
+    #     channel_options.append(current_channel_option)
+    #     channel_options.append(channel_me_option)
+    #     channel_options.append(channel_the_ao_option)
+    #     channel_options.append(channel_configured_ao_option)
+    # # elif config('CHANNEL', default=current_channel_id) == 'USER':
+    # elif current_channel_id == 'USER':
+    #     initial_channel_option = channel_me_option
+    #     channel_options.append(channel_me_option)
+    #     channel_options.append(current_channel_option)
+    #     channel_options.append(channel_the_ao_option)
+    # # elif config('CHANNEL', default=current_channel_id) == 'THE_AO':
+    # elif current_channel_id == 'THE_AO':
+    initial_channel_option = channel_the_ao_option
+    channel_options.append(channel_the_ao_option)
+    channel_options.append(current_channel_option)
+    channel_options.append(channel_me_option)
+    # # elif config('CHANNEL', default=current_channel_id) == current_channel_id:
+    # elif current_channel_id == current_channel_id:
+    #     # if there is no .env CHANNEL value, use default of current channel
+    #     initial_channel_option = current_channel_option
+    #     channel_options.append(current_channel_option)
+    #     channel_options.append(channel_me_option)
+    #     channel_options.append(channel_the_ao_option)
+    # else:
+    #     # Default to using the .env CHANNEL value which at this point must be a channel id
+    #     initial_channel_option = channel_configured_ao_option
+    #     channel_options.append(channel_configured_ao_option)
+    #     channel_options.append(current_channel_option)
+    #     channel_options.append(channel_me_option)
+    #     channel_options.append(channel_the_ao_option)
+
+    blocks = [
+        {
+            "type": "input",
+            "block_id": "title",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "title",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Snarky Title?"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Title"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "the_ao",
+            "element": {
+                "type": "channels_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select the AO",
+                    "emoji": True
+                },
+                "action_id": "channels_select-action"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The AO",
+                "emoji": True
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "date",
+            "element": {
+                "type": "datepicker",
+                "initial_date": datestring,
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select a date",
+                    "emoji": True
+                },
+                "action_id": "datepicker-action"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Workout Date",
+                "emoji": True
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "the_q",
+            "element": {
+                "type": "users_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Tag the Q",
+                    "emoji": True
+                },
+                "action_id": "users_select-action"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The Q",
+                "emoji": True
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "the_coq",
+            "element": {
+                "type": "multi_users_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Tag the CoQ(s)",
+                    "emoji": True
+                },
+                "action_id": "multi_users_select-action"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The CoQ(s), if applicable",
+                "emoji": True
+            },
+            "optional": True
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "plain_text",
+                    "text": "Note, only the first CoQ is tracked by PAXMiner",
+                    "emoji": True
+                }
+            ]
+        },
+        {
+            "type": "input",
+            "block_id": "the_pax",
+            "element": {
+                "type": "multi_users_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Tag the PAX",
+                    "emoji": True
+                },
+                "action_id": "multi_users_select-action"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The PAX",
+                "emoji": True
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "non_slack_pax",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "non_slack_pax-action",
+                "initial_value": "None",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Non-Slackers"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "List untaggable PAX separated by commas (not including FNGs)"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "fngs",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "fng-action",
+                "initial_value": "None",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "FNGs"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "List FNGs separated by commas"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "count",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "count-action",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Total PAX count including FNGs"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Count"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "moleskine",
+            "element": {
+                "type": "plain_text_input",
+                "multiline": True,
+                "action_id": "plain_text_input-action",
+                "initial_value": "\n*WARMUP:* \n*THE THANG:* \n*MARY:* \n*ANNOUNCEMENTS:* \n*COT:* ",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Tell us what happened\n\n"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The Moleskine",
+                "emoji": True
+            }
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "plain_text",
+                    "text": "If trying to tag PAX in here, substitute _ for spaces and do not include titles in parenthesis (ie, @Moneyball not @Moneyball_(F3_STC)). Spelling is important, capitalization is not!",
+                    "emoji": True
+                }
+            ]
+        },
+        {
+            "type": "divider"
+        },
+        # {
+        #     "type": "section",
+        #     "block_id": "destination",
+        #     "text": {
+        #         "type": "plain_text",
+        #         "text": "Choose where to post this"
+        #     },
+        #     "accessory": {
+        #         "action_id": "destination-action",
+        #         "type": "static_select",
+        #         "placeholder": {
+        #             "type": "plain_text",
+        #             "text": "Choose where"
+        #         },
+        #         "initial_option": initial_channel_option,
+        #         "options": channel_options
+        #     }
+        # },
+        {
+            "type": "input",
+            "block_id": "destination",
+            "element": {
+                "type": "static_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select an item",
+                    "emoji": True
+                },
+                "options": channel_options,
+                "initial_option": initial_channel_option,
+                "action_id": "destination-input"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Choose where to post this",
+                "emoji": True
+            }
+        }
+    ]
+
+    # Check to see if email is enabled for the region
+    try:
+        with my_connect() as mydb:
+            mycursor = mydb.conn.cursor()
+            mycursor.execute(f'SELECT email_enabled, email_option_show FROM regions WHERE team_id = "{team_id}";')
+            email_enabled, email_option_show = mycursor.fetchone()
+            print(f'email_enabled: {email_enabled}')
+    except Exception as e:
+        logging.error(f"Error pulling user db email info: {e}")
+
+    try:
+        if (email_enabled == 1) & (email_option_show == 1):
+            blocks.append({
+                "type": "input",
+                "block_id": "email_send",
+                "element": {
+                    "type": "radio_buttons",
+                    "options": [
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Send email",
+                                "emoji": True
+                            },
+                            "value": "yes"
+                        },
+                        {
+                            "text": {
+                                "type": "plain_text",
+                                "text": "Don't send email",
+                                "emoji": True
+                            },
+                            "value": "no"
+                        },                    
+                    ],
+                    "action_id": "email_send",
+                    "initial_option": {
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Send email",
+                            "emoji": True
+                        },
+                        "value": "yes"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Email Backblast (to Wordpress, etc.)",
+                    "emoji": True
+                }
+            })
+    except Exception as e:
+        logging.error(f"{e}")
+
+    blocks.append({
+        "type": "context",
+            "elements": [
+                {
+                    "type": "mrkdwn",
+                    "text": "*Do not hit Submit more than once!* Even if you get a timeout error, the backblast has likely already been posted. If using email, this can take time and this form may not automatically close."
+                }
+            ]
+    })
+
+    view = {
+        "type": "modal",
+        "callback_id": "backblast-id-labs",
+        "title": {
+            "type": "plain_text",
+            "text": "Create a Backblast"
+        },
+        "submit": {
+            "type": "plain_text",
+            "text": "Submit"
+        },
+        "blocks": blocks
+    }
+
+    res = client.views_open(
+        trigger_id=body["trigger_id"],
+        view=view,
+    )
+    logger.info(res)
         
 # def email_test(body, client, context):
 #     sendmail.send(subject='testing', recipient='evan.petzoldt@protonmail.com', body='this is a test', email_server='smtp.gmail.com', email_server_port=587, email_user='f3.qsignups@gmail.com', email_password='p24RoaZzBW#Q!L')
@@ -1190,6 +1616,11 @@ slack_app.command("/preblast")(
     lazy=[command]
 )
 
+slack_app.command("/labs-slackblast")(
+    ack=respond_to_slack_within_3_seconds,
+    lazy=[command_labs]
+)
+
 
 @slack_app.view("backblast-id")
 def view_submission(ack, body, logger, client, context):
@@ -1313,7 +1744,7 @@ def view_submission(ack, body, logger, client, context):
 
             if postie_format:
                 subject = f'[{ao_name}] {title}'
-                moleskine_msg += f'\n\nTags: {pax_names}'
+                moleskine_msg += f'\n\nTags: {ao_name}, {pax_names}'
             else:
                 subject = title
 
@@ -1334,6 +1765,132 @@ def view_submission(ack, body, logger, client, context):
     except Exception as sendmail_err:
         logger.error('Error with sendmail: {}'.format(sendmail_err))
 
+@slack_app.view("backblast-id-labs")
+def view_submission(ack, body, logger, client, context):
+    ack()
+    team_id = context['team_id']
+    bot_token = context['bot_token']
+
+    result = body["view"]["state"]["values"]
+    title = result["title"]["title"]["value"]
+    date = result["date"]["datepicker-action"]["selected_date"]
+    the_ao = result["the_ao"]["channels_select-action"]["selected_channel"]
+    the_q = result["the_q"]["users_select-action"]["selected_user"]
+    the_coq = result["the_coq"]["multi_users_select-action"]["selected_users"]
+    pax = result["the_pax"]["multi_users_select-action"]["selected_users"]
+    non_slack_pax = result["non_slack_pax"]["non_slack_pax-action"]["value"]
+    fngs = result["fngs"]["fng-action"]["value"]
+    count = result["count"]["count-action"]["value"]
+    moleskine = result["moleskine"]["plain_text_input-action"]["value"]
+    destination = result["destination"]["destination-input"]["selected_option"]["value"]
+    email_send = safeget(result, "email_send", "email_send", "selected_option", "value")
+    the_date = result["date"]["datepicker-action"]["selected_date"]
+
+    # Check to see if email is enabled for the region
+    try:
+        with my_connect() as mydb:
+            mycursor = mydb.conn.cursor()
+            mycursor.execute(f'SELECT email_enabled, email_option_show FROM regions WHERE team_id = "{team_id}";')
+            email_enabled, email_option_show = mycursor.fetchone()
+            print(f'email_enabled: {email_enabled}')
+    except Exception as e:
+        logging.error(f"Error pulling user db email info: {e}")
+
+    pax_names_list = get_user_names(pax, logger, client, return_urls=False) or ['']
+    pax_formatted = get_pax(pax)
+    pax_full_list = [pax_formatted]
+    fngs_formatted = fngs
+    if non_slack_pax != 'None':
+        pax_full_list.append(non_slack_pax)
+        pax_names_list.append(non_slack_pax)
+    if fngs != 'None':
+        pax_full_list.append(fngs)
+        pax_names_list.append(fngs)
+        fngs_formatted = str(fngs.count(',') + 1) + ' ' + fngs
+    pax_formatted = ', '.join(pax_full_list)
+    pax_names = ', '.join(pax_names_list)
+
+    if the_coq == []:
+        the_coqs_formatted = ''
+        the_coqs_names = ''
+    else:
+        the_coqs_formatted = get_pax(the_coq)
+        the_coqs_full_list = [the_coqs_formatted]
+        the_coqs_names_list = get_user_names(the_coq, logger, client, return_urls=False)
+        the_coqs_formatted = ', ' + ', '.join(the_coqs_full_list)
+        the_coqs_names = ', ' + ', '.join(the_coqs_names_list)
+
+    moleskine_formatted = parse_moleskin_users(moleskine, client)
+
+    logger.info(result)
+
+    chan = destination
+    if chan == 'THE_AO':
+        chan = the_ao
+
+    logger.info('Channel to post to will be {} because the selected destination value was {} while the selected AO in the modal was {}'.format(
+        chan, destination, the_ao))
+
+    ao_name = get_channel_name(the_ao, logger, client)
+    q_name, q_url = (get_user_names([the_q], logger, client, return_urls=True))
+    q_name = (q_name or [''])[0]
+    # print(f'CoQ: {the_coq}')
+    q_url = q_url[0]
+
+    msg = ""
+    try:
+        # formatting a message
+        # todo: change to use json object
+        header_msg = f"*Slackblast*: "
+        title_msg = f"*" + title + "*"
+
+        edit_block = [
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "Edit this backblast",
+                            "emoji": True
+                        },
+                        "value": "click_me_123",
+                        "action_id": "edit-backblast"
+                    }
+                ],
+                "block_id": "edit-backblast"
+            }
+        ]
+
+        date_msg = f"*DATE*: " + the_date
+        ao_msg = f"*AO*: <#" + the_ao + ">"
+        q_msg = f"*Q*: <@" + the_q + ">" + the_coqs_formatted
+        pax_msg = f"*PAX*: " + pax_formatted
+        fngs_msg = f"*FNGs*: " + fngs_formatted
+        count_msg = f"*COUNT*: " + count
+        moleskine_msg = moleskine_formatted
+
+        # Message the user via the app/bot name
+        # if config('POST_TO_CHANNEL', cast=bool):
+        body = make_body(date_msg, ao_msg, q_msg, pax_msg,
+                            fngs_msg, count_msg, moleskine_msg)
+        msg = header_msg + "\n" + title_msg + "\n" + body
+        client.chat_postMessage(channel=chan, text=msg, username=f'{q_name} (via Slackblast)', icon_url=q_url, blocks=edit_block)
+        logger.info('\nMessage posted to Slack! \n{}'.format(msg))
+    except Exception as slack_bolt_err:
+        logger.error('Error with posting Slack message with chat_postMessage: {}'.format(
+            slack_bolt_err))
+        # Try again and bomb out without attempting to send email
+        client.chat_postMessage(channel=chan, text='There was an error with your submission: {}'.format(slack_bolt_err))
+
+@slack_app.action("edit-backblast")
+def handle_manager_schedule_button(ack, body, client, logger, context):
+    ack("hello")
+    logger.info(body)
+    print(body)
+    user_id = context["user_id"]
+    team_id = context["team_id"]
 
 def make_body(date, ao, q, pax, fngs, count, moleskine):
     return date + \
