@@ -1766,7 +1766,7 @@ def view_submission(ack, body, logger, client, context):
         logger.error('Error with sendmail: {}'.format(sendmail_err))
 
 @slack_app.view("backblast-id-labs")
-def view_submission(ack, body, logger, client, context):
+def view_submission_labs(ack, body, logger, client, context):
     ack()
     team_id = context['team_id']
     bot_token = context['bot_token']
@@ -1782,6 +1782,7 @@ def view_submission(ack, body, logger, client, context):
     fngs = result["fngs"]["fng-action"]["value"]
     count = result["count"]["count-action"]["value"]
     moleskine = result["moleskine"]["plain_text_input-action"]["value"]
+    print(moleskine)
     destination = result["destination"]["destination-input"]["selected_option"]["value"]
     email_send = safeget(result, "email_send", "email_send", "selected_option", "value")
     the_date = result["date"]["datepicker-action"]["selected_date"]
@@ -1844,24 +1845,22 @@ def view_submission(ack, body, logger, client, context):
         header_msg = f"*Slackblast*: "
         title_msg = f"*" + title + "*"
 
-        edit_block = [
-            {
-                "type": "actions",
-                "elements": [
-                    {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Edit this backblast",
-                            "emoji": True
-                        },
-                        "value": "click_me_123",
-                        "action_id": "edit-backblast"
-                    }
-                ],
-                "block_id": "edit-backblast"
-            }
-        ]
+        edit_block = {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Edit this backblast",
+                        "emoji": True
+                    },
+                    "value": "click_me_123",
+                    "action_id": "edit-backblast"
+                }
+            ],
+            "block_id": "edit-backblast"
+        }
 
         date_msg = f"*DATE*: " + the_date
         ao_msg = f"*AO*: <#" + the_ao + ">"
@@ -1876,7 +1875,20 @@ def view_submission(ack, body, logger, client, context):
         body = make_body(date_msg, ao_msg, q_msg, pax_msg,
                             fngs_msg, count_msg, moleskine_msg)
         msg = header_msg + "\n" + title_msg + "\n" + body
-        client.chat_postMessage(channel=chan, text=msg, username=f'{q_name} (via Slackblast)', icon_url=q_url, blocks=edit_block)
+
+        msg_block = {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": msg
+            },
+            "block_id": "msg_text"
+        }
+
+        # res = client.chat_postMessage(channel=chan, text=msg, username=f'{q_name} (via Slackblast)', icon_url=q_url)
+        # edit_block['elements'][0]['value'] = res['ts']
+        # client.chat_postMessage(channel=chan, text="slackblast_button", username=f'{q_name} (via Slackblast)', icon_url=q_url, blocks=[edit_block])
+        res = client.chat_postMessage(channel=chan, text='slackblast_with_buttons', username=f'{q_name} (via Slackblast)', icon_url=q_url, blocks=[msg_block, edit_block])
         logger.info('\nMessage posted to Slack! \n{}'.format(msg))
     except Exception as slack_bolt_err:
         logger.error('Error with posting Slack message with chat_postMessage: {}'.format(
@@ -1885,12 +1897,435 @@ def view_submission(ack, body, logger, client, context):
         client.chat_postMessage(channel=chan, text='There was an error with your submission: {}'.format(slack_bolt_err))
 
 @slack_app.action("edit-backblast")
-def handle_manager_schedule_button(ack, body, client, logger, context):
-    ack("hello")
+def handle_edit_backblast(ack, body, client, logger, context):
+    ack()
     logger.info(body)
     print(body)
     user_id = context["user_id"]
     team_id = context["team_id"]
+
+    # backblast_ts = body['actions'][0]['value']
+    backblast_channel = body['channel']['id']
+    # res = client.conversations_history(channel=backblast_channel, lastest=backblast_ts, limit=2, inclusive=True)
+    # print(res)
+    # for message in res['messages']:
+    #     if message['ts']==backblast_ts:
+    #         text_og = message['text']
+
+    # Pull backblast post and text
+    text_og = body['message']['blocks'][0]['text']['text']
+    backblast_ts = body['message']['ts']
+    
+
+    # Take out * and split by line
+    text = text_og.replace('*','')
+    fields = text.split('\n')
+
+    # Start pulling fields
+    # TODO: this code is highly dependent on a specific format used by slackblast - if this changes, the below will break
+    # TODO: would be great to make it more resiliant in the future
+    title = fields[1]
+    date_str = fields[2][6:]
+    ao_id = fields[3][6:-1]
+    q_pax_id = fields[4][5:16]
+    coq_list = fields[4][19:].replace('<@', '').replace(' ','').replace('>', '').split(',')
+    if coq_list == ['']:
+        coq_list = []
+
+    # Generate FNG string / list
+    i = 6
+    try:
+        while i <= len(fields[6]):
+            fng_count = int(fields[6][i])
+            i += 1
+    except ValueError as e:
+        if i>6:
+            i += 1
+    fng_list = fields[6][i:].split(', ')
+    if len(fng_list) == 0:
+        fng_str = 'None'
+    else:
+        fng_str = ', '.join(fng_list)
+
+    # Generate slack PAX list
+    pax_list = fields[5][5:].replace(' ','').split(',')
+    pax_list = list(set(pax_list).difference(fng_list))
+    slack_pax_list = [x for x in pax_list if x[:2]=='<@']
+    slack_pax_list2 = [x.replace('<@','').replace('>','') for x in slack_pax_list]
+
+    # Generate non-slack (non-FNG) list
+    nonslack_pax_list = list(set(pax_list).difference(slack_pax_list))
+    if len(nonslack_pax_list) == 0:
+        nonslack_pax_str = 'None'
+    else:
+        nonslack_pax_str = ', '.join(nonslack_pax_list)
+
+    # Pull counts and formatted moleskin
+    pax_count = fields[7][7:]
+
+    nl_count = 0
+    nl_find = -1
+    while nl_count <= 7:
+        nl_find = text_og.find('\n', nl_find+1)
+        nl_count += 1
+
+    moleskin = text_og[nl_find:]
+
+    blocks = [
+        {
+            "type": "input",
+            "block_id": "title",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "title",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Snarky Title?"
+                },
+                "initial_value": title
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Title"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "the_ao",
+            "element": {
+                "type": "channels_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select the AO",
+                    "emoji": True
+                },
+                "action_id": "channels_select-action",
+                "initial_channel": ao_id
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The AO",
+                "emoji": True
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "date",
+            "element": {
+                "type": "datepicker",
+                "initial_date": date_str,
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Select a date",
+                    "emoji": True
+                },
+                "action_id": "datepicker-action"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Workout Date",
+                "emoji": True
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "the_q",
+            "element": {
+                "type": "users_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Tag the Q",
+                    "emoji": True
+                },
+                "action_id": "users_select-action",
+                "initial_user": q_pax_id
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The Q",
+                "emoji": True
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "the_coq",
+            "element": {
+                "type": "multi_users_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Tag the CoQ(s)",
+                    "emoji": True
+                },
+                "action_id": "multi_users_select-action"
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The CoQ(s), if applicable",
+                "emoji": True
+            },
+            "optional": True
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "plain_text",
+                    "text": "Note, only the first CoQ is tracked by PAXMiner",
+                    "emoji": True
+                }
+            ]
+        },
+        {
+            "type": "input",
+            "block_id": "the_pax",
+            "element": {
+                "type": "multi_users_select",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Tag the PAX",
+                    "emoji": True
+                },
+                "action_id": "multi_users_select-action",
+                "initial_users": slack_pax_list2
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The PAX",
+                "emoji": True
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "non_slack_pax",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "non_slack_pax-action",
+                "initial_value": nonslack_pax_str,
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Non-Slackers"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "List untaggable PAX separated by commas (not including FNGs)"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "fngs",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "fng-action",
+                "initial_value": fng_str,
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "FNGs"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "List FNGs separated by commas"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "count",
+            "element": {
+                "type": "plain_text_input",
+                "action_id": "count-action",
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Total PAX count including FNGs"
+                },
+                "initial_value": pax_count
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "Count"
+            }
+        },
+        {
+            "type": "input",
+            "block_id": "moleskine",
+            "element": {
+                "type": "plain_text_input",
+                "multiline": True,
+                "action_id": "plain_text_input-action",
+                "initial_value": moleskin,
+                "placeholder": {
+                    "type": "plain_text",
+                    "text": "Tell us what happened\n\n"
+                }
+            },
+            "label": {
+                "type": "plain_text",
+                "text": "The Moleskine",
+                "emoji": True
+            }
+        },
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "plain_text",
+                    "text": f"If trying to tag PAX in here, substitute _ for spaces and do not include titles in parenthesis (ie, @Moneyball not @Moneyball_(F3_STC)). Spelling is important, capitalization is not!\n\nPlease note that email is disabled for backblast updates.\n\n{backblast_channel},{backblast_ts}",
+                    "emoji": True
+                }
+            ]
+        }
+    ]
+
+    view = {
+        "type": "modal",
+        "callback_id": "edit-slackblast-modal",
+        "title": {
+            "type": "plain_text",
+            "text": "Edit backblast"
+        },
+        "submit": {
+            "type": "plain_text",
+            "text": "Submit"
+        },
+        "blocks": blocks
+    }
+
+    res = client.views_open(
+        trigger_id=body["trigger_id"],
+        view=view,
+    )
+    logger.info(res)
+
+@slack_app.view("edit-slackblast-modal")
+def view_edit_submission(ack, body, logger, client, context):
+    ack()
+    team_id = context['team_id']
+    bot_token = context['bot_token']
+
+    print(body)
+
+    result = body["view"]["state"]["values"]
+    title = result["title"]["title"]["value"]
+    date = result["date"]["datepicker-action"]["selected_date"]
+    the_ao = result["the_ao"]["channels_select-action"]["selected_channel"]
+    the_q = result["the_q"]["users_select-action"]["selected_user"]
+    the_coq = result["the_coq"]["multi_users_select-action"]["selected_users"]
+    pax = result["the_pax"]["multi_users_select-action"]["selected_users"]
+    non_slack_pax = result["non_slack_pax"]["non_slack_pax-action"]["value"]
+    fngs = result["fngs"]["fng-action"]["value"]
+    count = result["count"]["count-action"]["value"]
+    moleskine = result["moleskine"]["plain_text_input-action"]["value"]
+    # destination = result["destination"]["destination-input"]["selected_option"]["value"]
+    email_send = safeget(result, "email_send", "email_send", "selected_option", "value")
+    the_date = result["date"]["datepicker-action"]["selected_date"]
+
+    context_text = body['view']['blocks'][-1]['elements'][0]['text']
+    message_channel, backblast_ts = context_text.split('\n\n')[-1].split(',')
+    # Check to see if email is enabled for the region
+    try:
+        with my_connect() as mydb:
+            mycursor = mydb.conn.cursor()
+            mycursor.execute(f'SELECT email_enabled, email_option_show FROM regions WHERE team_id = "{team_id}";')
+            email_enabled, email_option_show = mycursor.fetchone()
+            print(f'email_enabled: {email_enabled}')
+    except Exception as e:
+        logging.error(f"Error pulling user db email info: {e}")
+
+    pax_names_list = get_user_names(pax, logger, client, return_urls=False) or ['']
+    pax_formatted = get_pax(pax)
+    pax_full_list = [pax_formatted]
+    fngs_formatted = fngs
+    if non_slack_pax != 'None':
+        pax_full_list.append(non_slack_pax)
+        pax_names_list.append(non_slack_pax)
+    if fngs != 'None':
+        pax_full_list.append(fngs)
+        pax_names_list.append(fngs)
+        fngs_formatted = str(fngs.count(',') + 1) + ' ' + fngs
+    pax_formatted = ', '.join(pax_full_list)
+    pax_names = ', '.join(pax_names_list)
+
+    if the_coq == []:
+        the_coqs_formatted = ''
+        the_coqs_names = ''
+    else:
+        the_coqs_formatted = get_pax(the_coq)
+        the_coqs_full_list = [the_coqs_formatted]
+        the_coqs_names_list = get_user_names(the_coq, logger, client, return_urls=False)
+        the_coqs_formatted = ', ' + ', '.join(the_coqs_full_list)
+        the_coqs_names = ', ' + ', '.join(the_coqs_names_list)
+
+    moleskine_formatted = parse_moleskin_users(moleskine, client)
+
+    logger.info(result)
+
+    # chan = destination
+    # if chan == 'THE_AO':
+    #     chan = the_ao
+
+    # logger.info('Channel to post to will be {} because the selected destination value was {} while the selected AO in the modal was {}'.format(
+    #     chan, destination, the_ao))
+
+    ao_name = get_channel_name(the_ao, logger, client)
+    q_name, q_url = (get_user_names([the_q], logger, client, return_urls=True))
+    q_name = (q_name or [''])[0]
+    # print(f'CoQ: {the_coq}')
+    q_url = q_url[0]
+
+    msg = ""
+    try:
+        # formatting a message
+        # todo: change to use json object
+        header_msg = f"*Slackblast*: "
+        title_msg = f"*" + title + "*"
+
+        edit_block = {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Edit this backblast",
+                        "emoji": True
+                    },
+                    "value": "click_me_123",
+                    "action_id": "edit-backblast"
+                }
+            ],
+            "block_id": "edit-backblast"
+        }
+
+        date_msg = f"*DATE*: " + the_date
+        ao_msg = f"*AO*: <#" + the_ao + ">"
+        q_msg = f"*Q*: <@" + the_q + ">" + the_coqs_formatted
+        pax_msg = f"*PAX*: " + pax_formatted
+        fngs_msg = f"*FNGs*: " + fngs_formatted
+        count_msg = f"*COUNT*: " + count
+        moleskine_msg = moleskine_formatted
+
+        # Message the user via the app/bot name
+        # if config('POST_TO_CHANNEL', cast=bool):
+        body = make_body(date_msg, ao_msg, q_msg, pax_msg,
+                            fngs_msg, count_msg, moleskine_msg)
+        msg = header_msg + "\n" + title_msg + "\n" + body
+
+        msg_block = {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": msg
+            },
+            "block_id": "msg_text"
+        }
+
+        client.chat_update(channel=message_channel, ts=backblast_ts, text=msg, username=f'{q_name} (via Slackblast)', icon_url=q_url)
+        logger.info('\nMessage posted to Slack! \n{}'.format(msg))
+    except Exception as slack_bolt_err:
+        logger.error('Error with updating Slack message with chat_postMessage: {}'.format(
+            slack_bolt_err))
+        # Try again and bomb out without attempting to send email
+        client.chat_postMessage(channel=message_channel, text='There was an error with your submission: {}'.format(slack_bolt_err))
 
 def make_body(date, ao, q, pax, fngs, count, moleskine):
     return date + \
