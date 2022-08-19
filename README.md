@@ -21,7 +21,7 @@ For a short tutorial on how to use the app, go to https://www.loom.com/share/705
 From a technical perspective, Slackblast is a Python web application that utilizes the modal window inside slack to make posting backblasts easier for PAX.
 
 Installation to your Slack Space is simple:
-1. Click [this link](https://slack.com/oauth/v2/authorize?client_id=3135457248691.3241841713426&scope=app_mentions:read,channels:read,chat:write,chat:write.customize,chat:write.public,commands,im:write,users:read,users:read.email,team:read&user_scope=) from a desktop computer
+1. Click [this link](https://slack.com/oauth/v2/authorize?client_id=3135457248691.3241841713426&scope=app_mentions:read,channels:read,chat:write,chat:write.customize,chat:write.public,commands,im:write,team:read,users:read,users:read.email,channels:history&user_scope=) from a desktop computer
 2. Make sure to select your region in the upper right if you are signed into multiple spaces
 3. You will get an error about 'wrong browser' - simply click "try again from here" and it should go through!
 
