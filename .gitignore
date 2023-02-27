@@ -147,3 +147,7 @@ cython_debug/
 main_*.yml
 
 aws-env.sh
+testing_code.py
+env.json
+
+.aws-sam/
