@@ -8,6 +8,7 @@ from utilities.helper_functions import (
     handle_preblast_post,
     handle_config_post,
     handle_backblast_edit_post,
+    run_fuzzy_match,
 )
 from utilities import constants
 from utilities.slack import forms
@@ -53,7 +54,60 @@ def respond_to_command(ack, body, logger, client, context, initial_backblast_dat
             Region(team_id=team_id, bot_token=context["bot_token"], workspace_name=team_name)
         )
 
-    if (
+    if safe_get(body, "command") == "/config-slackblast" or region_record.paxminer_schema is None:
+        config_form = forms.CONFIG_FORM
+        # paxminer_region_records = DbManager.execute_sql_query('select schema_name from paxminer.regions')
+        # regions_list = [r['schema_name'] for r in paxminer_region_records]
+        # logger.info("regions_list is {}".format(regions_list))
+        # regions_list = [p.region for p in paxminer_region_records]
+
+        if region_record:
+            if region_record.email_password:
+                fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
+                email_password_decrypted = fernet.decrypt(
+                    region_record.email_password.encode()
+                ).decode()
+            else:
+                email_password_decrypted = "SamplePassword123!"
+            # config_form.set_options({
+            #     actions.CONFIG_PAXMINER_DB: slack_orm.as_selector_options(regions_list)
+            # })
+            if region_record.paxminer_schema is None:
+                logger.info("running fuzzy match")
+                schema_best_guesses = run_fuzzy_match(region_record.workspace_name)
+                schema_best_guesses.append("Other (enter below)")
+                config_form.set_options(
+                    {actions.CONFIG_PAXMINER_DB: slack_orm.as_selector_options(schema_best_guesses)}
+                )
+            config_form.set_initial_values(
+                {
+                    actions.CONFIG_PAXMINER_DB: region_record.paxminer_schema,
+                    actions.CONFIG_EMAIL_ENABLE: "enable"
+                    if region_record.email_enabled == 1
+                    else "disable",
+                    actions.CONFIG_EMAIL_SHOW_OPTION: "yes"
+                    if region_record.email_option_show == 1
+                    else "no",
+                    actions.CONFIG_EMAIL_FROM: region_record.email_user
+                    or "example_sender@gmail.com",
+                    actions.CONFIG_EMAIL_TO: region_record.email_to
+                    or "example_destination@gmail.com",
+                    actions.CONFIG_EMAIL_SERVER: region_record.email_server or "smtp.gmail.com",
+                    actions.CONFIG_EMAIL_PORT: str(region_record.email_server_port) or "587",
+                    actions.CONFIG_EMAIL_PASSWORD: email_password_decrypted,
+                    actions.CONFIG_POSTIE_ENABLE: "yes"
+                    if region_record.postie_format == 1
+                    else "no",
+                }
+            )
+        config_form.post_modal(
+            client=client,
+            trigger_id=trigger_id,
+            callback_id=actions.CONFIG_CALLBACK_ID,
+            title_text="Configure Slackblast",
+        )
+
+    elif (
         safe_get(body, "command") == "/slackblast"
         or safe_get(body, "command") == "/backblast"
         or initial_backblast_data
@@ -123,40 +177,6 @@ def respond_to_command(ack, body, logger, client, context, initial_backblast_dat
             trigger_id=trigger_id,
             callback_id=actions.PREBLAST_CALLBACK_ID,
             title_text="Preblast",
-        )
-
-    elif safe_get(body, "command") == "/config-slackblast":
-        region_record: Region = DbManager.get_record(Region, id=team_id)
-        config_form = forms.CONFIG_FORM
-
-        if region_record:
-            fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
-            email_password_decrypted = fernet.decrypt(
-                region_record.email_password.encode()
-            ).decode()
-            config_form.set_initial_values(
-                {
-                    actions.CONFIG_EMAIL_ENABLE: "enable"
-                    if region_record.email_enabled == 1
-                    else "disable",
-                    actions.CONFIG_EMAIL_SHOW_OPTION: "yes"
-                    if region_record.email_option_show == 1
-                    else "no",
-                    actions.CONFIG_EMAIL_FROM: region_record.email_user,
-                    actions.CONFIG_EMAIL_TO: region_record.email_to,
-                    actions.CONFIG_EMAIL_SERVER: region_record.email_server,
-                    actions.CONFIG_EMAIL_PORT: str(region_record.email_server_port),
-                    actions.CONFIG_EMAIL_PASSWORD: email_password_decrypted,
-                    actions.CONFIG_POSTIE_ENABLE: "yes"
-                    if region_record.postie_format == 1
-                    else "no",
-                }
-            )
-        config_form.post_modal(
-            client=client,
-            trigger_id=trigger_id,
-            callback_id=actions.CONFIG_CALLBACK_ID,
-            title_text="Configure Slackblast",
         )
 
 

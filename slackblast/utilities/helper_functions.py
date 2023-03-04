@@ -1,9 +1,11 @@
 from utilities import sendmail, constants
-from utilities.database.orm import Region
+from utilities.database.orm import Region, Backblast, Attendance
 from utilities.database import DbManager
 from datetime import datetime
 from utilities.slack import actions
 from utilities.constants import LOCAL_DEVELOPMENT
+from typing import List
+from fuzzywuzzy import fuzz
 import os
 import sys
 from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
@@ -12,6 +14,8 @@ import re
 from cryptography.fernet import Fernet
 from slack_sdk.web import WebClient
 import json
+from sqlalchemy.exc import IntegrityError
+from pymysql.err import IntegrityError as PymysqlIntegrityError
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -161,13 +165,15 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
     pax_formatted = get_pax(pax)
     pax_full_list = [pax_formatted]
     fngs_formatted = fngs
+    fng_count = 0
     if non_slack_pax != "None":
         pax_full_list.append(non_slack_pax)
         pax_names_list.append(non_slack_pax)
     if fngs != "None":
         pax_full_list.append(fngs)
         pax_names_list.append(fngs)
-        fngs_formatted = str(fngs.count(",") + 1) + " " + fngs
+        fng_count = fngs.count(",") + 1
+        fngs_formatted = str(fng_count) + " " + fngs
     pax_formatted = ", ".join(pax_full_list)
     pax_names = ", ".join(pax_names_list)
 
@@ -223,6 +229,46 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
         "block_id": actions.BACKBLAST_EDIT_BUTTON,
     }
 
+    res = client.chat_postMessage(
+        channel=chan,
+        text="content_from_slackblast",
+        username=f"{q_name} (via Slackblast)",
+        icon_url=q_url,
+        blocks=[msg_block, edit_block],
+    )
+    logger.info("\nMessage posted to Slack! \n{}".format(post_msg))
+    logger.info("response is {}".format(res))
+
+    try:
+        DbManager.create_record(
+            schema=region_record.paxminer_schema,
+            record=Backblast(
+                timestamp=res["ts"],
+                ao_id=chan,
+                bd_date=the_date,
+                q_user_id=the_q,
+                coq_user_id=the_coq,
+                pax_count=count,
+                backblast=post_msg,
+                fngs=fngs_formatted if fngs != "None" else "None listed",
+                fng_count=fng_count,
+            ),
+        )
+
+        attendance_records = []
+        for pax_id in pax_names_list:
+            attendance_records.append(
+                Attendance(
+                    timestamp=res["ts"], user_id=pax_id, ao_id=chan, date=the_date, q_user_id=the_q
+                )
+            )
+
+        DbManager.create_records(schema=region_record.paxminer_schema, records=attendance_records)
+    except PymysqlIntegrityError as e:
+        ack(
+            "This backblast was not saved to the database. There is already a backblast for this AO and Q on this date."
+        )
+
     if (email_send and email_send == "yes") or (
         email_send is None and region_record.email_enabled == 1
     ):
@@ -263,16 +309,6 @@ COUNT: {count}
             logger.error("Error with sendmail: {}".format(sendmail_err))
             logger.info("\nEmail Sent! \n{}".format(email_msg))
 
-    res = client.chat_postMessage(
-        channel=chan,
-        text="slackblast",
-        username=f"{q_name} (via Slackblast)",
-        icon_url=q_url,
-        blocks=[msg_block, edit_block],
-    )
-    # client.chat_postMessage(channel=chan, text=post_msg, username=f'{q_name} (via Slackblast)', icon_url=q_url)
-    logger.info("\nMessage posted to Slack! \n{}".format(post_msg))
-
 
 def handle_backblast_edit_post(ack, body, logger, client, context, backblast_data) -> str:
     ack()
@@ -287,6 +323,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     fngs = safe_get(backblast_data, actions.BACKBLAST_FNGS)
     count = safe_get(backblast_data, actions.BACKBLAST_COUNT)
     moleskine = safe_get(backblast_data, actions.BACKBLAST_MOLESKIN)
+    ao = safe_get(backblast_data, actions.BACKBLAST_AO)
 
     message_metadata = body["view"]["blocks"][-1]["elements"][0]["text"]
     message_channel, message_ts = message_metadata.split("|")
@@ -295,13 +332,15 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     pax_formatted = get_pax(pax)
     pax_full_list = [pax_formatted]
     fngs_formatted = fngs
+    fng_count = 0
     if non_slack_pax != "None":
         pax_full_list.append(non_slack_pax)
         pax_names_list.append(non_slack_pax)
     if fngs != "None":
         pax_full_list.append(fngs)
         pax_names_list.append(fngs)
-        fngs_formatted = str(fngs.count(",") + 1) + " " + fngs
+        fng_count = fngs.count(",") + 1
+        fngs_formatted = str(fng_count) + " " + fngs
     pax_formatted = ", ".join(pax_full_list)
 
     if the_coq == None:
@@ -358,6 +397,55 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     )
     logger.info("\nBackblast updated in Slack! \n{}".format(post_msg))
 
+    region_record: Region = DbManager.get_record(Region, id=context["team_id"])
+    DbManager.delete_records(
+        cls=Backblast,
+        schema=region_record.paxminer_schema,
+        filters=[Backblast.timestamp == message_ts],
+    )
+    DbManager.delete_records(
+        cls=Attendance,
+        schema=region_record.paxminer_schema,
+        filters=[Attendance.timestamp == message_ts],
+    )
+
+    try:
+        DbManager.create_record(
+            schema=region_record.paxminer_schema,
+            record=Backblast(
+                timestamp=message_ts,
+                ts_edited=safe_get(res, "message", "edited", "ts"),
+                ao_id=ao,
+                bd_date=the_date,
+                q_user_id=the_q,
+                coq_user_id=the_coq,
+                pax_count=count,
+                backblast=post_msg,
+                fngs=fngs_formatted if fngs != "None" else "None listed",
+                fng_count=fng_count,
+            ),
+        )
+
+        attendance_records = []
+        for pax_id in pax_names_list:
+            attendance_records.append(
+                Attendance(
+                    timestamp=message_ts,
+                    ts_edited=safe_get(res, "message", "edited", "ts"),
+                    user_id=pax_id,
+                    ao_id=ao,
+                    date=the_date,
+                    q_user_id=the_q,
+                )
+            )
+
+        DbManager.create_records(schema=region_record.paxminer_schema, records=attendance_records)
+
+    except PymysqlIntegrityError as e:
+        ack(
+            "This backblast was not saved to the database. There is already a backblast for this AO and Q on this date."
+        )
+
 
 def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> str:
     ack()
@@ -407,16 +495,23 @@ def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> s
 def handle_config_post(ack, body, logger, client, context, config_data) -> str:
     ack()
 
-    region_record: Region = DbManager.get_record(Region, id=context["team_id"])
     fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
     email_password_encrypted = fernet.encrypt(
         safe_get(config_data, actions.CONFIG_EMAIL_PASSWORD).encode()
     ).decode()
 
+    if safe_get(config_data, actions.CONFIG_PAXMINER_DB) == "Other (enter below)":
+        paxminer_db = safe_get(config_data, actions.CONFIG_PAXMINER_DB_OTHER)
+    else:
+        paxminer_db = safe_get(config_data, actions.CONFIG_PAXMINER_DB)
+
+    # TODO: validate paxminer_db is a valid db name?
+
     DbManager.update_record(
-        Region,
-        region_record.id,
-        {
+        cls=Region,
+        id=context["team_id"],
+        fields={
+            Region.paxminer_schema: paxminer_db,
             Region.email_enabled: 1
             if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable"
             else 0,
@@ -433,3 +528,17 @@ def handle_config_post(ack, body, logger, client, context, config_data) -> str:
             else 0,
         },
     )
+
+
+def run_fuzzy_match(workspace_name: str) -> List[str]:
+    """Run the fuzz match on the workspace name and return a list of possible matches"""
+    paxminer_region_records = DbManager.execute_sql_query(
+        "select schema_name from paxminer.regions"
+    )
+    regions_list = [r["schema_name"] for r in paxminer_region_records]
+
+    ratio_dict = {}
+    for region in regions_list:
+        ratio_dict[region] = fuzz.ratio(region, workspace_name)
+
+    return [k for k, v in sorted(ratio_dict.items(), key=lambda item: item[1], reverse=True)][:20]

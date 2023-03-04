@@ -1,10 +1,11 @@
 slack_sdk
 slack_bolt
 datetime
-pandas
-mysql-connector-python
+# pandas
+# mysql-connector-python
 cryptography
 pymysql
 SQLAlchemy==1.4.15
 # email
 # smtplib
+fuzzywuzzy
