@@ -249,14 +249,14 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
                 q_user_id=the_q,
                 coq_user_id=the_coq,
                 pax_count=count,
-                backblast=post_msg,
+                backblast=post_msg.replace("*", ""),
                 fngs=fngs_formatted if fngs != "None" else "None listed",
                 fng_count=fng_count,
             ),
         )
 
         attendance_records = []
-        for pax_id in pax_names_list:
+        for pax_id in list(set(pax) | set(the_coq or []) | set(the_q)):
             attendance_records.append(
                 Attendance(
                     timestamp=res["ts"], user_id=pax_id, ao_id=chan, date=the_date, q_user_id=the_q
@@ -420,14 +420,14 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
                 q_user_id=the_q,
                 coq_user_id=the_coq,
                 pax_count=count,
-                backblast=post_msg,
+                backblast=post_msg.replace("*", ""),
                 fngs=fngs_formatted if fngs != "None" else "None listed",
                 fng_count=fng_count,
             ),
         )
 
         attendance_records = []
-        for pax_id in pax_names_list:
+        for pax_id in list(set(pax) | set(the_coq or []) | set(the_q)):
             attendance_records.append(
                 Attendance(
                     timestamp=message_ts,
