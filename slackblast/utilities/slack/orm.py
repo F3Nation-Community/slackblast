@@ -51,6 +51,7 @@ class BaseAction:
 class InputBlock(BaseBlock):
     optional: bool = True
     element: BaseElement = None
+    dispatch_action: bool = False
 
     def get_selected_value(self, input_data):
         return self.element.get_selected_value(input_data, self.action)
@@ -63,6 +64,8 @@ class InputBlock(BaseBlock):
             "label": self.make_label_field(),
         }
         block.update({"element": self.element.as_form_field(action=self.action)})
+        if self.dispatch_action:
+            block.update({"dispatch_action": True})
         return block
 
 
@@ -309,9 +312,14 @@ class MultiUsersSelectElement(BaseElement):
 class ContextBlock(BaseBlock):
     text: str = ""
 
-    # TODO: get_selected_value for passing metadata
     def as_form_field(self):
-        return {"type": "context", "elements": [{"type": "mrkdwn", "text": self.text}]}
+        j = {
+            "type": "context",
+            "elements": [{"type": "mrkdwn", "text": self.text}],
+        }
+        if self.action:
+            j["block_id"] = self.action
+        return j
 
 
 @dataclass
@@ -370,7 +378,28 @@ class BlockView:
 
         res = client.views_open(trigger_id=trigger_id, view=view)
 
-        # print(self.blocks.as_form_field())
+    def update_modal(
+        self,
+        client: Any,
+        view_id: str,
+        title_text: str,
+        callback_id: str,
+        submit_button_text: str = "Submit",
+        parent_metadata: str = None,
+    ):
+        blocks = self.as_form_field()
+        if parent_metadata:
+            blocks.append(ContextBlock(text=parent_metadata).as_form_field())
+
+        view = {
+            "type": "modal",
+            "callback_id": callback_id,
+            "title": {"type": "plain_text", "text": title_text},
+            "submit": {"type": "plain_text", "text": submit_button_text},
+            "blocks": blocks,
+        }
+
+        res = client.views_update(view_id=view_id, view=view)
 
 
 class DividerBlock(BaseBlock):

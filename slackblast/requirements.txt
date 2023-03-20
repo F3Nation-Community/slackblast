@@ -9,3 +9,4 @@ SQLAlchemy==1.4.15
 # email
 # smtplib
 fuzzywuzzy
+python-Levenshtein

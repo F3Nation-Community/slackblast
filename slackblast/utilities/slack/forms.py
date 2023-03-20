@@ -16,18 +16,25 @@ BACKBLAST_FORM = orm.BlockView(
             action=actions.BACKBLAST_AO,
             optional=False,
             element=orm.ChannelsSelectElement(placeholder="Select the AO..."),
+            dispatch_action=True,
         ),
         orm.InputBlock(
             label="Workout Date",
             action=actions.BACKBLAST_DATE,
             optional=False,
             element=orm.DatepickerElement(placeholder="Select the date..."),
+            dispatch_action=True,
         ),
         orm.InputBlock(
             label="The Q",
             action=actions.BACKBLAST_Q,
             optional=False,
             element=orm.UsersSelectElement(placeholder="Select the Q..."),
+            dispatch_action=True,
+        ),
+        orm.ContextBlock(
+            text=":warning: :warning: *WARNING*: duplicate backblast detected in PAXMiner DB for this Q, AO, and date; this backblast will not be saved as-is. Please modify one of these selections",
+            action=actions.BACKBLAST_DUPLICATE_WARNING,
         ),
         orm.InputBlock(
             label="The CoQ(s), if any",
@@ -203,6 +210,7 @@ CONFIG_FORM = orm.BlockView(
                     names=["Enable Email", "Disable Email"], values=["enable", "disable"]
                 ),
             ),
+            dispatch_action=True,
         ),
         orm.InputBlock(
             label="Show email option in form?",
@@ -238,7 +246,8 @@ CONFIG_FORM = orm.BlockView(
             element=orm.PlainTextInputElement(initial_value="example_pwd_123"),
         ),
         orm.ContextBlock(
-            text="If using gmail, you must use an App Password (https://support.google.com/accounts/answer/185833). Your password will be stored encrypted - however, it is STRONGLY recommended that you use a non-personal email address and password for this purpose, as security cannot be guaranteed."
+            text="If using gmail, you must use an App Password (https://support.google.com/accounts/answer/185833). Your password will be stored encrypted - however, it is STRONGLY recommended that you use a non-personal email address and password for this purpose, as security cannot be guaranteed.",
+            action=actions.CONFIG_PASSWORD_CONTEXT,
         ),
         orm.InputBlock(
             label="Email To Address",
@@ -256,7 +265,8 @@ CONFIG_FORM = orm.BlockView(
             ),
         ),
         orm.ContextBlock(
-            text="This will put the AO name as a category for the post, and will put PAX names at the end as tags."
+            text="This will put the AO name as a category for the post, and will put PAX names at the end as tags.",
+            action=actions.CONFIG_POSTIE_CONTEXT,
         ),
     ]
 )

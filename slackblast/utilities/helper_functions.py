@@ -199,8 +199,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
     q_url = q_url[0]
 
     post_msg = f"""
-*Slackblast*:
-*{title}*
+*Backblast! {title}*
 *DATE*: {the_date}
 *AO*: <#{the_ao}>
 *Q*: <@{the_q}>{the_coqs_formatted}
@@ -256,7 +255,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
         )
 
         attendance_records = []
-        for pax_id in list(set(pax) | set(the_coq or []) | set(the_q)):
+        for pax_id in list(set(pax) | set(the_coq or []) | set([the_q])):
             attendance_records.append(
                 Attendance(
                     timestamp=res["ts"], user_id=pax_id, ao_id=chan, date=the_date, q_user_id=the_q
@@ -264,9 +263,11 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
             )
 
         DbManager.create_records(schema=region_record.paxminer_schema, records=attendance_records)
-    except PymysqlIntegrityError as e:
-        ack(
-            "This backblast was not saved to the database. There is already a backblast for this AO and Q on this date."
+    except Exception as e:
+        logger.error("Error saving backblast to database: {}".format(e))
+        client.chat_postMessage(
+            channel=context["user_id"],
+            text=f"WARNING: The backblast you just posted was not saved to the database. There is already a backblast for this AO and Q on this date. Please edit the backblast using the `Edit this backblast` button. Thanks!",
         )
 
     if (email_send and email_send == "yes") or (
@@ -357,8 +358,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     q_url = q_url[0]
 
     post_msg = f"""
-*Slackblast*:
-*{title}*
+*Backblast! {title}*
 *DATE*: {the_date}
 *AO*: <#{the_ao}>
 *Q*: <@{the_q}>{the_coqs_formatted}
@@ -398,16 +398,17 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     logger.info("\nBackblast updated in Slack! \n{}".format(post_msg))
 
     region_record: Region = DbManager.get_record(Region, id=context["team_id"])
-    DbManager.delete_records(
-        cls=Backblast,
-        schema=region_record.paxminer_schema,
-        filters=[Backblast.timestamp == message_ts],
-    )
-    DbManager.delete_records(
-        cls=Attendance,
-        schema=region_record.paxminer_schema,
-        filters=[Attendance.timestamp == message_ts],
-    )
+    if message_ts:
+        DbManager.delete_records(
+            cls=Backblast,
+            schema=region_record.paxminer_schema,
+            filters=[Backblast.timestamp == message_ts],
+        )
+        DbManager.delete_records(
+            cls=Attendance,
+            schema=region_record.paxminer_schema,
+            filters=[Attendance.timestamp == message_ts],
+        )
 
     try:
         DbManager.create_record(
@@ -427,7 +428,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
         )
 
         attendance_records = []
-        for pax_id in list(set(pax) | set(the_coq or []) | set(the_q)):
+        for pax_id in list(set(pax) | set(the_coq or []) | set([the_q])):
             attendance_records.append(
                 Attendance(
                     timestamp=message_ts,
@@ -441,9 +442,11 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
 
         DbManager.create_records(schema=region_record.paxminer_schema, records=attendance_records)
 
-    except PymysqlIntegrityError as e:
-        ack(
-            "This backblast was not saved to the database. There is already a backblast for this AO and Q on this date."
+    except Exception as e:
+        logger.error("Error saving backblast to database: {}".format(e))
+        client.chat_postMessage(
+            channel=context["user_id"],
+            text=f"WARNING: The backblast you just posted was not saved to the database. There is already a backblast for this AO and Q on this date. Please edit the backblast using the `Edit this backblast` button. Thanks!",
         )
 
 
@@ -495,11 +498,6 @@ def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> s
 def handle_config_post(ack, body, logger, client, context, config_data) -> str:
     ack()
 
-    fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
-    email_password_encrypted = fernet.encrypt(
-        safe_get(config_data, actions.CONFIG_EMAIL_PASSWORD).encode()
-    ).decode()
-
     if safe_get(config_data, actions.CONFIG_PAXMINER_DB) == "Other (enter below)":
         paxminer_db = safe_get(config_data, actions.CONFIG_PAXMINER_DB_OTHER)
     else:
@@ -507,26 +505,34 @@ def handle_config_post(ack, body, logger, client, context, config_data) -> str:
 
     # TODO: validate paxminer_db is a valid db name?
 
+    fields = {
+        Region.paxminer_schema: paxminer_db,
+        Region.email_enabled: 1
+        if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable"
+        else 0,
+    }
+    if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable":
+        fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
+        email_password_encrypted = fernet.encrypt(
+            safe_get(config_data, actions.CONFIG_EMAIL_PASSWORD).encode()
+        ).decode()
+        fields.update(
+            {
+                Region.email_option_show: 1
+                if safe_get(config_data, actions.CONFIG_EMAIL_SHOW_OPTION) == "yes"
+                else 0,
+                Region.email_server: safe_get(config_data, actions.CONFIG_EMAIL_SERVER),
+                Region.email_server_port: safe_get(config_data, actions.CONFIG_EMAIL_PORT),
+                Region.email_user: safe_get(config_data, actions.CONFIG_EMAIL_FROM),
+                Region.email_to: safe_get(config_data, actions.CONFIG_EMAIL_TO),
+                Region.email_password: email_password_encrypted,
+            }
+        )
+
     DbManager.update_record(
         cls=Region,
         id=context["team_id"],
-        fields={
-            Region.paxminer_schema: paxminer_db,
-            Region.email_enabled: 1
-            if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable"
-            else 0,
-            Region.email_option_show: 1
-            if safe_get(config_data, actions.CONFIG_EMAIL_SHOW_OPTION) == "yes"
-            else 0,
-            Region.email_server: safe_get(config_data, actions.CONFIG_EMAIL_SERVER),
-            Region.email_server_port: safe_get(config_data, actions.CONFIG_EMAIL_PORT),
-            Region.email_user: safe_get(config_data, actions.CONFIG_EMAIL_FROM),
-            Region.email_to: safe_get(config_data, actions.CONFIG_EMAIL_TO),
-            Region.email_password: email_password_encrypted,
-            Region.postie_format: 1
-            if safe_get(config_data, actions.CONFIG_POSTIE_ENABLE) == "yes"
-            else 0,
-        },
+        fields=fields,
     )
 
 
@@ -542,3 +548,25 @@ def run_fuzzy_match(workspace_name: str) -> List[str]:
         ratio_dict[region] = fuzz.ratio(region, workspace_name)
 
     return [k for k, v in sorted(ratio_dict.items(), key=lambda item: item[1], reverse=True)][:20]
+
+
+def check_for_duplicate(
+    q: str, ao: str, date: datetime.date, region_record: Region, logger
+) -> bool:
+    """Check if there is already a backblast for this AO and Q on this date"""
+    if region_record.paxminer_schema:
+        backblast_dups = DbManager.find_records(
+            cls=Backblast,
+            filters=[Backblast.q_user_id == q, Backblast.ao_id == ao, Backblast.bd_date == date],
+            schema=region_record.paxminer_schema,
+        )
+        attendance_dups = DbManager.find_records(
+            cls=Attendance,
+            filters=[Attendance.q_user_id == q, Attendance.ao_id == ao, Attendance.date == date],
+            schema=region_record.paxminer_schema,
+        )
+        is_duplicate = backblast_dups or attendance_dups
+    else:
+        is_duplicate = False
+
+    return is_duplicate
