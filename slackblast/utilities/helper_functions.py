@@ -204,7 +204,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
 *AO*: <#{the_ao}>
 *Q*: <@{the_q}>{the_coqs_formatted}
 *PAX*: {pax_formatted}
-*FNGS*: {fngs_formatted}
+*FNGs*: {fngs_formatted}
 *COUNT*: {count}
 {moleskine_formatted}
     """
@@ -363,7 +363,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
 *AO*: <#{the_ao}>
 *Q*: <@{the_q}>{the_coqs_formatted}
 *PAX*: {pax_formatted}
-*FNGS*: {fngs_formatted}
+*FNGs*: {fngs_formatted}
 *COUNT*: {count}
 {moleskine_formatted}
     """

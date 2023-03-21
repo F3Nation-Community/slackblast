@@ -2,9 +2,9 @@ on:
   push:
     branches:
       - main
-      - staging
+      # - staging
 jobs:
-  build-deploy:
+  sam-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -16,43 +16,54 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
 
-      - name: Determine deployment stack name
-        uses: haya14busa/action-cond@v1
-        id: STACK_NAME
-        with:
-          cond: ${{ github.ref == 'refs/heads/master' }}
-          if_true: 'slackblast-prod'
-          if_false: 'slackblast-test'
+      # - name: Determine deployment stack name
+      #   uses: haya14busa/action-cond@v1
+      #   id: STACK_NAME
+      #   with:
+      #     cond: ${{ github.ref == 'refs/heads/master' }}
+      #     if_true: 'slackblast-prod'
+      #     if_false: 'slackblast-test'
 
-      - name: Pull appropriate client secret
-        uses: haya14busa/action-cond@v1
-        id: ENV_SLACK_CLIENT_SECRET
-        with:
-          cond: ${{ github.ref == 'refs/heads/master' }}
-          if_true: ${{ secrets.SLACK_CLIENT_SECRET_PROD }}
-          if_false: ${{ secrets.SLACK_CLIENT_SECRET_TEST }}
+      # - name: Pull appropriate client secret
+      #   uses: haya14busa/action-cond@v1
+      #   id: ENV_SLACK_CLIENT_SECRET
+      #   with:
+      #     cond: ${{ github.ref == 'refs/heads/master' }}
+      #     if_true: ${{ secrets.SLACK_CLIENT_SECRET_PROD }}
+      #     if_false: ${{ secrets.SLACK_CLIENT_SECRET_TEST }}
 
-      - name: Pull appropriate signing secret
-        uses: haya14busa/action-cond@v1
-        id: ENV_SLACK_SIGNING_SECRET
-        with:
-          cond: ${{ github.ref == 'refs/heads/master' }}
-          if_true: ${{ secrets.SLACK_SIGNING_SECRET_PROD }}
-          if_false: ${{ secrets.SLACK_SIGNING_SECRET_TEST }}
+      # - name: Pull appropriate signing secret
+      #   uses: haya14busa/action-cond@v1
+      #   id: ENV_SLACK_SIGNING_SECRET
+      #   with:
+      #     cond: ${{ github.ref == 'refs/heads/master' }}
+      #     if_true: ${{ secrets.SLACK_SIGNING_SECRET_PROD }}
+      #     if_false: ${{ secrets.SLACK_SIGNING_SECRET_TEST }}
 
-      - name: Set stage for other variables
-        uses: haya14busa/action-cond@v1
-        id: STAGE
-        with:
-          cond: ${{ github.ref == 'refs/heads/master' }}
-          if_true: prod
-          if_false: staging
+      # - name: Set stage for other variables
+      #   uses: haya14busa/action-cond@v1
+      #   id: STAGE
+      #   with:
+      #     cond: ${{ github.ref == 'refs/heads/master' }}
+      #     if_true: prod
+      #     if_false: staging
 
-      
-      # sam build 
+      # sam build
       - run: sam build --use-container
+      # Run Unit tests- Specify unit tests here
 
-      # Run Unit tests- Specify unit tests here 
+  sam-deploy-test:
+    runs-on: "ubuntu-latest"
+    environment: "test"
+    needs: sam-build
+    steps:
+      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ env.AWS_STACK_NAME }} --s3-bucket {{ env.AWS_S3_BUCKET }} --capabilities CAPABILITY_IAM --region us-east-2 --no-disable-rollback --force-upload --parameter-overrides "SlackClientSecret=${{ secrets.SLACK_CLIENT_SECRET }} SlackSigningSecret=${{ secrets.SLACK_SIGNING_SECRET }} Stage=${{ env.STAGE_NAME }} DatabaseHost=${{ secrets.DATABASE_HOST }} DatabasePassword=${{ secrets.ADMIN_DATABASE_PASSWORD }} PasswordEncryptKey=${{ secrets.PASSWORD_ENCRYPT_KEY }}"
 
-# sam deploy
-      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ steps.STACK_NAME.outputs.value }} --s3-bucket qsignups-deploy --capabilities CAPABILITY_IAM --region us-east-2 --no-disable-rollback --force-upload --parameter-overrides "SlackClientSecret=${{ steps.ENV_SLACK_CLIENT_SECRET.outputs.value }} SlackSigningSecret=${{ steps.ENV_SLACK_SIGNING_SECRET.outputs.value }} Stage=${{ steps.STAGE.outputs.value }} DatabaseHost=${{ secrets.DATABASE_HOST }} DatabasePassword=${{ secrets.ADMIN_DATABASE_PASSWORD }} PasswordEncryptKey=${{ secrets.PASSWORD_ENCRYPT_KEY }}"
+  sam-deploy-prod:
+    runs-on: "ubuntu-latest"
+    environment: "prod"
+    needs: [sam-build, sam-deploy-test]
+    steps:
+      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ env.AWS_STACK_NAME }} --s3-bucket {{ env.AWS_S3_BUCKET }} --capabilities CAPABILITY_IAM --region us-east-2 --no-disable-rollback --force-upload --parameter-overrides "SlackClientSecret=${{ secrets.SLACK_CLIENT_SECRET }} SlackSigningSecret=${{ secrets.SLACK_SIGNING_SECRET }} Stage=${{ env.STAGE_NAME }} DatabaseHost=${{ secrets.DATABASE_HOST }} DatabasePassword=${{ secrets.ADMIN_DATABASE_PASSWORD }} PasswordEncryptKey=${{ secrets.PASSWORD_ENCRYPT_KEY }}"
+# # sam deploy
+#       - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ steps.STACK_NAME.outputs.value }} --s3-bucket qsignups-deploy --capabilities CAPABILITY_IAM --region us-east-2 --no-disable-rollback --force-upload --parameter-overrides "SlackClientSecret=${{ steps.ENV_SLACK_CLIENT_SECRET.outputs.value }} SlackSigningSecret=${{ steps.ENV_SLACK_SIGNING_SECRET.outputs.value }} Stage=${{ steps.STAGE.outputs.value }} DatabaseHost=${{ secrets.DATABASE_HOST }} DatabasePassword=${{ secrets.ADMIN_DATABASE_PASSWORD }} PasswordEncryptKey=${{ secrets.PASSWORD_ENCRYPT_KEY }}"
