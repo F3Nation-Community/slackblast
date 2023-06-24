@@ -130,16 +130,16 @@ def build_config_form(
         else:
             email_password_decrypted = "SamplePassword123!"
 
-        logger.info("running fuzzy match")
-        schema_best_guesses = run_fuzzy_match(region_record.workspace_name)
-        schema_best_guesses.append("Other (enter below)")
-        config_form.set_options(
-            {actions.CONFIG_PAXMINER_DB: slack_orm.as_selector_options(schema_best_guesses)}
-        )
+        # logger.info("running fuzzy match")
+        # schema_best_guesses = run_fuzzy_match(region_record.workspace_name)
+        # schema_best_guesses.append("Other (enter below)")
+        # config_form.set_options(
+        #     {actions.CONFIG_PAXMINER_DB: slack_orm.as_selector_options(schema_best_guesses)}
+        # )
 
         config_form.set_initial_values(
             {
-                actions.CONFIG_PAXMINER_DB: region_record.paxminer_schema,
+                # actions.CONFIG_PAXMINER_DB: region_record.paxminer_schema,
                 actions.CONFIG_EMAIL_ENABLE: "enable"
                 if region_record.email_enabled == 1
                 else "disable",

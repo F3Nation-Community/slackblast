@@ -9,6 +9,7 @@ from utilities.helper_functions import (
     handle_preblast_post,
     handle_config_post,
     handle_backblast_edit_post,
+    get_paxminer_schema,
 )
 from utilities import constants
 from utilities.slack import forms
@@ -58,11 +59,19 @@ def respond_to_command(
             team_name = team_info["team"]["name"]
         except Exception as error:
             team_name = team_domain
+        paxminer_schema = get_paxminer_schema(team_id, logger)
         region_record: Region = DbManager.create_record(
-            Region(team_id=team_id, bot_token=context["bot_token"], workspace_name=team_name)
+            Region(
+                team_id=team_id,
+                bot_token=context["bot_token"],
+                workspace_name=team_name,
+                paxminer_schema=paxminer_schema,
+                email_enabled=0,
+                email_option_show=0,
+            )
         )
 
-    if safe_get(body, "command") == "/config-slackblast" or region_record.paxminer_schema is None:
+    if safe_get(body, "command") == "/config-slackblast":
         builders.build_config_form(client, trigger_id, region_record, logger)
 
     elif (

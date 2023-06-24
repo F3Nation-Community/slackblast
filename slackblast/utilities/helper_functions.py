@@ -1,3 +1,8 @@
+import os, sys
+import pickle
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
 from utilities import sendmail, constants
 from utilities.database.orm import Region, Backblast, Attendance
 from utilities.database import DbManager
@@ -6,8 +11,6 @@ from utilities.slack import actions
 from utilities.constants import LOCAL_DEVELOPMENT
 from typing import List
 from fuzzywuzzy import fuzz
-import os
-import sys
 from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 import re
@@ -16,8 +19,6 @@ from slack_sdk.web import WebClient
 import json
 from sqlalchemy.exc import IntegrityError
 from pymysql.err import IntegrityError as PymysqlIntegrityError
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 
 def get_oauth_flow():
@@ -228,47 +229,62 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
         "block_id": actions.BACKBLAST_EDIT_BUTTON,
     }
 
-    res = client.chat_postMessage(
-        channel=chan,
-        text="content_from_slackblast",
-        username=f"{q_name} (via Slackblast)",
-        icon_url=q_url,
-        blocks=[msg_block, edit_block],
-    )
+    if region_record.paxminer_schema is None:
+        res = client.chat_postMessage(
+            channel=chan,
+            text=post_msg,
+            username=f"{q_name} (via Slackblast)",
+            icon_url=q_url,
+        )
+    else:
+        res = client.chat_postMessage(
+            channel=chan,
+            text="content_from_slackblast",
+            username=f"{q_name} (via Slackblast)",
+            icon_url=q_url,
+            blocks=[msg_block, edit_block],
+        )
     logger.info("\nMessage posted to Slack! \n{}".format(post_msg))
     logger.info("response is {}".format(res))
 
-    try:
-        DbManager.create_record(
-            schema=region_record.paxminer_schema,
-            record=Backblast(
-                timestamp=res["ts"],
-                ao_id=chan,
-                bd_date=the_date,
-                q_user_id=the_q,
-                coq_user_id=the_coq,
-                pax_count=count,
-                backblast=post_msg.replace("*", ""),
-                fngs=fngs_formatted if fngs != "None" else "None listed",
-                fng_count=fng_count,
-            ),
-        )
-
-        attendance_records = []
-        for pax_id in list(set(pax) | set(the_coq or []) | set([the_q])):
-            attendance_records.append(
-                Attendance(
-                    timestamp=res["ts"], user_id=pax_id, ao_id=chan, date=the_date, q_user_id=the_q
-                )
+    if region_record.paxminer_schema is not None:
+        try:
+            DbManager.create_record(
+                schema=region_record.paxminer_schema,
+                record=Backblast(
+                    timestamp=res["ts"],
+                    ao_id=chan,
+                    bd_date=the_date,
+                    q_user_id=the_q,
+                    coq_user_id=the_coq,
+                    pax_count=count,
+                    backblast=post_msg.replace("*", ""),
+                    fngs=fngs_formatted if fngs != "None" else "None listed",
+                    fng_count=fng_count,
+                ),
             )
 
-        DbManager.create_records(schema=region_record.paxminer_schema, records=attendance_records)
-    except Exception as e:
-        logger.error("Error saving backblast to database: {}".format(e))
-        client.chat_postMessage(
-            channel=context["user_id"],
-            text=f"WARNING: The backblast you just posted was not saved to the database. There is already a backblast for this AO and Q on this date. Please edit the backblast using the `Edit this backblast` button. Thanks!",
-        )
+            attendance_records = []
+            for pax_id in list(set(pax) | set(the_coq or []) | set([the_q])):
+                attendance_records.append(
+                    Attendance(
+                        timestamp=res["ts"],
+                        user_id=pax_id,
+                        ao_id=chan,
+                        date=the_date,
+                        q_user_id=the_q,
+                    )
+                )
+
+            DbManager.create_records(
+                schema=region_record.paxminer_schema, records=attendance_records
+            )
+        except Exception as e:
+            logger.error("Error saving backblast to database: {}".format(e))
+            client.chat_postMessage(
+                channel=context["user_id"],
+                text=f"WARNING: The backblast you just posted was not saved to the database. There is already a backblast for this AO and Q on this date. Please edit the backblast using the `Edit this backblast` button. Thanks!",
+            )
 
     if (email_send and email_send == "yes") or (
         email_send is None and region_record.email_enabled == 1
@@ -390,7 +406,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     res = client.chat_update(
         channel=message_channel,
         ts=message_ts,
-        text="slackblast",
+        text="content_from_slackblast",
         username=f"{q_name} (via Slackblast)",
         icon_url=q_url,
         blocks=[msg_block, edit_block],
@@ -498,15 +514,8 @@ def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> s
 def handle_config_post(ack, body, logger, client, context, config_data) -> str:
     ack()
 
-    if safe_get(config_data, actions.CONFIG_PAXMINER_DB) == "Other (enter below)":
-        paxminer_db = safe_get(config_data, actions.CONFIG_PAXMINER_DB_OTHER)
-    else:
-        paxminer_db = safe_get(config_data, actions.CONFIG_PAXMINER_DB)
-
-    # TODO: validate paxminer_db is a valid db name?
-
     fields = {
-        Region.paxminer_schema: paxminer_db,
+        # Region.paxminer_schema: paxminer_db,
         Region.email_enabled: 1
         if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable"
         else 0,
@@ -570,3 +579,58 @@ def check_for_duplicate(
         is_duplicate = False
 
     return is_duplicate
+
+
+def get_paxminer_schema(team_id: str, logger) -> str:
+    """Scrapes the paxminer db to figure out this team's paxminer schema
+
+    Args:
+        team_id (str): slack internal team id
+
+    Returns:
+        str: returns the paxminer schema name
+    """ """"""
+
+    with open("data/paxminer_dict.pickle", "rb") as f:
+        paxminer_dict = pickle.load(f)
+
+    paxminer_schema = safe_get(paxminer_dict, "team_id")
+    if paxminer_schema:
+        logger.info(f"PAXMiner schema for {team_id} is {paxminer_schema}")
+        return paxminer_schema
+
+    else:
+        paxminer_region_records = DbManager.execute_sql_query("select * from paxminer.regions")
+
+        for region in paxminer_region_records:
+            print(f'Processing {region["region"]}')
+            slack_client = WebClient(region["slack_token"])
+
+            ao_index = 0
+            try:
+                ao_records = DbManager.execute_sql_query(
+                    f"select * from {region['schema_name']}.aos"
+                )
+                ao_records = [ao for ao in ao_records if ao["channel_id"] is not None]
+
+                keep_trying = True
+                while keep_trying and ao_index < len(ao_records):
+                    try:
+                        slack_response = slack_client.conversations_info(
+                            channel=ao_records[ao_index]["channel_id"]
+                        )
+                        keep_trying = False
+                    except Exception as e:
+                        ao_index += 1
+
+            except Exception as e:
+                logger.info("No AOs table, skipping...")
+                continue
+
+            pm_team_id = slack_response["channel"]["shared_team_ids"][0]
+            if team_id == pm_team_id:
+                logger.info(f'PAXMiner schema for {team_id} is {region["schema_name"]}')
+                return region["schema_name"]
+
+        logger.info(f"No PAXMiner schema found for {team_id}")
+        return None
