@@ -188,18 +188,18 @@ PREBLAST_FORM = orm.BlockView(
 
 CONFIG_FORM = orm.BlockView(
     [
-        orm.InputBlock(
-            label="Paxminer Region Database",
-            action=actions.CONFIG_PAXMINER_DB,
-            optional=False,
-            element=orm.StaticSelectElement(placeholder="Select your database..."),
-        ),
-        orm.InputBlock(
-            label="Other (if not listed above)",
-            action=actions.CONFIG_PAXMINER_DB_OTHER,
-            optional=False,
-            element=orm.PlainTextInputElement(initial_value="OtherDBName"),
-        ),
+        # orm.InputBlock(
+        #     label="Paxminer Region Database",
+        #     action=actions.CONFIG_PAXMINER_DB,
+        #     optional=False,
+        #     element=orm.StaticSelectElement(placeholder="Select your database..."),
+        # ),
+        # orm.InputBlock(
+        #     label="Other (if not listed above)",
+        #     action=actions.CONFIG_PAXMINER_DB_OTHER,
+        #     optional=False,
+        #     element=orm.PlainTextInputElement(initial_value="OtherDBName"),
+        # ),
         orm.InputBlock(
             label="Slackblast Email",
             action=actions.CONFIG_EMAIL_ENABLE,
