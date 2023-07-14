@@ -594,7 +594,7 @@ def get_paxminer_schema(team_id: str, logger) -> str:
     with open("data/paxminer_dict.pickle", "rb") as f:
         paxminer_dict = pickle.load(f)
 
-    paxminer_schema = safe_get(paxminer_dict, "team_id")
+    paxminer_schema = safe_get(paxminer_dict, team_id)
     if paxminer_schema:
         logger.info(f"PAXMiner schema for {team_id} is {paxminer_schema}")
         return paxminer_schema
