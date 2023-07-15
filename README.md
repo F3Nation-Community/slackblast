@@ -8,7 +8,7 @@ This is my fork and revamp of the [original Slackblast](https://github.com/F3Nat
 
 When the user types `/slackblast`, `/backblast`, or `/preblast` and hits send, a window like the one below will pop up:
 
-<img src="https://raw.githubusercontent.com/evanpetzoldt/slackblast/main/assets/backblast_demo.png" width="500">
+<img src="assets/backblast_demo.png" width="500">
 
 # Getting started
 
