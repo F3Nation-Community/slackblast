@@ -2,22 +2,22 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Slackblast is a simple application you can get up and running in your Slack environment that will pop up a simple Backblast form for someone to fill out in the Slack App (mobile or desktop or web) when they type `/slackblast`, `/backblast`, or even `/preblast`. ~~The advantage of slackblast is that it puts the backblast in a format that is compatible with [PAXminer](https://github.com/F3Nation-Community/PAXminer), which makes it easier to compile stats on users each month.~~ As of this new version, Slackblast writes to the PAXminer database directly, and its posts do not need to be scraped by PAXminer (PAXminer will ignore them).
+Slackblast is a simple application you can get up and running in your Slack environment that will pop up a simple Backblast form for someone to fill out in the Slack App (mobile or desktop or web) when they type `/slackblast`, `/backblast`, or even `/preblast`. Slackblast interfaces with your PAXminer database directly, and its posts do not need to be scraped by PAXminer (PAXminer will ignore them).
 
 This is my fork and revamp of the [original Slackblast](https://github.com/F3Nation-Community/slackblast) made by the awesome HIMs from that project. This version can serve any number of regions and runs on AWS Lambda - installation is as simple as a [simple link click](#getting-started-), without the need for you to get your own server up and running.
 
 When the user types `/slackblast`, `/backblast`, or `/preblast` and hits send, a window like the one below will pop up:
 
-<img src="https://raw.githubusercontent.com/F3Nation-Community/slackblast/main/SlackBlast%20Modal.png" width="500">
+<img src="https://raw.githubusercontent.com/evanpetzoldt/slackblast/main/assets/backblast_demo.png" width="500">
 
 # Getting started
 
 Installation to your Slack Space is simple:
-1. Click [this link](https://slack.com/oauth/v2/authorize?client_id=3135457248691.3241841713426&scope=app_mentions:read,channels:read,chat:write,chat:write.customize,chat:write.public,commands,im:write,team:read,users:read,users:read.email,channels:history&user_scope=) from a desktop computer
+1. Click [this link](https://n1tbdh3ak9.execute-api.us-east-2.amazonaws.com/Prod/slack/install) from a desktop computer
 2. Make sure to select your region in the upper right if you are signed into multiple spaces
-3. As a first step, you will need to run `/config-slackblast` and select your region's PAXminer database so Slackblast knows which region to write to
+3. To change email settings (and more to come!), you will need to run `/config-slackblast` and select your region's PAXminer database so Slackblast knows which region to write to
 
-To use, simply type `/slackblast`, `/backblast` or `/preblast` from any channel and the form should come up.
+To use, simply type `/slackblast`, `/backblast` or `/preblast` from any channel and a form should come up.
                                                                          
 # Slack App Configuration (email)
 
