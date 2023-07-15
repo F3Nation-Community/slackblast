@@ -29,17 +29,23 @@ def build_backblast_form(
     initial_backblast_data: dict = None,
     currently_duplicate: bool = False,
     update_view_id: str = None,
+    duplicate_check: bool = False,
+    parent_metadata: str = None,
 ):
     backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
 
-    if backblast_method in ["edit", "duplicate_check"]:
+    if backblast_method == "edit" or duplicate_check:
+        parent_metadata_safe = parent_metadata or "|"
+        og_ts = safe_get(body, "message", "ts") or parent_metadata_safe.split("|")[1]
         is_duplicate = check_for_duplicate(
             q=safe_get(initial_backblast_data, actions.BACKBLAST_Q),
             date=safe_get(initial_backblast_data, actions.BACKBLAST_DATE),
             ao=safe_get(initial_backblast_data, actions.BACKBLAST_AO),
             region_record=region_record,
             logger=logger,
+            og_ts=og_ts,
         )
+        logger.info("is_duplicate is {}".format(is_duplicate))
     else:
         is_duplicate = check_for_duplicate(
             q=user_id,
@@ -49,17 +55,17 @@ def build_backblast_form(
             logger=logger,
         )
 
-    if backblast_method == "duplicate_check" and currently_duplicate == is_duplicate:
+    if duplicate_check and currently_duplicate == is_duplicate:
         return
 
-    if not is_duplicate or backblast_method == "edit":
+    if not is_duplicate:
         backblast_form.delete_block(actions.BACKBLAST_DUPLICATE_WARNING)
 
-    if backblast_method in ["edit", "duplicate_check"]:
+    if backblast_method == "edit" or duplicate_check:
         backblast_form.set_initial_values(initial_backblast_data)
 
     if backblast_method == "edit":
-        backblast_metadata = (
+        backblast_metadata = parent_metadata or (
             safe_get(body, "container", "channel_id")
             + "|"
             + safe_get(body, "container", "message_ts")
@@ -93,7 +99,7 @@ def build_backblast_form(
 
     logger.info("backblast_form is {}".format(backblast_form.as_form_field()))
 
-    if backblast_method == "duplicate_check":
+    if duplicate_check:
         backblast_form.update_modal(
             client=client,
             view_id=update_view_id,
@@ -155,9 +161,11 @@ def build_config_form(
             }
         )
 
-    email_enable = (
-        "disable" if not initial_config_data else initial_config_data[actions.CONFIG_EMAIL_ENABLE]
-    )
+    if not initial_config_data:
+        email_enable = "enable" if region_record.email_enabled == 1 else "disable"
+    else:
+        email_enable = initial_config_data[actions.CONFIG_EMAIL_ENABLE]
+
     logger.info("email_enable is {}".format(email_enable))
     if email_enable == "disable":
         config_form.delete_block(actions.CONFIG_EMAIL_SHOW_OPTION)
