@@ -190,6 +190,13 @@ def handle_duplicate_check(ack, body, client, logger, context):
             currently_duplicate = True
             break
 
+    if safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID:
+        backblast_method = "edit"
+        parent_metadata = body["view"]["blocks"][-1]["elements"][0]["text"]
+    else:
+        backblast_method = "create"
+        parent_metadata = None
+
     backblast_data = forms.BACKBLAST_FORM.get_selected_values(body)
     logger.info("backblast_data is {}".format(backblast_data))
 
@@ -200,11 +207,13 @@ def handle_duplicate_check(ack, body, client, logger, context):
         client=client,
         logger=logger,
         region_record=region_record,
-        backblast_method="duplicate_check",
+        backblast_method=backblast_method,
         trigger_id=trigger_id,
         initial_backblast_data=backblast_data,
         currently_duplicate=currently_duplicate,
         update_view_id=view_id,
+        duplicate_check=True,
+        parent_metadata=parent_metadata,
     )
 
 

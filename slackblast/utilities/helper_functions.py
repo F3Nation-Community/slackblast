@@ -560,7 +560,12 @@ def run_fuzzy_match(workspace_name: str) -> List[str]:
 
 
 def check_for_duplicate(
-    q: str, ao: str, date: datetime.date, region_record: Region, logger
+    q: str,
+    ao: str,
+    date: datetime.date,
+    region_record: Region,
+    logger,
+    og_ts: str = None,
 ) -> bool:
     """Check if there is already a backblast for this AO and Q on this date"""
     if region_record.paxminer_schema:
@@ -574,7 +579,11 @@ def check_for_duplicate(
             filters=[Attendance.q_user_id == q, Attendance.ao_id == ao, Attendance.date == date],
             schema=region_record.paxminer_schema,
         )
-        is_duplicate = backblast_dups or attendance_dups
+        logger.info(f"Backblast dups: {backblast_dups}")
+        logger.info(f"og_ts: {og_ts}")
+        is_duplicate = (
+            len(backblast_dups) > 0 or len(attendance_dups) > 0
+        ) and og_ts != backblast_dups[0].timestamp
     else:
         is_duplicate = False
 
