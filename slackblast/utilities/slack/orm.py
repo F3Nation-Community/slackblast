@@ -196,6 +196,7 @@ class RadioButtonsElement(BaseElement):
 class PlainTextInputElement(BaseElement):
     initial_value: str = None
     multiline: bool = False
+    max_length: int = None
 
     def get_selected_value(self, input_data, action):
         return safe_get(input_data, action, action, "value")
@@ -210,6 +211,8 @@ class PlainTextInputElement(BaseElement):
             j.update(self.make_placeholder_field())
         if self.multiline:
             j["multiline"] = True
+        if self.max_length:
+            j["max_length"] = self.max_length
         return j
 
 
