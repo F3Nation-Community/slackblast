@@ -156,7 +156,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
     non_slack_pax = safe_get(backblast_data, actions.BACKBLAST_NONSLACK_PAX)
     fngs = safe_get(backblast_data, actions.BACKBLAST_FNGS)
     count = safe_get(backblast_data, actions.BACKBLAST_COUNT)
-    moleskine = safe_get(backblast_data, actions.BACKBLAST_MOLESKIN)
+    moleskin = safe_get(backblast_data, actions.BACKBLAST_MOLESKIN)
     destination = safe_get(backblast_data, actions.BACKBLAST_DESTINATION)
     email_send = safe_get(backblast_data, actions.BACKBLAST_EMAIL_SEND)
 
@@ -188,7 +188,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
         the_coqs_formatted = ", " + ", ".join(the_coqs_full_list)
         the_coqs_names = ", " + ", ".join(the_coqs_names_list)
 
-    moleskine_formatted = parse_moleskin_users(moleskine, client)
+    moleskin_formatted = parse_moleskin_users(moleskin, client)
 
     chan = destination
     if chan == "The_AO":
@@ -207,7 +207,6 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
 *PAX*: {pax_formatted}
 *FNGs*: {fngs_formatted}
 *COUNT*: {count}
-{moleskine_formatted}
     """
 
     msg_block = {
@@ -216,6 +215,15 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
         "block_id": "msg_text",
     }
 
+    moleskin_block = {
+        "type": "section",
+        "text": {"type": "mrkdwn", "text": moleskin_formatted},
+        "block_id": "moleskin_text",
+    }
+
+    ignore = backblast_data.pop(
+        actions.BACKBLAST_MOLESKIN, None
+    )  # moleskin was making the target value too long
     edit_block = {
         "type": "actions",
         "elements": [
@@ -242,7 +250,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
             text="content_from_slackblast",
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
-            blocks=[msg_block, edit_block],
+            blocks=[msg_block, moleskin_block, edit_block],
         )
     logger.info("\nMessage posted to Slack! \n{}".format(post_msg))
     logger.info("response is {}".format(res))
@@ -289,7 +297,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
     if (email_send and email_send == "yes") or (
         email_send is None and region_record.email_enabled == 1
     ):
-        moleskine_msg = moleskine.replace("*", "")
+        moleskin_msg = moleskin.replace("*", "")
 
         if region_record.postie_format:
             subject = f"[{ao_name}] {title}"
@@ -304,7 +312,7 @@ Q: {q_name} {the_coqs_names}
 PAX: {pax_names}
 FNGs: {fngs_formatted}
 COUNT: {count}
-{moleskine_msg}
+{moleskin_msg}
         """
 
         # Decrypt password
@@ -339,7 +347,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     non_slack_pax = safe_get(backblast_data, actions.BACKBLAST_NONSLACK_PAX)
     fngs = safe_get(backblast_data, actions.BACKBLAST_FNGS)
     count = safe_get(backblast_data, actions.BACKBLAST_COUNT)
-    moleskine = safe_get(backblast_data, actions.BACKBLAST_MOLESKIN)
+    moleskin = safe_get(backblast_data, actions.BACKBLAST_MOLESKIN)  # get this from the body
     ao = safe_get(backblast_data, actions.BACKBLAST_AO)
 
     message_metadata = body["view"]["blocks"][-1]["elements"][0]["text"]
@@ -367,7 +375,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
         the_coqs_full_list = [the_coqs_formatted]
         the_coqs_formatted = ", " + ", ".join(the_coqs_full_list)
 
-    moleskine_formatted = parse_moleskin_users(moleskine, client)
+    moleskin_formatted = parse_moleskin_users(moleskin, client)
 
     q_name, q_url = get_user_names([the_q], logger, client, return_urls=True)
     q_name = (q_name or [""])[0]
@@ -381,7 +389,6 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
 *PAX*: {pax_formatted}
 *FNGs*: {fngs_formatted}
 *COUNT*: {count}
-{moleskine_formatted}
     """
 
     msg_block = {
@@ -390,6 +397,15 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
         "block_id": "msg_text",
     }
 
+    moleskin_block = {
+        "type": "section",
+        "text": {"type": "mrkdwn", "text": moleskin_formatted},
+        "block_id": "moleskine_text",
+    }
+
+    ignore = backblast_data.pop(
+        actions.BACKBLAST_MOLESKIN, None
+    )  # moleskin was making the target value too long
     edit_block = {
         "type": "actions",
         "elements": [
@@ -409,7 +425,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
         text="content_from_slackblast",
         username=f"{q_name} (via Slackblast)",
         icon_url=q_url,
-        blocks=[msg_block, edit_block],
+        blocks=[msg_block, moleskin_block, edit_block],
     )
     logger.info("\nBackblast updated in Slack! \n{}".format(post_msg))
 
