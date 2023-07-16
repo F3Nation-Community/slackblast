@@ -76,7 +76,6 @@ BACKBLAST_FORM = orm.BlockView(
                 placeholder="Tell us what happened\n\n",
                 initial_value="\n*WARMUP:* \n*THE THANG:* \n*MARY:* \n*ANNOUNCEMENTS:* \n*COT:* ",
                 multiline=True,
-                max_length=500,
             ),
         ),
         orm.ContextBlock(
@@ -173,7 +172,6 @@ PREBLAST_FORM = orm.BlockView(
             element=orm.PlainTextInputElement(
                 placeholder="A hint of what you're planning...",
                 multiline=True,
-                max_length=500,
             ),
         ),
         orm.DividerBlock(),

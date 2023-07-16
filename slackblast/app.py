@@ -148,6 +148,8 @@ def handle_backblast_edit(ack, body, client, logger, context):
     logger.info("body is {}".format(body))
     logger.info("context is {}".format(context))
     backblast_data: dict = json.loads(body["actions"][0]["value"])
+    if not safe_get(backblast_data, actions.BACKBLAST_MOLESKIN):
+        backblast_data[actions.BACKBLAST_MOLESKIN] = body["message"]["blocks"][1]["text"]["text"]
     logger.info("backblast_data is {}".format(backblast_data))
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
