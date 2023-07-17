@@ -301,7 +301,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
 
         if region_record.postie_format:
             subject = f"[{ao_name}] {title}"
-            moleskine_msg += f"\n\nTags: {ao_name}, {pax_names}"
+            moleskin_msg += f"\n\nTags: {ao_name}, {pax_names}"
         else:
             subject = title
 
@@ -400,7 +400,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     moleskin_block = {
         "type": "section",
         "text": {"type": "mrkdwn", "text": moleskin_formatted},
-        "block_id": "moleskine_text",
+        "block_id": "moleskin_text",
     }
 
     ignore = backblast_data.pop(
@@ -493,7 +493,7 @@ def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> s
     the_why = safe_get(preblast_data, actions.PREBLAST_WHY)
     fngs = safe_get(preblast_data, actions.PREBLAST_FNGS)
     coupons = safe_get(preblast_data, actions.PREBLAST_COUPONS)
-    moleskine = safe_get(preblast_data, actions.PREBLAST_MOLESKIN)
+    moleskin = safe_get(preblast_data, actions.PREBLAST_MOLESKIN)
     destination = safe_get(preblast_data, actions.PREBLAST_DESTINATION)
 
     chan = destination
@@ -517,8 +517,8 @@ def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> s
         body_list.append(f"*Coupons*: " + coupons)
     if fngs:
         body_list.append(f"*FNGs*: " + fngs)
-    if moleskine:
-        body_list.append(moleskine)
+    if moleskin:
+        body_list.append(moleskin)
 
     msg = "\n".join(body_list)
     client.chat_postMessage(
@@ -551,6 +551,9 @@ def handle_config_post(ack, body, logger, client, context, config_data) -> str:
                 Region.email_user: safe_get(config_data, actions.CONFIG_EMAIL_FROM),
                 Region.email_to: safe_get(config_data, actions.CONFIG_EMAIL_TO),
                 Region.email_password: email_password_encrypted,
+                Region.postie_format: 1
+                if safe_get(config_data, actions.CONFIG_POSTIE_ENABLE) == "yes"
+                else 0,
             }
         )
 
