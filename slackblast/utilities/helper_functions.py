@@ -199,8 +199,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
 
-    post_msg = f"""
-*Backblast! {title}*
+    post_msg = f"""*Backblast! {title}*
 *DATE*: {the_date}
 *AO*: <#{the_ao}>
 *Q*: <@{the_q}>{the_coqs_formatted}
@@ -305,8 +304,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
         else:
             subject = title
 
-        email_msg = f"""
-Date: {the_date}
+        email_msg = f"""Date: {the_date}
 AO: {ao_name}
 Q: {q_name} {the_coqs_names}
 PAX: {pax_names}
@@ -381,8 +379,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
 
-    post_msg = f"""
-*Backblast! {title}*
+    post_msg = f"""*Backblast! {title}*
 *DATE*: {the_date}
 *AO*: <#{the_ao}>
 *Q*: <@{the_q}>{the_coqs_formatted}
