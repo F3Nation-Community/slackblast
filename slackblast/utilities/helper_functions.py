@@ -240,7 +240,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
     if region_record.paxminer_schema is None:
         res = client.chat_postMessage(
             channel=chan,
-            text=post_msg,
+            text=post_msg + "\n" + moleskin_formatted,
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
         )
