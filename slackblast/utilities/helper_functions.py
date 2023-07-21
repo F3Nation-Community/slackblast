@@ -659,3 +659,24 @@ def get_paxminer_schema(team_id: str, logger) -> str:
 
         logger.info(f"No PAXMiner schema found for {team_id}")
         return None
+
+
+def replace_slack_user_ids(text: str, client, logger) -> str:
+    """Replace slack user ids with their user names
+
+    Args:
+        text (str): text with slack ids
+
+    Returns:
+        str: text with slack ids replaced
+    """
+
+    slack_user_ids = re.findall(r"<@([A-Z0-9]+)>", text)
+    slack_user_names = get_user_names(slack_user_ids, logger, client, return_urls=False)
+
+    slack_user_ids = [f"<@{user_id}>" for user_id in slack_user_ids]
+    slack_user_names = [f"@{user_name}".replace(" ", "_") for user_name in slack_user_names]
+
+    for old_value, new_value in zip(slack_user_ids, slack_user_names):
+        text = text.replace(old_value, new_value, 1)
+    return text

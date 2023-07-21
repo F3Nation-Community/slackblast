@@ -10,6 +10,7 @@ from utilities.helper_functions import (
     handle_config_post,
     handle_backblast_edit_post,
     get_paxminer_schema,
+    replace_slack_user_ids,
 )
 from utilities import constants
 from utilities.slack import forms
@@ -150,6 +151,9 @@ def handle_backblast_edit(ack, body, client, logger, context):
     backblast_data: dict = json.loads(body["actions"][0]["value"])
     if not safe_get(backblast_data, actions.BACKBLAST_MOLESKIN):
         backblast_data[actions.BACKBLAST_MOLESKIN] = body["message"]["blocks"][1]["text"]["text"]
+        backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
+            backblast_data[actions.BACKBLAST_MOLESKIN], client, logger
+        )
     logger.info("backblast_data is {}".format(backblast_data))
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
