@@ -162,6 +162,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
 
     region_record: Region = DbManager.get_record(Region, id=context["team_id"])
 
+    auto_count = len(set(list([the_q] + (the_coq or []) + pax)))
     pax_names_list = get_user_names(pax, logger, client, return_urls=False) or [""]
     pax_formatted = get_pax(pax)
     pax_full_list = [pax_formatted]
@@ -170,11 +171,13 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
     if non_slack_pax != "None":
         pax_full_list.append(non_slack_pax)
         pax_names_list.append(non_slack_pax)
+        auto_count += non_slack_pax.count(",") + 1
     if fngs != "None":
         pax_full_list.append(fngs)
         pax_names_list.append(fngs)
         fng_count = fngs.count(",") + 1
         fngs_formatted = str(fng_count) + " " + fngs
+        auto_count += fngs.count(",") + 1
     pax_formatted = ", ".join(pax_full_list)
     pax_names = ", ".join(pax_names_list)
 
@@ -198,6 +201,9 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
     q_name, q_url = get_user_names([the_q], logger, client, return_urls=True)
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
+
+    if count or 0 < auto_count:
+        count = auto_count
 
     post_msg = f"""*Backblast! {title}*
 *DATE*: {the_date}
@@ -231,7 +237,13 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
                 "text": {"type": "plain_text", "text": "Edit this backblast", "emoji": True},
                 "value": json.dumps(backblast_data),
                 "action_id": actions.BACKBLAST_EDIT_BUTTON,
-            }
+            },
+            {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "New backblast", "emoji": True},
+                "value": "new",
+                "action_id": actions.BACKBLAST_NEW_BUTTON,
+            },
         ],
         "block_id": actions.BACKBLAST_EDIT_BUTTON,
     }
@@ -351,6 +363,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     message_metadata = body["view"]["blocks"][-1]["elements"][0]["text"]
     message_channel, message_ts = message_metadata.split("|")
 
+    auto_count = len(set(list([the_q] + (the_coq or []) + pax)))
     pax_names_list = get_user_names(pax, logger, client, return_urls=False) or [""]
     pax_formatted = get_pax(pax)
     pax_full_list = [pax_formatted]
@@ -359,11 +372,13 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     if non_slack_pax != "None":
         pax_full_list.append(non_slack_pax)
         pax_names_list.append(non_slack_pax)
+        auto_count += non_slack_pax.count(",") + 1
     if fngs != "None":
         pax_full_list.append(fngs)
         pax_names_list.append(fngs)
         fng_count = fngs.count(",") + 1
         fngs_formatted = str(fng_count) + " " + fngs
+        auto_count += fngs.count(",") + 1
     pax_formatted = ", ".join(pax_full_list)
 
     if the_coq == None:
@@ -378,6 +393,9 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     q_name, q_url = get_user_names([the_q], logger, client, return_urls=True)
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
+
+    if count or 0 < auto_count:
+        count = auto_count
 
     post_msg = f"""*Backblast! {title}*
 *DATE*: {the_date}

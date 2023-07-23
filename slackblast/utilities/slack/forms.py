@@ -65,8 +65,11 @@ BACKBLAST_FORM = orm.BlockView(
         orm.InputBlock(
             label="Total PAX Count",
             action=actions.BACKBLAST_COUNT,
-            optional=False,
+            optional=True,
             element=orm.PlainTextInputElement(placeholder="Total PAX count including FNGs"),
+        ),
+        orm.ContextBlock(
+            text="If left blank, this will be calculated automatically from the fields above."
         ),
         orm.InputBlock(
             label="The Moleskin",

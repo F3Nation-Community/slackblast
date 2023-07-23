@@ -175,6 +175,49 @@ def handle_backblast_edit(ack, body, client, logger, context):
     )
 
 
+@app.action(actions.BACKBLAST_NEW_BUTTON)
+def handle_backblast_new(ack, body, client, logger, context):
+    ack()
+    logger.info("body is {}".format(body))
+    logger.info("context is {}".format(context))
+
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
+    team_domain = safe_get(body, "team_domain") or safe_get(body, "team", "domain")
+    trigger_id = safe_get(body, "trigger_id")
+    channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
+
+    region_record: Region = DbManager.get_record(Region, id=team_id)
+    if not region_record:
+        try:
+            team_info = client.team_info()
+            team_name = team_info["team"]["name"]
+        except Exception as error:
+            team_name = team_domain
+        paxminer_schema = get_paxminer_schema(team_id, logger)
+        region_record: Region = DbManager.create_record(
+            Region(
+                team_id=team_id,
+                bot_token=context["bot_token"],
+                workspace_name=team_name,
+                paxminer_schema=paxminer_schema,
+                email_enabled=0,
+                email_option_show=0,
+            )
+        )
+
+    builders.build_backblast_form(
+        user_id,
+        channel_id,
+        body,
+        client,
+        logger,
+        region_record,
+        backblast_method="create",
+        trigger_id=trigger_id,
+    )
+
+
 @app.action(actions.BACKBLAST_AO)
 @app.action(actions.BACKBLAST_Q)
 @app.action(actions.BACKBLAST_DATE)
