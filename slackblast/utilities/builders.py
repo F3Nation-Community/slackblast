@@ -158,6 +158,7 @@ def build_config_form(
                 actions.CONFIG_EMAIL_PORT: str(region_record.email_server_port or 587),
                 actions.CONFIG_EMAIL_PASSWORD: email_password_decrypted,
                 actions.CONFIG_POSTIE_ENABLE: "yes" if region_record.postie_format == 1 else "no",
+                actions.CONFIG_EDITING_LOCKED: "yes" if region_record.editing_locked == 1 else "no",
             }
         )
 

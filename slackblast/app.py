@@ -144,7 +144,7 @@ def respond_to_view(ack, body, client, logger, context):
 
 
 @app.action(actions.BACKBLAST_EDIT_BUTTON)
-def handle_backblast_edit(ack, body, client, logger, context):
+def handle_backblast_edit(ack, body, client, logger, context, say):
     ack()
     logger.info("body is {}".format(body))
     logger.info("context is {}".format(context))
@@ -159,7 +159,7 @@ def handle_backblast_edit(ack, body, client, logger, context):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     trigger_id = safe_get(body, "trigger_id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
-    channel_id = safe_get(body, "channel_id")
+    channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
     region_record: Region = DbManager.get_record(Region, id=team_id)
 
     user_info_dict = client.users_info(user=user_id)
@@ -185,8 +185,10 @@ def handle_backblast_edit(ack, body, client, logger, context):
             initial_backblast_data=backblast_data,
         )
     else:
-        ack(
-            "Editing this backblast is only allowed for the Q(s), the original poster, or your local Slack admins. Please contact one of them to make changes."
+        client.chat_postEphemeral(
+            text="Editing this backblast is only allowed for the Q(s), the original poster, or your local Slack admins. Please contact one of them to make changes.",
+            channel=channel_id,
+            user=user_id,
         )
 
 

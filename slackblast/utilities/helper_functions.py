@@ -231,7 +231,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
         actions.BACKBLAST_MOLESKIN, None
     )  # moleskin was making the target value too long
 
-    backblast_data.add(actions.BACKBLAST_OP, user_id)
+    backblast_data[actions.BACKBLAST_OP] = user_id
 
     edit_block = {
         "type": "actions",
@@ -279,7 +279,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
                     ao_id=chan,
                     bd_date=the_date,
                     q_user_id=the_q,
-                    coq_user_id=the_coq,
+                    coq_user_id=the_coq[0] if the_coq else None,
                     pax_count=count,
                     backblast=f"{post_msg}\n{moleskin_formatted}".replace("*", ""),
                     fngs=fngs_formatted if fngs != "None" else "None listed",
@@ -471,7 +471,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
                 ao_id=ao,
                 bd_date=the_date,
                 q_user_id=the_q,
-                coq_user_id=the_coq,
+                coq_user_id=the_coq[0] if the_coq else None,
                 pax_count=count,
                 backblast=f"{post_msg}\n{moleskin_formatted}".replace("*", ""),
                 fngs=fngs_formatted if fngs != "None" else "None listed",
@@ -554,6 +554,9 @@ def handle_config_post(ack, body, logger, client, context, config_data) -> str:
         # Region.paxminer_schema: paxminer_db,
         Region.email_enabled: 1
         if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable"
+        else 0,
+        Region.editing_locked: 1
+        if safe_get(config_data, actions.CONFIG_EDITING_LOCKED) == "yes"
         else 0,
     }
     if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable":

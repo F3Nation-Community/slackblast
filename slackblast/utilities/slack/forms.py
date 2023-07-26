@@ -272,5 +272,14 @@ CONFIG_FORM = orm.BlockView(
             text="This will put the AO name as a category for the post, and will put PAX names at the end as tags.",
             action=actions.CONFIG_POSTIE_CONTEXT,
         ),
+        orm.InputBlock(
+            label="Lock editing of backblasts?",
+            action=actions.CONFIG_EDITING_LOCKED,
+            optional=False,
+            element=orm.RadioButtonsElement(
+                initial_value="no",
+                options=orm.as_selector_options(names=["Yes", "No"], values=["yes", "no"]),
+            ),
+        ),
     ]
 )
