@@ -69,6 +69,7 @@ def respond_to_command(
                 paxminer_schema=paxminer_schema,
                 email_enabled=0,
                 email_option_show=0,
+                editing_locked=0,
             )
         )
 
