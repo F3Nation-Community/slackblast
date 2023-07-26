@@ -160,6 +160,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
     destination = safe_get(backblast_data, actions.BACKBLAST_DESTINATION)
     email_send = safe_get(backblast_data, actions.BACKBLAST_EMAIL_SEND)
 
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     region_record: Region = DbManager.get_record(Region, id=context["team_id"])
 
     auto_count = len(set(list([the_q] + (the_coq or []) + pax)))
@@ -229,6 +230,9 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
     ignore = backblast_data.pop(
         actions.BACKBLAST_MOLESKIN, None
     )  # moleskin was making the target value too long
+
+    backblast_data[actions.BACKBLAST_OP] = user_id
+
     edit_block = {
         "type": "actions",
         "elements": [
@@ -275,7 +279,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
                     ao_id=chan,
                     bd_date=the_date,
                     q_user_id=the_q,
-                    coq_user_id=the_coq,
+                    coq_user_id=the_coq[0] if the_coq else None,
                     pax_count=count,
                     backblast=f"{post_msg}\n{moleskin_formatted}".replace("*", ""),
                     fngs=fngs_formatted if fngs != "None" else "None listed",
@@ -325,11 +329,12 @@ COUNT: {count}
 {moleskin_msg}
         """
 
-        # Decrypt password
-        fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
-        email_password_decrypted = fernet.decrypt(region_record.email_password.encode()).decode()
-
         try:
+            # Decrypt password
+            fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
+            email_password_decrypted = fernet.decrypt(
+                region_record.email_password.encode()
+            ).decode()
             sendmail.send(
                 subject=subject,
                 body=email_msg,
@@ -466,7 +471,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
                 ao_id=ao,
                 bd_date=the_date,
                 q_user_id=the_q,
-                coq_user_id=the_coq,
+                coq_user_id=the_coq[0] if the_coq else None,
                 pax_count=count,
                 backblast=f"{post_msg}\n{moleskin_formatted}".replace("*", ""),
                 fngs=fngs_formatted if fngs != "None" else "None listed",
@@ -550,12 +555,19 @@ def handle_config_post(ack, body, logger, client, context, config_data) -> str:
         Region.email_enabled: 1
         if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable"
         else 0,
+        Region.editing_locked: 1
+        if safe_get(config_data, actions.CONFIG_EDITING_LOCKED) == "yes"
+        else 0,
     }
     if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable":
         fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
-        email_password_encrypted = fernet.encrypt(
-            safe_get(config_data, actions.CONFIG_EMAIL_PASSWORD).encode()
-        ).decode()
+        email_password_decrypted = safe_get(config_data, actions.CONFIG_EMAIL_PASSWORD)
+        if email_password_decrypted:
+            email_password_encrypted = fernet.encrypt(
+                safe_get(config_data, actions.CONFIG_EMAIL_PASSWORD).encode()
+            ).decode()
+        else:
+            email_password_encrypted = None
         fields.update(
             {
                 Region.email_option_show: 1

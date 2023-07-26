@@ -144,7 +144,7 @@ def respond_to_view(ack, body, client, logger, context):
 
 
 @app.action(actions.BACKBLAST_EDIT_BUTTON)
-def handle_backblast_edit(ack, body, client, logger, context):
+def handle_backblast_edit(ack, body, client, logger, context, say):
     ack()
     logger.info("body is {}".format(body))
     logger.info("context is {}".format(context))
@@ -159,20 +159,37 @@ def handle_backblast_edit(ack, body, client, logger, context):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     trigger_id = safe_get(body, "trigger_id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
-    channel_id = safe_get(body, "channel_id")
+    channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
     region_record: Region = DbManager.get_record(Region, id=team_id)
 
-    builders.build_backblast_form(
-        user_id=user_id,
-        channel_id=channel_id,
-        body=body,
-        client=client,
-        logger=logger,
-        region_record=region_record,
-        backblast_method="edit",
-        trigger_id=trigger_id,
-        initial_backblast_data=backblast_data,
+    user_info_dict = client.users_info(user=user_id)
+    user_admin: bool = user_info_dict["user"]["is_admin"]
+    allow_edit: bool = (
+        (region_record.editing_locked == 0)
+        or user_admin
+        or (user_id == backblast_data[actions.BACKBLAST_Q])
+        or (user_id in backblast_data[actions.BACKBLAST_COQ] or [])
+        or (user_id in backblast_data[actions.BACKBLAST_OP])
     )
+
+    if allow_edit:
+        builders.build_backblast_form(
+            user_id=user_id,
+            channel_id=channel_id,
+            body=body,
+            client=client,
+            logger=logger,
+            region_record=region_record,
+            backblast_method="edit",
+            trigger_id=trigger_id,
+            initial_backblast_data=backblast_data,
+        )
+    else:
+        client.chat_postEphemeral(
+            text="Editing this backblast is only allowed for the Q(s), the original poster, or your local Slack admins. Please contact one of them to make changes.",
+            channel=channel_id,
+            user=user_id,
+        )
 
 
 @app.action(actions.BACKBLAST_NEW_BUTTON)
