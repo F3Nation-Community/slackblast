@@ -203,8 +203,7 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data) ->
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
 
-    if count or 0 < auto_count:
-        count = auto_count
+    count = count or auto_count
 
     post_msg = f"""*Backblast! {title}*
 *DATE*: {the_date}
@@ -399,8 +398,7 @@ def handle_backblast_edit_post(ack, body, logger, client, context, backblast_dat
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
 
-    if count or 0 < auto_count:
-        count = auto_count
+    count = count or auto_count
 
     post_msg = f"""*Backblast! {title}*
 *DATE*: {the_date}
