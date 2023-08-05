@@ -51,16 +51,16 @@ BACKBLAST_FORM = orm.BlockView(
         orm.InputBlock(
             label="List untaggable PAX, separated by commas (not FNGs)",
             action=actions.BACKBLAST_NONSLACK_PAX,
-            optional=False,
+            optional=True,
             element=orm.PlainTextInputElement(
-                placeholder="Enter untaggable PAX...", initial_value="None"
+                placeholder="Enter untaggable PAX...",
             ),
         ),
         orm.InputBlock(
             label="List FNGs, separated by commas",
             action=actions.BACKBLAST_FNGS,
-            optional=False,
-            element=orm.PlainTextInputElement(placeholder="Enter FNGs...", initial_value="None"),
+            optional=True,
+            element=orm.PlainTextInputElement(placeholder="Enter FNGs..."),
         ),
         orm.InputBlock(
             label="Total PAX Count",

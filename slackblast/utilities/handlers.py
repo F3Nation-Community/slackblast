@@ -57,11 +57,11 @@ def handle_backblast_post(
     pax_full_list = [pax_formatted]
     fngs_formatted = fngs
     fng_count = 0
-    if non_slack_pax != "None":
+    if non_slack_pax:
         pax_full_list.append(non_slack_pax)
         pax_names_list.append(non_slack_pax)
         auto_count += non_slack_pax.count(",") + 1
-    if fngs != "None":
+    if fngs:
         pax_full_list.append(fngs)
         pax_names_list.append(fngs)
         fng_count = fngs.count(",") + 1
@@ -228,7 +228,7 @@ def handle_backblast_post(
                     coq_user_id=the_coq[0] if the_coq else None,
                     pax_count=count,
                     backblast=f"{post_msg}\n{moleskin_formatted}".replace("*", ""),
-                    fngs=fngs_formatted if fngs != "None" else "None listed",
+                    fngs=fngs_formatted if fngs else "None listed",
                     fng_count=fng_count,
                 ),
             )
