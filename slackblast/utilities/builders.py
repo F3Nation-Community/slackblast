@@ -193,3 +193,34 @@ def build_config_form(
             callback_id=actions.CONFIG_CALLBACK_ID,
             title_text="Configure Slackblast",
         )
+
+
+def build_preblast_form(
+    user_id: str,
+    channel_id: str,
+    client: WebClient,
+    trigger_id: str,
+):
+    preblast_form = copy.deepcopy(forms.PREBLAST_FORM)
+    preblast_form.set_options(
+        {
+            actions.PREBLAST_DESTINATION: slack_orm.as_selector_options(
+                names=["The AO Channel", "My DMs"], values=["The_AO", user_id]
+            )
+        }
+    )
+    preblast_form.set_initial_values(
+        {
+            actions.PREBLAST_Q: user_id,
+            actions.PREBLAST_DATE: datetime.now().strftime("%Y-%m-%d"),
+            actions.PREBLAST_DESTINATION: "The_AO",
+        }
+    )
+    if channel_id:
+        preblast_form.set_initial_values({actions.PREBLAST_AO: channel_id})
+    preblast_form.post_modal(
+        client=client,
+        trigger_id=trigger_id,
+        callback_id=actions.PREBLAST_CALLBACK_ID,
+        title_text="Preblast",
+    )

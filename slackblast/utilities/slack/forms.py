@@ -135,9 +135,7 @@ PREBLAST_FORM = orm.BlockView(
             label="Workout Time",
             action=actions.PREBLAST_TIME,
             optional=False,
-            element=orm.TimepickerElement(
-                initial_value="05:30",
-            ),
+            element=orm.TimepickerElement(),
         ),
         orm.InputBlock(
             label="The Q",

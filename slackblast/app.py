@@ -4,14 +4,12 @@ from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 from slack_sdk.web import WebClient
 from utilities.helper_functions import (
     get_oauth_flow,
-    handle_backblast_post,
     safe_get,
-    handle_preblast_post,
-    handle_config_post,
-    handle_backblast_edit_post,
     get_paxminer_schema,
     replace_slack_user_ids,
+    get_region_record,
 )
+from utilities.handlers import handle_backblast_post, handle_preblast_post, handle_config_post
 from utilities import constants
 from utilities.slack import forms
 from utilities.slack import orm as slack_orm, actions
@@ -53,34 +51,12 @@ def respond_to_command(
     trigger_id = safe_get(body, "trigger_id")
     channel_id = safe_get(body, "channel_id")
 
-    region_record: Region = DbManager.get_record(Region, id=team_id)
-    if not region_record:
-        try:
-            team_info = client.team_info()
-            team_name = team_info["team"]["name"]
-        except Exception as error:
-            team_name = team_domain
-        paxminer_schema = get_paxminer_schema(team_id, logger)
-        region_record: Region = DbManager.create_record(
-            Region(
-                team_id=team_id,
-                bot_token=context["bot_token"],
-                workspace_name=team_name,
-                paxminer_schema=paxminer_schema,
-                email_enabled=0,
-                email_option_show=0,
-                editing_locked=0,
-            )
-        )
+    region_record = get_region_record(team_id, body, context, client, logger)
 
     if safe_get(body, "command") == "/config-slackblast":
         builders.build_config_form(client, trigger_id, region_record, logger)
 
-    elif (
-        safe_get(body, "command") == "/slackblast"
-        or safe_get(body, "command") == "/backblast"
-        # or initial_backblast_data
-    ):
+    elif safe_get(body, "command") == "/slackblast" or safe_get(body, "command") == "/backblast":
         builders.build_backblast_form(
             user_id,
             channel_id,
@@ -93,28 +69,11 @@ def respond_to_command(
         )
 
     elif safe_get(body, "command") == "/preblast":
-        preblast_form = copy.deepcopy(forms.PREBLAST_FORM)
-        preblast_form.set_options(
-            {
-                actions.PREBLAST_DESTINATION: slack_orm.as_selector_options(
-                    names=["The AO Channel", "My DMs"], values=["The_AO", user_id]
-                )
-            }
-        )
-        preblast_form.set_initial_values(
-            {
-                actions.PREBLAST_Q: user_id,
-                actions.PREBLAST_DATE: datetime.now().strftime("%Y-%m-%d"),
-                actions.PREBLAST_DESTINATION: "The_AO",
-            }
-        )
-        if channel_id:
-            preblast_form.set_initial_values({actions.PREBLAST_AO: channel_id})
-        preblast_form.post_modal(
-            client=client,
-            trigger_id=trigger_id,
-            callback_id=actions.PREBLAST_CALLBACK_ID,
-            title_text="Preblast",
+        builders.build_preblast_form(
+            user_id,
+            channel_id,
+            client,
+            trigger_id,
         )
 
 
@@ -123,10 +82,18 @@ def respond_to_view(ack, body, client, logger, context):
     logger.info("body is {}".format(body))
     logger.info("context is {}".format(context))
 
-    if safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID:
+    if safe_get(body, "view", "callback_id") in [
+        actions.BACKBLAST_CALLBACK_ID,
+        actions.BACKBLAST_EDIT_CALLBACK_ID,
+    ]:
         backblast_data: dict = forms.BACKBLAST_FORM.get_selected_values(body)
         logger.info("backblast_data is {}".format(backblast_data))
-        handle_backblast_post(ack, body, logger, client, context, backblast_data)
+
+        if safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID:
+            create_or_edit = "create"
+        else:
+            create_or_edit = "edit"
+        handle_backblast_post(ack, body, logger, client, context, backblast_data, create_or_edit)
 
     elif safe_get(body, "view", "callback_id") == actions.PREBLAST_CALLBACK_ID:
         preblast_data: dict = forms.PREBLAST_FORM.get_selected_values(body)
@@ -137,11 +104,6 @@ def respond_to_view(ack, body, client, logger, context):
         config_data: dict = forms.CONFIG_FORM.get_selected_values(body)
         logger.info("config_data is {}".format(config_data))
         handle_config_post(ack, body, logger, client, context, config_data)
-
-    elif safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID:
-        backblast_data: dict = forms.BACKBLAST_FORM.get_selected_values(body)
-        logger.info("backblast_data is {}".format(backblast_data))
-        handle_backblast_edit_post(ack, body, logger, client, context, backblast_data)
 
 
 @app.action(actions.BACKBLAST_EDIT_BUTTON)
@@ -201,28 +163,10 @@ def handle_backblast_new(ack, body, client, logger, context):
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
-    team_domain = safe_get(body, "team_domain") or safe_get(body, "team", "domain")
     trigger_id = safe_get(body, "trigger_id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
 
-    region_record: Region = DbManager.get_record(Region, id=team_id)
-    if not region_record:
-        try:
-            team_info = client.team_info()
-            team_name = team_info["team"]["name"]
-        except Exception as error:
-            team_name = team_domain
-        paxminer_schema = get_paxminer_schema(team_id, logger)
-        region_record: Region = DbManager.create_record(
-            Region(
-                team_id=team_id,
-                bot_token=context["bot_token"],
-                workspace_name=team_name,
-                paxminer_schema=paxminer_schema,
-                email_enabled=0,
-                email_option_show=0,
-            )
-        )
+    region_record: Region = get_region_record(team_id, body, context, client, logger)
 
     builders.build_backblast_form(
         user_id,
