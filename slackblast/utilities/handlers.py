@@ -216,6 +216,8 @@ def handle_backblast_post(
             )
         logger.info("\nBackblast deleted from database! \n{}".format(post_msg))
 
+    res_link = client.chat_getPermalink(channel=chan or message_channel, message_ts=res["ts"])
+
     if region_record.paxminer_schema is not None:
         try:
             DbManager.create_record(
@@ -258,7 +260,7 @@ def handle_backblast_post(
                 import_or_edit = "imported" if create_or_edit == "create" else "edited"
                 client.chat_postMessage(
                     channel=paxminer_log_channel,
-                    text=f"Backblast successfully {import_or_edit} for AO: <#{ao or chan}> Date: {the_date} Q: {q_name}",
+                    text=f"Backblast successfully {import_or_edit} for AO: <#{ao or chan}> Date: {the_date} Q: {q_name}\nLink: {res_link['permalink']}",
                 )
         except Exception as e:
             logger.error("Error saving backblast to database: {}".format(e))
