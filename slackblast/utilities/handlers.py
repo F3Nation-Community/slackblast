@@ -6,6 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from utilities import constants, sendmail
 
 from utilities.helper_functions import (
+    get_channel_id,
     safe_get,
     get_user_names,
     get_pax,
@@ -249,6 +250,16 @@ def handle_backblast_post(
             DbManager.create_records(
                 schema=region_record.paxminer_schema, records=attendance_records
             )
+
+            paxminer_log_channel = get_channel_id(
+                name="paxminer_logs", client=client, logger=logger
+            )
+            if paxminer_log_channel:
+                import_or_edit = "imported" if create_or_edit == "create" else "edited"
+                client.chat_postMessage(
+                    channel=paxminer_log_channel,
+                    text=f"Backblast successfully {import_or_edit} for AO: <#{ao or chan}> Date: {the_date} Q: {q_name}",
+                )
         except Exception as e:
             logger.error("Error saving backblast to database: {}".format(e))
             client.chat_postMessage(

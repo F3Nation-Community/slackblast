@@ -56,6 +56,15 @@ def get_channel_name(id, logger, client):
     return channel_name
 
 
+def get_channel_id(name, logger, client):
+    channel_info_dict = client.conversations_list()
+    channels = channel_info_dict["channels"]
+    for channel in channels:
+        if channel["name"] == name:
+            return channel["id"]
+    return None
+
+
 def get_user_names(array_of_user_ids, logger, client, return_urls=False):
     names = []
     urls = []
