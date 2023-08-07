@@ -3,6 +3,7 @@ from slack_bolt import App
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 from slack_sdk.web import WebClient
 from utilities.helper_functions import (
+    get_channel_name,
     get_oauth_flow,
     safe_get,
     get_paxminer_schema,
@@ -50,6 +51,7 @@ def respond_to_command(
     team_domain = safe_get(body, "team_domain") or safe_get(body, "team", "domain")
     trigger_id = safe_get(body, "trigger_id")
     channel_id = safe_get(body, "channel_id")
+    channel_name = safe_get(body, "channel_name")
 
     region_record = get_region_record(team_id, body, context, client, logger)
 
@@ -58,12 +60,13 @@ def respond_to_command(
 
     elif safe_get(body, "command") == "/slackblast" or safe_get(body, "command") == "/backblast":
         builders.build_backblast_form(
-            user_id,
-            channel_id,
-            body,
-            client,
-            logger,
-            region_record,
+            user_id=user_id,
+            channel_id=channel_id,
+            channel_name=channel_name,
+            body=body,
+            client=client,
+            logger=logger,
+            region_record=region_record,
             backblast_method="create",
             trigger_id=trigger_id,
         )
@@ -123,6 +126,7 @@ def handle_backblast_edit(ack, body, client, logger, context, say):
     trigger_id = safe_get(body, "trigger_id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
+    channel_name = safe_get(body, "channel_name") or safe_get(body, "channel", "name")
     region_record: Region = DbManager.get_record(Region, id=team_id)
 
     user_info_dict = client.users_info(user=user_id)
@@ -139,6 +143,7 @@ def handle_backblast_edit(ack, body, client, logger, context, say):
         builders.build_backblast_form(
             user_id=user_id,
             channel_id=channel_id,
+            channel_name=channel_name,
             body=body,
             client=client,
             logger=logger,
@@ -165,16 +170,18 @@ def handle_backblast_new(ack, body, client, logger, context):
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
     trigger_id = safe_get(body, "trigger_id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
+    channel_name = safe_get(body, "channel_name") or safe_get(body, "channel", "name")
 
     region_record: Region = get_region_record(team_id, body, context, client, logger)
 
     builders.build_backblast_form(
-        user_id,
-        channel_id,
-        body,
-        client,
-        logger,
-        region_record,
+        user_id=user_id,
+        channel_id=channel_id,
+        channel_name=channel_name,
+        body=body,
+        client=client,
+        logger=logger,
+        region_record=region_record,
         backblast_method="create",
         trigger_id=trigger_id,
     )
@@ -193,13 +200,16 @@ def handle_duplicate_check(ack, body, client, logger, context):
     trigger_id = safe_get(body, "trigger_id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
     channel_id = safe_get(body, "channel_id")
+    channel_name = safe_get(body, "channel_name")
     region_record: Region = DbManager.get_record(Region, id=team_id)
 
     currently_duplicate = False
     for block in body["view"]["blocks"]:
         if block["block_id"] == actions.BACKBLAST_DUPLICATE_WARNING:
             currently_duplicate = True
-            break
+        if not channel_id and block["block_id"] == actions.BACKBLAST_DESTINATION:
+            channel_id = block["element"]["options"][1]["value"]
+            channel_name = get_channel_name(channel_id, logger, client)
 
     if safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID:
         backblast_method = "edit"
@@ -214,6 +224,7 @@ def handle_duplicate_check(ack, body, client, logger, context):
     builders.build_backblast_form(
         user_id=user_id,
         channel_id=channel_id,
+        channel_name=channel_name,
         body=body,
         client=client,
         logger=logger,

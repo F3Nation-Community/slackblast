@@ -7,6 +7,7 @@ from utilities.slack import forms
 from utilities.slack import orm as slack_orm, actions
 from utilities import constants
 from utilities.helper_functions import (
+    get_channel_name,
     safe_get,
     run_fuzzy_match,
     check_for_duplicate,
@@ -20,6 +21,7 @@ from cryptography.fernet import Fernet
 def build_backblast_form(
     user_id: str,
     channel_id: str,
+    channel_name: str,
     body: dict,
     client: WebClient,
     logger: Logger,
@@ -45,7 +47,8 @@ def build_backblast_form(
             logger=logger,
             og_ts=og_ts,
         )
-        logger.info("is_duplicate is {}".format(is_duplicate))
+        ao_id = safe_get(initial_backblast_data, actions.BACKBLAST_AO)
+        ao_name = get_channel_name(ao_id, logger, client)
     else:
         is_duplicate = check_for_duplicate(
             q=user_id,
@@ -54,9 +57,11 @@ def build_backblast_form(
             region_record=region_record,
             logger=logger,
         )
+        ao_id = channel_id
+        ao_name = channel_name
 
-    if duplicate_check and currently_duplicate == is_duplicate:
-        return
+    # if duplicate_check and currently_duplicate == is_duplicate:
+    #     return
 
     if not is_duplicate:
         backblast_form.delete_block(actions.BACKBLAST_DUPLICATE_WARNING)
@@ -74,10 +79,13 @@ def build_backblast_form(
         backblast_form.delete_block(actions.BACKBLAST_DESTINATION)
         callback_id = actions.BACKBLAST_EDIT_CALLBACK_ID
     else:
+        logger.info("ao_id is {}".format(ao_id))
+        logger.info("channel_id is {}".format(channel_id))
         backblast_form.set_options(
             {
                 actions.BACKBLAST_DESTINATION: slack_orm.as_selector_options(
-                    names=["The AO Channel", "My DMs"], values=["The_AO", user_id]
+                    names=[f"The AO Channel (#{ao_name})", f"Current Channel (#{channel_name})"],
+                    values=[ao_id, channel_id],
                 )
             }
         )

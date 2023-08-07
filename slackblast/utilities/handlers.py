@@ -256,8 +256,9 @@ def handle_backblast_post(
                 text=f"WARNING: The backblast you just posted was not saved to the database. There is already a backblast for this AO and Q on this date. Please edit the backblast using the `Edit this backblast` button. Thanks!",
             )
 
-    if (email_send and email_send == "yes") or (
-        email_send is None and region_record.email_enabled == 1
+    if create_or_edit == "create" and (
+        (email_send and email_send == "yes")
+        or (email_send is None and region_record.email_enabled == 1)
     ):
         moleskin_msg = moleskin.replace("*", "")
 
