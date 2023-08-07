@@ -3,6 +3,8 @@ import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from utilities.slack import orm, actions
 
+from utilities import constants
+
 BACKBLAST_FORM = orm.BlockView(
     blocks=[
         orm.InputBlock(
@@ -51,16 +53,16 @@ BACKBLAST_FORM = orm.BlockView(
         orm.InputBlock(
             label="List untaggable PAX, separated by commas (not FNGs)",
             action=actions.BACKBLAST_NONSLACK_PAX,
-            optional=False,
+            optional=True,
             element=orm.PlainTextInputElement(
-                placeholder="Enter untaggable PAX...", initial_value="None"
+                placeholder="Enter untaggable PAX...",
             ),
         ),
         orm.InputBlock(
             label="List FNGs, separated by commas",
             action=actions.BACKBLAST_FNGS,
-            optional=False,
-            element=orm.PlainTextInputElement(placeholder="Enter FNGs...", initial_value="None"),
+            optional=True,
+            element=orm.PlainTextInputElement(placeholder="Enter FNGs..."),
         ),
         orm.InputBlock(
             label="Total PAX Count",
@@ -135,9 +137,7 @@ PREBLAST_FORM = orm.BlockView(
             label="Workout Time",
             action=actions.PREBLAST_TIME,
             optional=False,
-            element=orm.TimepickerElement(
-                initial_value="05:30",
-            ),
+            element=orm.TimepickerElement(),
         ),
         orm.InputBlock(
             label="The Q",
@@ -281,6 +281,24 @@ CONFIG_FORM = orm.BlockView(
             element=orm.RadioButtonsElement(
                 initial_value="no",
                 options=orm.as_selector_options(names=["Yes", "No"], values=["yes", "no"]),
+            ),
+        ),
+        orm.InputBlock(
+            label="Default Slack channel desination for backblasts",
+            action=actions.CONFIG_DEFAULT_DESTINATION,
+            optional=False,
+            element=orm.RadioButtonsElement(
+                initial_value=constants.CONFIG_DESTINATION_AO["value"],
+                options=orm.as_selector_options(
+                    names=[
+                        constants.CONFIG_DESTINATION_AO["name"],
+                        constants.CONFIG_DESTINATION_CURRENT["name"],
+                    ],
+                    values=[
+                        constants.CONFIG_DESTINATION_AO["value"],
+                        constants.CONFIG_DESTINATION_CURRENT["value"],
+                    ],
+                ),
             ),
         ),
     ]

@@ -7,6 +7,7 @@ from utilities.slack import forms
 from utilities.slack import orm as slack_orm, actions
 from utilities import constants
 from utilities.helper_functions import (
+    get_channel_name,
     safe_get,
     run_fuzzy_match,
     check_for_duplicate,
@@ -20,6 +21,7 @@ from cryptography.fernet import Fernet
 def build_backblast_form(
     user_id: str,
     channel_id: str,
+    channel_name: str,
     body: dict,
     client: WebClient,
     logger: Logger,
@@ -45,7 +47,8 @@ def build_backblast_form(
             logger=logger,
             og_ts=og_ts,
         )
-        logger.info("is_duplicate is {}".format(is_duplicate))
+        ao_id = safe_get(initial_backblast_data, actions.BACKBLAST_AO)
+        ao_name = get_channel_name(ao_id, logger, client)
     else:
         is_duplicate = check_for_duplicate(
             q=user_id,
@@ -54,9 +57,11 @@ def build_backblast_form(
             region_record=region_record,
             logger=logger,
         )
+        ao_id = channel_id
+        ao_name = channel_name
 
-    if duplicate_check and currently_duplicate == is_duplicate:
-        return
+    # if duplicate_check and currently_duplicate == is_duplicate:
+    #     return
 
     if not is_duplicate:
         backblast_form.delete_block(actions.BACKBLAST_DUPLICATE_WARNING)
@@ -74,10 +79,13 @@ def build_backblast_form(
         backblast_form.delete_block(actions.BACKBLAST_DESTINATION)
         callback_id = actions.BACKBLAST_EDIT_CALLBACK_ID
     else:
+        logger.info("ao_id is {}".format(ao_id))
+        logger.info("channel_id is {}".format(channel_id))
         backblast_form.set_options(
             {
                 actions.BACKBLAST_DESTINATION: slack_orm.as_selector_options(
-                    names=["The AO Channel", "My DMs"], values=["The_AO", user_id]
+                    names=[f"The AO Channel (#{ao_name})", f"Current Channel (#{channel_name})"],
+                    values=["The_AO", channel_id],
                 )
             }
         )
@@ -87,11 +95,18 @@ def build_backblast_form(
         callback_id = actions.BACKBLAST_CALLBACK_ID
 
     if backblast_method == "create":
+        if region_record.default_destination == constants.CONFIG_DESTINATION_CURRENT["value"]:
+            default_destination_id = channel_id
+        elif region_record.default_destination == constants.CONFIG_DESTINATION_AO["value"]:
+            default_destination_id = "The_AO"
+        else:
+            default_destination_id = None
+
         backblast_form.set_initial_values(
             {
                 actions.BACKBLAST_Q: user_id,
                 actions.BACKBLAST_DATE: datetime.now().strftime("%Y-%m-%d"),
-                actions.BACKBLAST_DESTINATION: "The_AO",
+                actions.BACKBLAST_DESTINATION: default_destination_id or "The_AO",
             }
         )
         if channel_id:
@@ -159,6 +174,8 @@ def build_config_form(
                 actions.CONFIG_EMAIL_PASSWORD: email_password_decrypted,
                 actions.CONFIG_POSTIE_ENABLE: "yes" if region_record.postie_format == 1 else "no",
                 actions.CONFIG_EDITING_LOCKED: "yes" if region_record.editing_locked == 1 else "no",
+                actions.CONFIG_DEFAULT_DESTINATION: region_record.default_destination
+                or constants.CONFIG_DESTINATION_AO["value"],
             }
         )
 
@@ -193,3 +210,34 @@ def build_config_form(
             callback_id=actions.CONFIG_CALLBACK_ID,
             title_text="Configure Slackblast",
         )
+
+
+def build_preblast_form(
+    user_id: str,
+    channel_id: str,
+    client: WebClient,
+    trigger_id: str,
+):
+    preblast_form = copy.deepcopy(forms.PREBLAST_FORM)
+    preblast_form.set_options(
+        {
+            actions.PREBLAST_DESTINATION: slack_orm.as_selector_options(
+                names=["The AO Channel", "My DMs"], values=["The_AO", user_id]
+            )
+        }
+    )
+    preblast_form.set_initial_values(
+        {
+            actions.PREBLAST_Q: user_id,
+            actions.PREBLAST_DATE: datetime.now().strftime("%Y-%m-%d"),
+            actions.PREBLAST_DESTINATION: "The_AO",
+        }
+    )
+    if channel_id:
+        preblast_form.set_initial_values({actions.PREBLAST_AO: channel_id})
+    preblast_form.post_modal(
+        client=client,
+        trigger_id=trigger_id,
+        callback_id=actions.PREBLAST_CALLBACK_ID,
+        title_text="Preblast",
+    )

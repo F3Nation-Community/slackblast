@@ -42,6 +42,7 @@ class Region(BaseClass, GetDBClass):
     email_option_show = Column("email_option_show", Integer)
     postie_format = Column("postie_format", Integer)
     editing_locked = Column("editing_locked", Integer)
+    default_destination = Column("default_destination", String(30))
     created = Column("created", DateTime, default=datetime.utcnow)
     updated = Column("updated", DateTime, default=datetime.utcnow)
 
