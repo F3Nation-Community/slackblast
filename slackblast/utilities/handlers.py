@@ -354,6 +354,7 @@ def handle_config_post(ack, body, logger, client, context, config_data) -> str:
         Region.editing_locked: 1
         if safe_get(config_data, actions.CONFIG_EDITING_LOCKED) == "yes"
         else 0,
+        Region.default_destination: safe_get(config_data, actions.CONFIG_DEFAULT_DESTINATION),
     }
     if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable":
         fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())

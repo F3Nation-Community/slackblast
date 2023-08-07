@@ -3,6 +3,8 @@ import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from utilities.slack import orm, actions
 
+from utilities import constants
+
 BACKBLAST_FORM = orm.BlockView(
     blocks=[
         orm.InputBlock(
@@ -279,6 +281,24 @@ CONFIG_FORM = orm.BlockView(
             element=orm.RadioButtonsElement(
                 initial_value="no",
                 options=orm.as_selector_options(names=["Yes", "No"], values=["yes", "no"]),
+            ),
+        ),
+        orm.InputBlock(
+            label="Default Slack channel desination for backblasts",
+            action=actions.CONFIG_DEFAULT_DESTINATION,
+            optional=False,
+            element=orm.RadioButtonsElement(
+                initial_value=constants.CONFIG_DESTINATION_AO["value"],
+                options=orm.as_selector_options(
+                    names=[
+                        constants.CONFIG_DESTINATION_AO["name"],
+                        constants.CONFIG_DESTINATION_CURRENT["name"],
+                    ],
+                    values=[
+                        constants.CONFIG_DESTINATION_AO["value"],
+                        constants.CONFIG_DESTINATION_CURRENT["value"],
+                    ],
+                ),
             ),
         ),
     ]

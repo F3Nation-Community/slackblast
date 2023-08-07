@@ -85,7 +85,7 @@ def build_backblast_form(
             {
                 actions.BACKBLAST_DESTINATION: slack_orm.as_selector_options(
                     names=[f"The AO Channel (#{ao_name})", f"Current Channel (#{channel_name})"],
-                    values=[ao_id, channel_id],
+                    values=["The_AO", channel_id],
                 )
             }
         )
@@ -95,11 +95,18 @@ def build_backblast_form(
         callback_id = actions.BACKBLAST_CALLBACK_ID
 
     if backblast_method == "create":
+        if region_record.default_destination == constants.CONFIG_DESTINATION_CURRENT["value"]:
+            default_destination_id = channel_id
+        elif region_record.default_destination == constants.CONFIG_DESTINATION_AO["value"]:
+            default_destination_id = "The_AO"
+        else:
+            default_destination_id = None
+
         backblast_form.set_initial_values(
             {
                 actions.BACKBLAST_Q: user_id,
                 actions.BACKBLAST_DATE: datetime.now().strftime("%Y-%m-%d"),
-                actions.BACKBLAST_DESTINATION: "The_AO",
+                actions.BACKBLAST_DESTINATION: default_destination_id or "The_AO",
             }
         )
         if channel_id:
@@ -167,6 +174,8 @@ def build_config_form(
                 actions.CONFIG_EMAIL_PASSWORD: email_password_decrypted,
                 actions.CONFIG_POSTIE_ENABLE: "yes" if region_record.postie_format == 1 else "no",
                 actions.CONFIG_EDITING_LOCKED: "yes" if region_record.editing_locked == 1 else "no",
+                actions.CONFIG_DEFAULT_DESTINATION: region_record.default_destination
+                or constants.CONFIG_DESTINATION_AO["value"],
             }
         )
 
