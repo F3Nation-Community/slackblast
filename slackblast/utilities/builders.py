@@ -95,9 +95,9 @@ def build_backblast_form(
         callback_id = actions.BACKBLAST_CALLBACK_ID
 
     if backblast_method == "create":
-        if region_record.default_destination == constants.CONFIG_DESTINATION_CURRENT["value"]:
+        if region_record.default_destination or "" == constants.CONFIG_DESTINATION_CURRENT["value"]:
             default_destination_id = channel_id
-        elif region_record.default_destination == constants.CONFIG_DESTINATION_AO["value"]:
+        elif region_record.default_destination or "" == constants.CONFIG_DESTINATION_AO["value"]:
             default_destination_id = "The_AO"
         else:
             default_destination_id = None
@@ -107,6 +107,8 @@ def build_backblast_form(
                 actions.BACKBLAST_Q: user_id,
                 actions.BACKBLAST_DATE: datetime.now().strftime("%Y-%m-%d"),
                 actions.BACKBLAST_DESTINATION: default_destination_id or "The_AO",
+                actions.BACKBLAST_MOLESKIN: region_record.backblast_moleskin_template
+                or constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE,
             }
         )
         if channel_id:
@@ -176,6 +178,12 @@ def build_config_form(
                 actions.CONFIG_EDITING_LOCKED: "yes" if region_record.editing_locked == 1 else "no",
                 actions.CONFIG_DEFAULT_DESTINATION: region_record.default_destination
                 or constants.CONFIG_DESTINATION_AO["value"],
+                actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE: constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE
+                if region_record.backblast_moleskin_template is None
+                else region_record.backblast_moleskin_template,
+                actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE: ""
+                if region_record.preblast_moleskin_template is None
+                else region_record.preblast_moleskin_template,
             }
         )
 
@@ -217,6 +225,7 @@ def build_preblast_form(
     channel_id: str,
     client: WebClient,
     trigger_id: str,
+    region_record: Region,
 ):
     preblast_form = copy.deepcopy(forms.PREBLAST_FORM)
     preblast_form.set_options(
@@ -231,6 +240,7 @@ def build_preblast_form(
             actions.PREBLAST_Q: user_id,
             actions.PREBLAST_DATE: datetime.now().strftime("%Y-%m-%d"),
             actions.PREBLAST_DESTINATION: "The_AO",
+            actions.PREBLAST_MOLESKIN: region_record.preblast_moleskin_template or "",
         }
     )
     if channel_id:

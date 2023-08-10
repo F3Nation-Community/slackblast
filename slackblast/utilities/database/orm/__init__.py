@@ -43,6 +43,8 @@ class Region(BaseClass, GetDBClass):
     postie_format = Column("postie_format", Integer)
     editing_locked = Column("editing_locked", Integer)
     default_destination = Column("default_destination", String(30))
+    backblast_moleskin_template = Column("backblast_moleskin_template", LONGTEXT)
+    preblast_moleskin_template = Column("preblast_moleskin_template", LONGTEXT)
     created = Column("created", DateTime, default=datetime.utcnow)
     updated = Column("updated", DateTime, default=datetime.utcnow)
 
@@ -87,3 +89,16 @@ class Attendance(BaseClass, GetDBClass):
 
     def get_id():
         return Attendance.timestamp
+
+
+class User(BaseClass, GetDBClass):
+    __tablename__ = "users"
+    id = Column("id", Integer, primary_key=True)
+    team_id = Column("team_id", String(100))
+    user_id = Column("user_id", String(100))
+    strava_access_token = Column("strava_access_token", String(100))
+    strava_refresh_token = Column("strava_refresh_token", String(100))
+    strava_expires_at = Column("strava_expires_at", DateTime)
+    strava_athlete_id = Column("strava_athlete_id", Integer)
+    created = Column("created", DateTime, default=datetime.utcnow)
+    updated = Column("updated", DateTime, default=datetime.utcnow)

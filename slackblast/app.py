@@ -9,6 +9,7 @@ from utilities.helper_functions import (
     get_paxminer_schema,
     replace_slack_user_ids,
     get_region_record,
+    strava_exchange_token,
 )
 from utilities.handlers import handle_backblast_post, handle_preblast_post, handle_config_post
 from utilities import constants
@@ -31,6 +32,11 @@ app = App(process_before_response=True, oauth_flow=get_oauth_flow())
 
 
 def handler(event, context):
+    # print("event is {}".format(event))
+    # print("context is {}".format(context))
+    # print("os.environ is {}".format(os.environ))
+    if event.get("path") == "/exchange_token":
+        return strava_exchange_token(event, context)
     slack_handler = SlackRequestHandler(app=app)
     return slack_handler.handle(event, context)
 
@@ -77,6 +83,7 @@ def respond_to_command(
             channel_id,
             client,
             trigger_id,
+            region_record,
         )
 
 

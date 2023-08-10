@@ -10,3 +10,4 @@ SQLAlchemy==1.4.15
 # smtplib
 fuzzywuzzy
 python-Levenshtein
+requests==2.29.0
