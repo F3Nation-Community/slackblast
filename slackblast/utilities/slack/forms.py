@@ -79,7 +79,7 @@ BACKBLAST_FORM = orm.BlockView(
             optional=False,
             element=orm.PlainTextInputElement(
                 placeholder="Tell us what happened\n\n",
-                initial_value="\n*WARMUP:* \n*THE THANG:* \n*MARY:* \n*ANNOUNCEMENTS:* \n*COT:* ",
+                # initial_value="\n*WARMUP:* \n*THE THANG:* \n*MARY:* \n*ANNOUNCEMENTS:* \n*COT:* ",
                 multiline=True,
                 max_length=3000,
             ),
@@ -153,14 +153,14 @@ PREBLAST_FORM = orm.BlockView(
         #     placeholder="[Optional] Explain the Why...",
         #   )
         # ),
-        # orm.InputBlock(
-        #   label="Coupons?",
-        #   action=actions.PREBLAST_COUPONS,
-        #   optional=True,
-        #   element=orm.PlainTextInputElement( # TODO: change to radio buttons or checkboxes
-        #     placeholder="Coupons or not?",
-        #   )
-        # ),
+        orm.InputBlock(
+            label="Coupons?",
+            action=actions.PREBLAST_COUPONS,
+            optional=True,
+            element=orm.PlainTextInputElement(  # TODO: change to radio buttons or checkboxes
+                placeholder="Coupons or not?",
+            ),
+        ),
         # orm.InputBlock(
         #   label="FNGs",
         #   action=actions.PREBLAST_FNGS,
@@ -299,6 +299,26 @@ CONFIG_FORM = orm.BlockView(
                         constants.CONFIG_DESTINATION_CURRENT["value"],
                     ],
                 ),
+            ),
+        ),
+        orm.InputBlock(
+            label="Backblast Moleskine Template / Starter",
+            action=actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE,
+            optional=True,
+            element=orm.PlainTextInputElement(
+                initial_value=constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE,
+                max_length=3000,
+                multiline=True,
+            ),
+        ),
+        orm.InputBlock(
+            label="Preblast Moleskine Template / Starter",
+            action=actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE,
+            optional=True,
+            element=orm.PlainTextInputElement(
+                initial_value="",
+                max_length=3000,
+                multiline=True,
             ),
         ),
     ]

@@ -120,13 +120,21 @@ def handle_backblast_post(
         "elements": [
             {
                 "type": "button",
-                "text": {"type": "plain_text", "text": "Edit this backblast", "emoji": True},
+                "text": {
+                    "type": "plain_text",
+                    "text": ":pencil: Edit this backblast",
+                    "emoji": True,
+                },
                 "value": json.dumps(backblast_data),
                 "action_id": actions.BACKBLAST_EDIT_BUTTON,
             },
             {
                 "type": "button",
-                "text": {"type": "plain_text", "text": "New backblast", "emoji": True},
+                "text": {
+                    "type": "plain_text",
+                    "text": ":heavy_plus_sign: New backblast",
+                    "emoji": True,
+                },
                 "value": "new",
                 "action_id": actions.BACKBLAST_NEW_BUTTON,
             },
@@ -145,7 +153,7 @@ def handle_backblast_post(
         else:
             res = client.chat_postMessage(
                 channel=chan,
-                text="Use 'New Backblast' button to create a new backblast",
+                text=f"{moleskin_formatted}\n\nUse the 'New Backblast' button to create a new backblast",
                 username=f"{q_name} (via Slackblast)",
                 icon_url=q_url,
                 blocks=[msg_block, moleskin_block, edit_block],
@@ -196,7 +204,7 @@ def handle_backblast_post(
         res = client.chat_update(
             channel=message_channel,
             ts=message_ts,
-            text="Use 'New Backblast' button to create a new backblast",
+            text=f"{moleskin_formatted}\n\nUse the 'New Backblast' button to create a new backblast",
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
             blocks=[msg_block, moleskin_block, edit_block],
@@ -269,47 +277,6 @@ def handle_backblast_post(
                 text=f"WARNING: The backblast you just posted was not saved to the database. There is already a backblast for this AO and Q on this date. Please edit the backblast using the `Edit this backblast` button. Thanks!",
             )
 
-    if create_or_edit == "create" and (
-        (email_send and email_send == "yes")
-        or (email_send is None and region_record.email_enabled == 1)
-    ):
-        moleskin_msg = moleskin.replace("*", "")
-
-        if region_record.postie_format:
-            subject = f"[{ao_name}] {title}"
-            moleskin_msg += f"\n\nTags: {ao_name}, {pax_names}"
-        else:
-            subject = title
-
-        email_msg = f"""Date: {the_date}
-    AO: {ao_name}
-    Q: {q_name} {the_coqs_names}
-    PAX: {pax_names}
-    FNGs: {fngs_formatted}
-    COUNT: {count}
-    {moleskin_msg}
-        """
-
-        try:
-            # Decrypt password
-            fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
-            email_password_decrypted = fernet.decrypt(
-                region_record.email_password.encode()
-            ).decode()
-            sendmail.send(
-                subject=subject,
-                body=email_msg,
-                email_server=region_record.email_server,
-                email_server_port=region_record.email_server_port,
-                email_user=region_record.email_user,
-                email_password=email_password_decrypted,
-                email_to=region_record.email_to,
-            )
-            logger.info("\nEmail Sent! \n{}".format(email_msg))
-        except Exception as sendmail_err:
-            logger.error("Error with sendmail: {}".format(sendmail_err))
-            logger.info("\nEmail Sent! \n{}".format(email_msg))
-
 
 def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> str:
     ack()
@@ -368,6 +335,14 @@ def handle_config_post(ack, body, logger, client, context, config_data) -> str:
         if safe_get(config_data, actions.CONFIG_EDITING_LOCKED) == "yes"
         else 0,
         Region.default_destination: safe_get(config_data, actions.CONFIG_DEFAULT_DESTINATION),
+        Region.backblast_moleskin_template: safe_get(
+            config_data, actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE
+        )
+        or "",
+        Region.preblast_moleskin_template: safe_get(
+            config_data, actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE
+        )
+        or "",
     }
     if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable":
         fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())

@@ -52,6 +52,14 @@ Parameters:
     Description: Hash encrypt key for decrypting email passwords
     Type: String
     Default: "123"
+  StravaClientID:
+    Description: Strava Client ID
+    Type: String
+    Default: "123"
+  StravaClientSecret:
+    Description: Strava Client Secret
+    Type: String
+    Default: "123"
 
 Mappings:
   StagesMap:
@@ -98,6 +106,11 @@ Resources:
               - StagesMap
               - Ref: Stage
               - KeepWarmName
+        StravaExchange:
+          Type: Api
+          Properties:
+            Path: /exchange_token
+            Method: get
       Environment:
         Variables:
           SLACK_BOT_TOKEN: !Ref SlackToken
@@ -121,6 +134,8 @@ Resources:
             - StagesMap
             - Ref: Stage
             - SlackInstallS3Bucket
+          STRAVA_CLIENT_ID: !Ref StravaClientID
+          STRAVA_CLIENT_SECRET: !Ref StravaClientSecret
 
   # EventRule:
   #   Type: AWS::Events::Rule

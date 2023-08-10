@@ -4,7 +4,7 @@ import pickle
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from utilities import sendmail, constants
-from utilities.database.orm import Region, Backblast, Attendance
+from utilities.database.orm import Region, Backblast, Attendance, User
 from utilities.database import DbManager
 from datetime import datetime
 from utilities.slack import actions
@@ -19,6 +19,7 @@ from slack_sdk.web import WebClient
 import json
 from sqlalchemy.exc import IntegrityError
 from pymysql.err import IntegrityError as PymysqlIntegrityError
+import requests
 
 
 def get_oauth_flow():
@@ -34,6 +35,52 @@ def get_oauth_flow():
                 scopes=os.environ[constants.SLACK_SCOPES].split(","),
             ),
         )
+
+
+def strava_exchange_token(event, context) -> dict:
+    """Exchanges a Strava auth code for an access token."""
+    team_id, user_id = event.get("queryStringParameters", {}).get("state").split("-")
+    print("team_id is {}".format(team_id))
+    code = event.get("queryStringParameters", {}).get("code")
+    if not code:
+        r = {
+            "statusCode": 400,
+            "body": {"error": "No code provided."},
+            "headers": {},
+        }
+        return r
+
+    response = requests.post(
+        url="https://www.strava.com/oauth/token",
+        data={
+            "client_id": os.environ[constants.STRAVA_CLIENT_ID],
+            "client_secret": os.environ[constants.STRAVA_CLIENT_SECRET],
+            "code": code,
+            "grant_type": "authorization_code",
+        },
+    )
+    response.raise_for_status()
+
+    response_json = response.json()
+    print("response is {}".format(response.json()))
+    user_record: User = DbManager.create_record(  # TODO: make this a function that updates the record if it already exists
+        User(
+            team_id=team_id,
+            user_id=user_id,
+            strava_access_token=response_json["access_token"],
+            strava_refresh_token=response_json["refresh_token"],
+            strava_expires_at=datetime.fromtimestamp(response_json["expires_at"]),
+            strava_athlete_id=response_json["athlete"]["id"],
+        )
+    )
+
+    r = {
+        "statusCode": 200,
+        "body": {"message": "Authorization successful! You can return to Slack."},
+        "headers": {},
+    }
+
+    return r
 
 
 def safe_get(data, *keys):
