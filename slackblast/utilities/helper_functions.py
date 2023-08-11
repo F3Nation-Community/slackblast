@@ -97,7 +97,11 @@ def safe_get(data, *keys):
 
 
 def get_channel_name(id, logger, client):
-    channel_info_dict = client.conversations_info(channel=id)
+    try:
+        channel_info_dict = client.conversations_info(channel=id)
+    except Exception as e:
+        logger.error(e)
+        return ""
     channel_name = safe_get(channel_info_dict, "channel", "name") or None
     logger.info("channel_name is {}".format(channel_name))
     return channel_name
