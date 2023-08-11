@@ -9,7 +9,6 @@ from utilities.helper_functions import (
     get_paxminer_schema,
     replace_slack_user_ids,
     get_region_record,
-    strava_exchange_token,
 )
 from utilities.handlers import handle_backblast_post, handle_preblast_post, handle_config_post
 from utilities import constants
@@ -20,10 +19,11 @@ from logging import Logger
 from datetime import datetime, date
 from utilities.database import DbManager
 from utilities.database.orm import Region
-from utilities import builders
+from utilities import builders, strava
 import os
 import re
 import copy
+from pprint import pformat
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -36,7 +36,7 @@ def handler(event, context):
     # print("context is {}".format(context))
     # print("os.environ is {}".format(os.environ))
     if event.get("path") == "/exchange_token":
-        return strava_exchange_token(event, context)
+        return strava.strava_exchange_token(event, context)
     slack_handler = SlackRequestHandler(app=app)
     return slack_handler.handle(event, context)
 
@@ -192,6 +192,36 @@ def handle_backblast_new(ack, body, client, logger, context):
         backblast_method="create",
         trigger_id=trigger_id,
     )
+
+
+@app.action(actions.BACKBLAST_STRAVA_BUTTON)
+def handle_backblast_strava(ack, body, client, logger, context):
+    ack()
+
+    logger.info("body is \n{}".format(pformat(body)))
+    logger.info("context is \n{}".format(pformat(context)))
+
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
+    trigger_id = safe_get(body, "trigger_id")
+    channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
+    channel_name = safe_get(body, "channel_name") or safe_get(body, "channel", "name")
+    lambda_function_host = safe_get(context, "lambda_request", "headers", "Host")
+
+    builders.build_strava_form(
+        team_id=team_id,
+        user_id=user_id,
+        client=client,
+        trigger_id=trigger_id,
+        logger=logger,
+        lambda_function_host=lambda_function_host,
+    )
+
+
+@app.action(re.compile(actions.STRAVA_ACTIVITY_BUTTON))
+def handle_some_action(ack, body, logger):
+    ack()
+    logger.info(body)
 
 
 @app.action(actions.BACKBLAST_AO)

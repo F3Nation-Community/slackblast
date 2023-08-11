@@ -1,5 +1,5 @@
 from typing import Any, List, Union, Dict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from slack_sdk.web import WebClient
 import os, sys
 
@@ -87,6 +87,7 @@ class ButtonElement(BaseAction):
     style: str = None
     value: str = None
     confirm: object = None
+    url: str = None
 
     def as_form_field(self):
         j = {
@@ -99,6 +100,8 @@ class ButtonElement(BaseAction):
             j["style"] = self.style
         if self.confirm:
             j["confirm"] = self.confirm
+        if self.url:
+            j["url"] = self.url
         return j
 
 
@@ -326,6 +329,26 @@ class ContextBlock(BaseBlock):
 
 
 @dataclass
+class DividerBlock(BaseBlock):
+    def as_form_field(self):
+        return {"type": "divider"}
+
+
+@dataclass
+class ActionsBlock(BaseBlock):
+    elements: List[BaseAction] = field(default_factory=list)
+
+    def as_form_field(self):
+        j = {
+            "type": "actions",
+            "elements": [e.as_form_field() for e in self.elements],
+        }
+        if self.action:
+            j["block_id"] = self.action
+        return j
+
+
+@dataclass
 class BlockView:
     blocks: List[BaseBlock]
 
@@ -375,9 +398,11 @@ class BlockView:
             "type": "modal",
             "callback_id": callback_id,
             "title": {"type": "plain_text", "text": title_text},
-            "submit": {"type": "plain_text", "text": submit_button_text},
             "blocks": blocks,
         }
+
+        if submit_button_text != "None":  # TODO: would prefer this to use None instead of "None"
+            view["submit"] = {"type": "plain_text", "text": submit_button_text}
 
         res = client.views_open(trigger_id=trigger_id, view=view)
 

@@ -138,6 +138,16 @@ def handle_backblast_post(
                 "value": "new",
                 "action_id": actions.BACKBLAST_NEW_BUTTON,
             },
+            {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": ":runner: Connect to Strava",
+                    "emoji": True,
+                },
+                "value": "strava",
+                "action_id": actions.BACKBLAST_STRAVA_BUTTON,
+            },
         ],
         "block_id": actions.BACKBLAST_EDIT_BUTTON,
     }

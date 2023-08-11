@@ -1,11 +1,12 @@
 import sys, os
+from typing import List
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from slack_sdk.web import WebClient
-from utilities.database.orm import Region
-from utilities.slack import forms
-from utilities.slack import orm as slack_orm, actions
-from utilities import constants
+from utilities.database.orm import Region, User
+from utilities.database import DbManager
+from utilities.slack import forms, orm as slack_orm, actions
+from utilities import constants, strava
 from utilities.helper_functions import (
     get_channel_name,
     safe_get,
@@ -16,6 +17,7 @@ import copy
 from logging import Logger
 from datetime import datetime, date
 from cryptography.fernet import Fernet
+import requests
 
 
 def build_backblast_form(
@@ -250,4 +252,60 @@ def build_preblast_form(
         trigger_id=trigger_id,
         callback_id=actions.PREBLAST_CALLBACK_ID,
         title_text="Preblast",
+    )
+
+
+def build_strava_form(
+    team_id: str,
+    user_id: str,
+    client: WebClient,
+    trigger_id: str,
+    logger: Logger,
+    lambda_function_host: str,
+):
+    user_records: List[User] = DbManager.find_records(
+        User, filters=[User.user_id == user_id, User.team_id == team_id]
+    )
+
+    if len(user_records) == 0:
+        title_text = "Connect Strava"
+        strava_blocks = [
+            slack_orm.ButtonElement(
+                label="Connect Strava\n(opens in new window)",
+                action=actions.STRAVA_CONNECT_BUTTON,
+                url=f"https://strava.com/oauth/authorize?client_id={os.environ[constants.STRAVA_CLIENT_ID]}&response_type=code&redirect_uri=https://{lambda_function_host}/exchange_token&approval_prompt=force&scope=read,activity:read,activity:write&state={team_id}-{user_id}",
+            ),
+        ]
+    else:
+        title_text = "Choose Activity"
+        user_record = user_records[0]
+        strava_recent_activities = strava.get_strava_activities(user_record)
+
+        strava_blocks = []
+        for activity in strava_recent_activities:
+            date = datetime.strptime(activity["start_date_local"], "%Y-%m-%dT%H:%M:%SZ")
+            date_fmt = date.strftime("%m-%d %H:%M")
+            strava_blocks.append(
+                slack_orm.ButtonElement(
+                    label=f"{date_fmt} - {activity['name']}",
+                    action="-".join([actions.STRAVA_ACTIVITY_BUTTON, str(activity["id"])]),
+                    value=str(activity["id"]),
+                    # TODO: add confirmation modal
+                )
+            )
+
+    strava_form = slack_orm.BlockView(
+        blocks=[
+            slack_orm.ActionsBlock(
+                elements=strava_blocks,
+            ),
+        ]
+    )
+
+    strava_form.post_modal(
+        client=client,
+        trigger_id=trigger_id,
+        callback_id=actions.STRAVA_CALLBACK_ID,
+        title_text=title_text,
+        submit_button_text="None",
     )
