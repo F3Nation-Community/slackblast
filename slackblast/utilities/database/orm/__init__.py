@@ -102,3 +102,20 @@ class User(BaseClass, GetDBClass):
     strava_athlete_id = Column("strava_athlete_id", Integer)
     created = Column("created", DateTime, default=datetime.utcnow)
     updated = Column("updated", DateTime, default=datetime.utcnow)
+
+
+class PaxminerUser(BaseClass, GetDBClass):
+    __tablename__ = "users"
+    user_id = Column("user_id", String(45), primary_key=True)
+    user_name = Column("user_name", String(45))
+    real_name = Column("real_name", String(45))
+    phone = Column("phone", String(45))
+    email = Column("email", String(45))
+    start_date = Column("start_date", String(45))
+    app = Column("app", Integer)
+
+    def get_id(self):
+        return self.user_id
+
+    def get_id():
+        return PaxminerUser.user_id

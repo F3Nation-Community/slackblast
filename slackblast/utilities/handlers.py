@@ -53,7 +53,9 @@ def handle_backblast_post(
         message_ts = None
 
     auto_count = len(set(list([the_q] + (the_coq or []) + pax)))
-    pax_names_list = get_user_names(pax, logger, client, return_urls=False) or [""]
+    pax_names_list = get_user_names(
+        pax, logger, client, return_urls=False, region_record=region_record
+    ) or [""]
     pax_formatted = get_pax(pax)
     pax_full_list = [pax_formatted]
     fngs_formatted = fngs
@@ -77,14 +79,18 @@ def handle_backblast_post(
     else:
         the_coqs_formatted = get_pax(the_coq)
         the_coqs_full_list = [the_coqs_formatted]
-        the_coqs_names_list = get_user_names(the_coq, logger, client, return_urls=False)
+        the_coqs_names_list = get_user_names(
+            the_coq, logger, client, return_urls=False, region_record=region_record
+        )
         the_coqs_formatted = ", " + ", ".join(the_coqs_full_list)
         the_coqs_names = ", " + ", ".join(the_coqs_names_list)
 
     moleskin_formatted = parse_moleskin_users(moleskin, client)
 
     ao_name = get_channel_name(the_ao, logger, client)
-    q_name, q_url = get_user_names([the_q], logger, client, return_urls=True)
+    q_name, q_url = get_user_names(
+        [the_q], logger, client, return_urls=True, region_record=region_record
+    )
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
 
@@ -292,11 +298,15 @@ def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> s
     moleskin = safe_get(preblast_data, actions.PREBLAST_MOLESKIN)
     destination = safe_get(preblast_data, actions.PREBLAST_DESTINATION)
 
+    region_record: Region = DbManager.get_record(Region, id=context["team_id"])
+
     chan = destination
     if chan == "The_AO":
         chan = the_ao
 
-    q_name, q_url = get_user_names([the_q], logger, client, return_urls=True)
+    q_name, q_url = get_user_names(
+        [the_q], logger, client, return_urls=True, region_record=region_record
+    )
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
 

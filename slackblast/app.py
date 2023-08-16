@@ -121,13 +121,6 @@ def handle_backblast_edit(ack, body, client, logger, context, say):
     ack()
     logger.info("body is {}".format(body))
     logger.info("context is {}".format(context))
-    backblast_data: dict = json.loads(body["actions"][0]["value"])
-    if not safe_get(backblast_data, actions.BACKBLAST_MOLESKIN):
-        backblast_data[actions.BACKBLAST_MOLESKIN] = body["message"]["blocks"][1]["text"]["text"]
-        backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
-            backblast_data[actions.BACKBLAST_MOLESKIN], client, logger
-        )
-    logger.info("backblast_data is {}".format(backblast_data))
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     trigger_id = safe_get(body, "trigger_id")
@@ -135,6 +128,14 @@ def handle_backblast_edit(ack, body, client, logger, context, say):
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
     channel_name = safe_get(body, "channel_name") or safe_get(body, "channel", "name")
     region_record: Region = DbManager.get_record(Region, id=team_id)
+
+    backblast_data: dict = json.loads(body["actions"][0]["value"])
+    if not safe_get(backblast_data, actions.BACKBLAST_MOLESKIN):
+        backblast_data[actions.BACKBLAST_MOLESKIN] = body["message"]["blocks"][1]["text"]["text"]
+        backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
+            backblast_data[actions.BACKBLAST_MOLESKIN], client, logger, region_record
+        )
+    logger.info("backblast_data is {}".format(backblast_data))
 
     user_info_dict = client.users_info(user=user_id)
     user_admin: bool = user_info_dict["user"]["is_admin"]

@@ -4,7 +4,7 @@ import pickle
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from utilities import sendmail, constants
-from utilities.database.orm import Region, Backblast, Attendance, User
+from utilities.database.orm import PaxminerUser, Region, Backblast, Attendance, User
 from utilities.database import DbManager
 from datetime import datetime
 from utilities.slack import actions
@@ -116,29 +116,53 @@ def get_channel_id(name, logger, client):
     return None
 
 
-def get_user_names(array_of_user_ids, logger, client, return_urls=False):
+def get_user_names(
+    array_of_user_ids, logger, client: WebClient, return_urls=False, region_record: Region = None
+):
+    members = client.users_list()["members"]
     names = []
     urls = []
 
-    for user_id in array_of_user_ids:
-        user_info_dict = client.users_info(user=user_id)
-        user_name = (
-            safe_get(user_info_dict, "user", "profile", "display_name")
-            or safe_get(user_info_dict, "user", "profile", "real_name")
-            or None
+    if region_record.paxminer_schema and not return_urls:
+        user_records = DbManager.find_records(
+            cls=PaxminerUser,
+            filters=[User.user_id.in_(array_of_user_ids)],
+            schema=region_record.paxminer_schema,
         )
-        if user_name:
-            names.append(user_name)
-        logger.info("user_name is {}".format(user_name))
+        for user_id in array_of_user_ids:
+            user = [u for u in user_records if u.user_id == user_id]
+            if user:
+                user_name = user[0].user_name
+            else:
+                user_info_dict = client.users_info(user=user_id)
+                user_name = (
+                    safe_get(user_info_dict, "user", "profile", "display_name")
+                    or safe_get(user_info_dict, "user", "profile", "real_name")
+                    or None
+                )
+            if user_name:
+                names.append(user_name)
 
-        user_icon_url = user_info_dict["user"]["profile"]["image_192"]
-        urls.append(user_icon_url)
-    logger.info("names are {}".format(names))
-
-    if return_urls:
-        return names, urls
     else:
-        return names
+        for user_id in array_of_user_ids:
+            user_info_dict = [m for m in members if m["id"] == user_id][0]
+            user_name = (
+                safe_get(user_info_dict, "user", "profile", "display_name")
+                or safe_get(user_info_dict, "user", "profile", "real_name")
+                or None
+            )
+            if user_name:
+                names.append(user_name)
+            logger.info("user_name is {}".format(user_name))
+
+            user_icon_url = user_info_dict["user"]["profile"]["image_192"]
+            urls.append(user_icon_url)
+        logger.info("names are {}".format(names))
+
+        if return_urls:
+            return names, urls
+        else:
+            return names
 
 
 def get_user_ids(user_names, client):
@@ -285,7 +309,7 @@ def get_paxminer_schema(team_id: str, logger) -> str:
         return None
 
 
-def replace_slack_user_ids(text: str, client, logger) -> str:
+def replace_slack_user_ids(text: str, client, logger, region_record: Region = None) -> str:
     """Replace slack user ids with their user names
 
     Args:
@@ -296,7 +320,9 @@ def replace_slack_user_ids(text: str, client, logger) -> str:
     """
 
     slack_user_ids = re.findall(r"<@([A-Z0-9]+)>", text)
-    slack_user_names = get_user_names(slack_user_ids, logger, client, return_urls=False)
+    slack_user_names = get_user_names(
+        slack_user_ids, logger, client, return_urls=False, region_record=region_record
+    )
 
     slack_user_ids = [f"<@{user_id}>" for user_id in slack_user_ids]
     slack_user_names = [f"@{user_name}".replace(" ", "_") for user_name in slack_user_names]
