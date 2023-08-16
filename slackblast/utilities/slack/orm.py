@@ -317,14 +317,28 @@ class MultiUsersSelectElement(BaseElement):
 @dataclass
 class ContextBlock(BaseBlock):
     text: str = ""
+    initial_value: str = None
 
     def as_form_field(self):
         j = {
             "type": "context",
-            "elements": [{"type": "mrkdwn", "text": self.text}],
+            "elements": [{"type": "mrkdwn", "text": self.initial_value or self.text}],
         }
         if self.action:
             j["block_id"] = self.action
+        return j
+
+
+@dataclass
+class ContextElement(BaseElement):
+    text: str = ""
+    initial_value: str = None
+
+    def as_form_field(self, action: str):
+        j = {
+            "type": "mrkdwn",
+            "text": self.initial_value or self.text,
+        }
         return j
 
 

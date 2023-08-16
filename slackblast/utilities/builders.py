@@ -1,5 +1,6 @@
+import json
 import sys, os
-from typing import List
+from typing import Any, Dict, List
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from slack_sdk.web import WebClient
@@ -259,13 +260,19 @@ def build_strava_form(
     team_id: str,
     user_id: str,
     client: WebClient,
+    body: Dict[str, Any],
     trigger_id: str,
+    channel_id: str,
     logger: Logger,
     lambda_function_host: str,
 ):
     user_records: List[User] = DbManager.find_records(
         User, filters=[User.user_id == user_id, User.team_id == team_id]
     )
+
+    backblast_ts = body["message"]["ts"]
+    backblast_meta = json.loads(body["message"]["blocks"][-1]["elements"][0]["value"])
+    moleskine_text = body["message"]["blocks"][1]["text"]["text"]
 
     if len(user_records) == 0:
         title_text = "Connect Strava"
@@ -289,7 +296,15 @@ def build_strava_form(
                 slack_orm.ButtonElement(
                     label=f"{date_fmt} - {activity['name']}",
                     action="-".join([actions.STRAVA_ACTIVITY_BUTTON, str(activity["id"])]),
-                    value=str(activity["id"]),
+                    value="|".join(
+                        [
+                            str(activity["id"]),
+                            channel_id,
+                            backblast_ts,
+                            backblast_meta["title"],
+                            moleskine_text[:2000],
+                        ]
+                    ),
                     # TODO: add confirmation modal
                 )
             )
@@ -308,4 +323,29 @@ def build_strava_form(
         callback_id=actions.STRAVA_CALLBACK_ID,
         title_text=title_text,
         submit_button_text="None",
+    )
+
+
+def build_strava_modify_form(
+    client: WebClient,
+    logger: Logger,
+    trigger_id: str,
+    backblast_title: str,
+    backblast_moleskine: str,
+    backblast_metadata: str,
+):
+    modify_form = copy.deepcopy(forms.STRAVA_ACTIVITY_MODIFY_FORM)
+    modify_form.set_initial_values(
+        {
+            actions.STRAVA_ACTIVITY_TITLE: backblast_title,
+            actions.STRAVA_ACTIVITY_DESCRIPTION: backblast_moleskine,
+            actions.STRAVA_ACTIVITY_METADATA: backblast_metadata,
+        }
+    )
+
+    modify_form.post_modal(
+        client=client,
+        trigger_id=trigger_id,
+        callback_id=actions.STRAVA_MODIFY_CALLBACK_ID,
+        title_text="Modify Strava Activity",
     )

@@ -212,16 +212,49 @@ def handle_backblast_strava(ack, body, client, logger, context):
         team_id=team_id,
         user_id=user_id,
         client=client,
+        body=body,
         trigger_id=trigger_id,
+        channel_id=channel_id,
         logger=logger,
         lambda_function_host=lambda_function_host,
     )
 
 
 @app.action(re.compile(actions.STRAVA_ACTIVITY_BUTTON))
-def handle_some_action(ack, body, logger):
+def handle_strava_activity_action(ack, body, logger, client, context):
     ack()
     logger.info(body)
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
+    trigger_id = safe_get(body, "trigger_id")
+    channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
+
+    strava_activity_id, channel_id, backblast_ts, backblast_title, backblast_moleskine = body[
+        "actions"
+    ][0]["value"].split("|")
+
+    builders.build_strava_modify_form(
+        client=client,
+        logger=logger,
+        trigger_id=trigger_id,
+        backblast_title=backblast_title,
+        backblast_moleskine=backblast_moleskine,
+        backblast_metadata='|'.join([strava_activity_id, channel_id, backblast_ts]),
+    )
+
+    # activity_data = strava.update_strava_activity(
+    #     strava_activity_id=strava_activity_id,
+    #     user_id=user_id,
+    #     team_id=team_id,
+    #     backblast_title=backblast_title,
+    #     backblast_moleskine=backblast_moleskine,
+    # )
+    # logger.info("activity_data is {}".format(activity_data))
+    # client.chat_postMessage(
+    #     channel=channel_id,
+    #     thread_ts=backblast_ts,
+    #     text=f"<@{user_id}> has connected this backblast to a <https://www.strava.com/activities/{strava_activity_id}|Strava activity>!",
+    # )
 
 
 @app.action(actions.BACKBLAST_AO)

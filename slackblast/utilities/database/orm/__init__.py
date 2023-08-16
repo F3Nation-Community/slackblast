@@ -102,3 +102,9 @@ class User(BaseClass, GetDBClass):
     strava_athlete_id = Column("strava_athlete_id", Integer)
     created = Column("created", DateTime, default=datetime.utcnow)
     updated = Column("updated", DateTime, default=datetime.utcnow)
+
+    def get_id(self):
+        return self.id
+
+    def get_id():
+        return User.id

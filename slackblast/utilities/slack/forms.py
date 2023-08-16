@@ -323,3 +323,33 @@ CONFIG_FORM = orm.BlockView(
         ),
     ]
 )
+
+STRAVA_ACTIVITY_MODIFY_FORM = orm.BlockView(
+    blocks=[
+        orm.InputBlock(
+            label="Activity Title",
+            action=actions.STRAVA_ACTIVITY_TITLE,
+            optional=False,
+            element=orm.PlainTextInputElement(
+                initial_value="",
+                placeholder="Enter a workout title...",
+                max_length=100,
+            ),
+        ),
+        orm.InputBlock(
+            label="Activity Description",
+            action=actions.STRAVA_ACTIVITY_DESCRIPTION,
+            optional=False,
+            element=orm.PlainTextInputElement(
+                initial_value="",
+                placeholder="Enter a workout description...",
+                max_length=3000,
+                multiline=True,
+            ),
+        ),
+        orm.ContextBlock(
+            text="",
+            action=actions.STRAVA_ACTIVITY_METADATA,
+        ),
+    ]
+)
