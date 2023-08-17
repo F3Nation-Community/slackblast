@@ -92,7 +92,7 @@ class Attendance(BaseClass, GetDBClass):
 
 
 class User(BaseClass, GetDBClass):
-    __tablename__ = "users"
+    __tablename__ = "users2"
     id = Column("id", Integer, primary_key=True)
     team_id = Column("team_id", String(100))
     user_id = Column("user_id", String(100))
@@ -102,6 +102,12 @@ class User(BaseClass, GetDBClass):
     strava_athlete_id = Column("strava_athlete_id", Integer)
     created = Column("created", DateTime, default=datetime.utcnow)
     updated = Column("updated", DateTime, default=datetime.utcnow)
+
+    def get_id(self):
+        return self.id
+
+    def get_id():
+        return User.user_id
 
 
 class PaxminerUser(BaseClass, GetDBClass):

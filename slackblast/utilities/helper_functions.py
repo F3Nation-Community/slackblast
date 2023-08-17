@@ -119,14 +119,13 @@ def get_channel_id(name, logger, client):
 def get_user_names(
     array_of_user_ids, logger, client: WebClient, return_urls=False, region_record: Region = None
 ):
-    members = client.users_list()["members"]
     names = []
     urls = []
 
     if region_record.paxminer_schema and not return_urls:
         user_records = DbManager.find_records(
             cls=PaxminerUser,
-            filters=[User.user_id.in_(array_of_user_ids)],
+            filters=[PaxminerUser.user_id.in_(array_of_user_ids)],
             schema=region_record.paxminer_schema,
         )
         for user_id in array_of_user_ids:
@@ -145,7 +144,7 @@ def get_user_names(
 
     else:
         for user_id in array_of_user_ids:
-            user_info_dict = [m for m in members if m["id"] == user_id][0]
+            user_info_dict = client.users_info(user=user_id)
             user_name = (
                 safe_get(user_info_dict, "user", "profile", "display_name")
                 or safe_get(user_info_dict, "user", "profile", "real_name")

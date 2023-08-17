@@ -56,6 +56,9 @@ def handle_backblast_post(
     pax_names_list = get_user_names(
         pax, logger, client, return_urls=False, region_record=region_record
     ) or [""]
+    # names, urls = get_user_names(
+    #     [pax, the_coq or [], the_q], logger, client, return_urls=True, region_record=region_record
+    # )
     pax_formatted = get_pax(pax)
     pax_full_list = [pax_formatted]
     fngs_formatted = fngs
