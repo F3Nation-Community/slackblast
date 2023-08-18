@@ -326,7 +326,9 @@ def replace_slack_user_ids(text: str, client, logger, region_record: Region = No
     """
     user_records = None
     if region_record.paxminer_schema:
-        user_records = DbManager.find_records(PaxminerUser, schema=region_record.paxminer_schema)
+        user_records = DbManager.find_records(
+            PaxminerUser, filters=[True], schema=region_record.paxminer_schema
+        )
 
     slack_user_ids = re.findall(r"<@([A-Z0-9]+)>", text)
     slack_user_names = get_user_names(
@@ -334,7 +336,7 @@ def replace_slack_user_ids(text: str, client, logger, region_record: Region = No
     )
 
     slack_user_ids = [f"<@{user_id}>" for user_id in slack_user_ids]
-    slack_user_names = [f"@{user_name}".replace(" ", "_") for user_name in slack_user_names]
+    slack_user_names = [f"@{user_name}".replace(" ", "_") for user_name in slack_user_names or []]
 
     for old_value, new_value in zip(slack_user_ids, slack_user_names):
         text = text.replace(old_value, new_value, 1)
