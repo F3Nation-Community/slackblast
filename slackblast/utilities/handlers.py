@@ -14,7 +14,7 @@ from utilities.helper_functions import (
     get_channel_name,
 )
 from utilities.slack import actions
-from utilities.database.orm import Attendance, Backblast, Region
+from utilities.database.orm import Attendance, Backblast, PaxminerAO, PaxminerUser, Region
 from utilities.database import DbManager
 from cryptography.fernet import Fernet
 
@@ -39,7 +39,17 @@ def handle_backblast_post(
     ao = safe_get(backblast_data, actions.BACKBLAST_AO)
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+
     region_record: Region = DbManager.get_record(Region, id=context["team_id"])
+    user_records = None
+    ao_records = None
+    if region_record.paxminer_schema:
+        user_records = DbManager.find_records(
+            PaxminerUser, filters=[True], schema=region_record.paxminer_schema
+        )
+        ao_records = DbManager.find_records(
+            PaxminerAO, filters=[True], schema=region_record.paxminer_schema
+        )
 
     chan = destination
     if chan == "The_AO":
@@ -54,7 +64,7 @@ def handle_backblast_post(
 
     auto_count = len(set(list([the_q] + (the_coq or []) + pax)))
     pax_names_list = get_user_names(
-        pax, logger, client, return_urls=False, region_record=region_record
+        pax, logger, client, return_urls=False, user_records=user_records
     ) or [""]
     # names, urls = get_user_names(
     #     [pax, the_coq or [], the_q], logger, client, return_urls=True, region_record=region_record
@@ -83,16 +93,16 @@ def handle_backblast_post(
         the_coqs_formatted = get_pax(the_coq)
         the_coqs_full_list = [the_coqs_formatted]
         the_coqs_names_list = get_user_names(
-            the_coq, logger, client, return_urls=False, region_record=region_record
+            the_coq, logger, client, return_urls=False, user_records=user_records
         )
         the_coqs_formatted = ", " + ", ".join(the_coqs_full_list)
         the_coqs_names = ", " + ", ".join(the_coqs_names_list)
 
-    moleskin_formatted = parse_moleskin_users(moleskin, client)
+    moleskin_formatted = parse_moleskin_users(moleskin, client, user_records)
 
-    ao_name = get_channel_name(the_ao, logger, client)
+    ao_name = get_channel_name(the_ao, logger, client, region_record)
     q_name, q_url = get_user_names(
-        [the_q], logger, client, return_urls=True, region_record=region_record
+        [the_q], logger, client, return_urls=True, user_records=user_records
     )
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
@@ -167,8 +177,12 @@ def handle_backblast_post(
                 icon_url=q_url,
                 blocks=[msg_block, moleskin_block, edit_block],
             )
-        logger.info("\nMessage posted to Slack! \n{}".format(post_msg))
-
+        logger.debug("\nMessage posted to Slack! \n{}".format(post_msg))
+        print(
+            json.dumps(
+                {"event_type": "successful_slack_post", "team_name": region_record.workspace_name}
+            )
+        )
         if (email_send and email_send == "yes") or (
             email_send is None and region_record.email_enabled == 1
         ):
@@ -204,10 +218,23 @@ def handle_backblast_post(
                     email_password=email_password_decrypted,
                     email_to=region_record.email_to,
                 )
-                logger.info("\nEmail Sent! \n{}".format(email_msg))
+                logger.debug("\nEmail Sent! \n{}".format(email_msg))
+                print(
+                    json.dumps(
+                        {
+                            "event_type": "successful_email_sent",
+                            "team_name": region_record.workspace_name,
+                        }
+                    )
+                )
             except Exception as sendmail_err:
                 logger.error("Error with sendmail: {}".format(sendmail_err))
-                logger.info("\nEmail Sent! \n{}".format(email_msg))
+                logger.debug("\nEmail Sent! \n{}".format(email_msg))
+                print(
+                    json.dumps(
+                        {"event_type": "failed_email", "team_name": region_record.workspace_name}
+                    )
+                )
 
     elif create_or_edit == "edit":
         res = client.chat_update(
@@ -218,7 +245,12 @@ def handle_backblast_post(
             icon_url=q_url,
             blocks=[msg_block, moleskin_block, edit_block],
         )
-        logger.info("\nBackblast updated in Slack! \n{}".format(post_msg))
+        logger.debug("\nBackblast updated in Slack! \n{}".format(post_msg))
+        print(
+            json.dumps(
+                {"event_type": "successful_slack_edit", "team_name": region_record.workspace_name}
+            )
+        )
 
         if message_ts:
             DbManager.delete_records(
@@ -231,7 +263,12 @@ def handle_backblast_post(
                 schema=region_record.paxminer_schema,
                 filters=[Attendance.timestamp == message_ts],
             )
-        logger.info("\nBackblast deleted from database! \n{}".format(post_msg))
+        logger.debug("\nBackblast deleted from database! \n{}".format(post_msg))
+        print(
+            json.dumps(
+                {"event_type": "successful_db_delete", "team_name": region_record.workspace_name}
+            )
+        )
 
     res_link = client.chat_getPermalink(channel=chan or message_channel, message_ts=res["ts"])
 
@@ -269,6 +306,14 @@ def handle_backblast_post(
             DbManager.create_records(
                 schema=region_record.paxminer_schema, records=attendance_records
             )
+            print(
+                json.dumps(
+                    {
+                        "event_type": "successful_db_insert",
+                        "team_name": region_record.workspace_name,
+                    }
+                )
+            )
 
             paxminer_log_channel = get_channel_id(
                 name="paxminer_logs", client=client, logger=logger
@@ -284,6 +329,11 @@ def handle_backblast_post(
             client.chat_postMessage(
                 channel=context["user_id"],
                 text=f"WARNING: The backblast you just posted was not saved to the database. There is already a backblast for this AO and Q on this date. Please edit the backblast using the `Edit this backblast` button. Thanks!",
+            )
+            print(
+                json.dumps(
+                    {"event_type": "failed_db_insert", "team_name": region_record.workspace_name}
+                )
             )
 
 
@@ -302,13 +352,18 @@ def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> s
     destination = safe_get(preblast_data, actions.PREBLAST_DESTINATION)
 
     region_record: Region = DbManager.get_record(Region, id=context["team_id"])
+    user_records = None
+    if region_record.paxminer_schema:
+        user_records = DbManager.find_records(
+            PaxminerUser, filters=[True], schema=region_record.paxminer_schema
+        )
 
     chan = destination
     if chan == "The_AO":
         chan = the_ao
 
     q_name, q_url = get_user_names(
-        [the_q], logger, client, return_urls=True, region_record=region_record
+        [the_q], logger, client, return_urls=True, user_records=user_records
     )
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
@@ -333,11 +388,18 @@ def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> s
     client.chat_postMessage(
         channel=chan, text=msg, username=f"{q_name} (via Slackblast)", icon_url=q_url
     )
-    logger.info("\nMessage posted to Slack! \n{}".format(msg))
+    logger.debug("\nMessage posted to Slack! \n{}".format(msg))
+    print(
+        json.dumps(
+            {"event_type": "successful_preblast_post", "team_name": region_record.workspace_name}
+        )
+    )
 
 
 def handle_config_post(ack, body, logger, client, context, config_data) -> str:
     ack()
+
+    region_record: Region = DbManager.get_record(Region, id=context["team_id"])
 
     fields = {
         # Region.paxminer_schema: paxminer_db,
@@ -386,4 +448,9 @@ def handle_config_post(ack, body, logger, client, context, config_data) -> str:
         cls=Region,
         id=context["team_id"],
         fields=fields,
+    )
+    print(
+        json.dumps(
+            {"event_type": "successful_config_update", "team_name": region_record.workspace_name}
+        )
     )

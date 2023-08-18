@@ -125,3 +125,18 @@ class PaxminerUser(BaseClass, GetDBClass):
 
     def get_id():
         return PaxminerUser.user_id
+
+
+class PaxminerAO(BaseClass, GetDBClass):
+    __tablename__ = "aos"
+    channel_id = Column("channel_id", String(45), primary_key=True)
+    ao = Column("ao", String(45))
+    channel_created = Column("channel_created", Integer)
+    archived = Column("archived", Integer)
+    backblast = Column("backblast", Integer)
+
+    def get_id(self):
+        return self.channel_id
+
+    def get_id():
+        return PaxminerAO.channel_id
