@@ -92,7 +92,7 @@ class Attendance(BaseClass, GetDBClass):
 
 
 class User(BaseClass, GetDBClass):
-    __tablename__ = "users"
+    __tablename__ = "users2"
     id = Column("id", Integer, primary_key=True)
     team_id = Column("team_id", String(100))
     user_id = Column("user_id", String(100))
@@ -102,3 +102,41 @@ class User(BaseClass, GetDBClass):
     strava_athlete_id = Column("strava_athlete_id", Integer)
     created = Column("created", DateTime, default=datetime.utcnow)
     updated = Column("updated", DateTime, default=datetime.utcnow)
+
+    def get_id(self):
+        return self.id
+
+    def get_id():
+        return User.user_id
+
+
+class PaxminerUser(BaseClass, GetDBClass):
+    __tablename__ = "users"
+    user_id = Column("user_id", String(45), primary_key=True)
+    user_name = Column("user_name", String(45))
+    real_name = Column("real_name", String(45))
+    phone = Column("phone", String(45))
+    email = Column("email", String(45))
+    start_date = Column("start_date", String(45))
+    app = Column("app", Integer)
+
+    def get_id(self):
+        return self.user_id
+
+    def get_id():
+        return PaxminerUser.user_id
+
+
+class PaxminerAO(BaseClass, GetDBClass):
+    __tablename__ = "aos"
+    channel_id = Column("channel_id", String(45), primary_key=True)
+    ao = Column("ao", String(45))
+    channel_created = Column("channel_created", Integer)
+    archived = Column("archived", Integer)
+    backblast = Column("backblast", Integer)
+
+    def get_id(self):
+        return self.channel_id
+
+    def get_id():
+        return PaxminerAO.channel_id

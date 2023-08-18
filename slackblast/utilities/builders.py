@@ -48,7 +48,7 @@ def build_backblast_form(
             og_ts=og_ts,
         )
         ao_id = safe_get(initial_backblast_data, actions.BACKBLAST_AO)
-        ao_name = get_channel_name(ao_id, logger, client)
+        ao_name = get_channel_name(ao_id, logger, client, region_record)
     else:
         is_duplicate = check_for_duplicate(
             q=user_id,
@@ -79,8 +79,8 @@ def build_backblast_form(
         backblast_form.delete_block(actions.BACKBLAST_DESTINATION)
         callback_id = actions.BACKBLAST_EDIT_CALLBACK_ID
     else:
-        logger.info("ao_id is {}".format(ao_id))
-        logger.info("channel_id is {}".format(channel_id))
+        logger.debug("ao_id is {}".format(ao_id))
+        logger.debug("channel_id is {}".format(channel_id))
         backblast_form.set_options(
             {
                 actions.BACKBLAST_DESTINATION: slack_orm.as_selector_options(
@@ -114,7 +114,7 @@ def build_backblast_form(
         if channel_id:
             backblast_form.set_initial_values({actions.BACKBLAST_AO: channel_id})
 
-    logger.info("backblast_form is {}".format(backblast_form.as_form_field()))
+    logger.debug("backblast_form is {}".format(backblast_form.as_form_field()))
 
     if duplicate_check:
         backblast_form.update_modal(
@@ -153,7 +153,7 @@ def build_config_form(
         else:
             email_password_decrypted = "SamplePassword123!"
 
-        # logger.info("running fuzzy match")
+        # logger.debug("running fuzzy match")
         # schema_best_guesses = run_fuzzy_match(region_record.workspace_name)
         # schema_best_guesses.append("Other (enter below)")
         # config_form.set_options(
@@ -192,7 +192,7 @@ def build_config_form(
     else:
         email_enable = initial_config_data[actions.CONFIG_EMAIL_ENABLE]
 
-    logger.info("email_enable is {}".format(email_enable))
+    logger.debug("email_enable is {}".format(email_enable))
     if email_enable == "disable":
         config_form.delete_block(actions.CONFIG_EMAIL_SHOW_OPTION)
         config_form.delete_block(actions.CONFIG_EMAIL_FROM)

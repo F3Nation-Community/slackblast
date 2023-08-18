@@ -4,7 +4,7 @@ import pickle
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from utilities import sendmail, constants
-from utilities.database.orm import Region, Backblast, Attendance, User
+from utilities.database.orm import PaxminerAO, PaxminerUser, Region, Backblast, Attendance, User
 from utilities.database import DbManager
 from datetime import datetime
 from utilities.slack import actions
@@ -40,7 +40,6 @@ def get_oauth_flow():
 def strava_exchange_token(event, context) -> dict:
     """Exchanges a Strava auth code for an access token."""
     team_id, user_id = event.get("queryStringParameters", {}).get("state").split("-")
-    print("team_id is {}".format(team_id))
     code = event.get("queryStringParameters", {}).get("code")
     if not code:
         r = {
@@ -62,7 +61,6 @@ def strava_exchange_token(event, context) -> dict:
     response.raise_for_status()
 
     response_json = response.json()
-    print("response is {}".format(response.json()))
     user_record: User = DbManager.create_record(  # TODO: make this a function that updates the record if it already exists
         User(
             team_id=team_id,
@@ -96,15 +94,20 @@ def safe_get(data, *keys):
         return None
 
 
-def get_channel_name(id, logger, client):
-    try:
-        channel_info_dict = client.conversations_info(channel=id)
-    except Exception as e:
-        logger.error(e)
-        return ""
-    channel_name = safe_get(channel_info_dict, "channel", "name") or None
-    logger.info("channel_name is {}".format(channel_name))
-    return channel_name
+def get_channel_name(id, logger, client, region_record: Region = None):
+    ao_record = None
+    if region_record.paxminer_schema:
+        ao_record = DbManager.get_record(PaxminerAO, id, region_record.paxminer_schema)
+
+    if not ao_record:
+        try:
+            channel_info_dict = client.conversations_info(channel=id)
+        except Exception as e:
+            logger.error(e)
+            return ""
+        channel_name = safe_get(channel_info_dict, "channel", "name") or None
+        logger.debug("channel_name is {}".format(channel_name))
+        return channel_name
 
 
 def get_channel_id(name, logger, client):
@@ -116,45 +119,73 @@ def get_channel_id(name, logger, client):
     return None
 
 
-def get_user_names(array_of_user_ids, logger, client, return_urls=False):
+def get_user_names(
+    array_of_user_ids,
+    logger,
+    client: WebClient,
+    return_urls=False,
+    user_records: List[PaxminerUser] = None,
+):
     names = []
     urls = []
 
-    for user_id in array_of_user_ids:
-        user_info_dict = client.users_info(user=user_id)
-        user_name = (
-            safe_get(user_info_dict, "user", "profile", "display_name")
-            or safe_get(user_info_dict, "user", "profile", "real_name")
-            or None
-        )
-        if user_name:
-            names.append(user_name)
-        logger.info("user_name is {}".format(user_name))
+    if user_records and not return_urls:
+        for user_id in array_of_user_ids:
+            user = [u for u in user_records if u.user_id == user_id]
+            if user:
+                user_name = user[0].user_name
+            else:
+                user_info_dict = client.users_info(user=user_id)
+                user_name = (
+                    safe_get(user_info_dict, "user", "profile", "display_name")
+                    or safe_get(user_info_dict, "user", "profile", "real_name")
+                    or None
+                )
+            if user_name:
+                names.append(user_name)
 
-        user_icon_url = user_info_dict["user"]["profile"]["image_192"]
-        urls.append(user_icon_url)
-    logger.info("names are {}".format(names))
-
-    if return_urls:
-        return names, urls
     else:
-        return names
+        for user_id in array_of_user_ids:
+            user_info_dict = client.users_info(user=user_id)
+            user_name = (
+                safe_get(user_info_dict, "user", "profile", "display_name")
+                or safe_get(user_info_dict, "user", "profile", "real_name")
+                or None
+            )
+            if user_name:
+                names.append(user_name)
+            logger.debug("user_name is {}".format(user_name))
+
+            user_icon_url = user_info_dict["user"]["profile"]["image_192"]
+            urls.append(user_icon_url)
+        logger.debug("names are {}".format(names))
+
+        if return_urls:
+            return names, urls
+        else:
+            return names
 
 
-def get_user_ids(user_names, client):
-    members = client.users_list()["members"]
-
-    member_list = {}
-    for member in members:
-        member_dict = member["profile"]
-        member_dict.update({"id": member["id"]})
-        if member_dict["display_name"] == "":
-            member_dict["display_name"] = member_dict["real_name"]
-        member_dict["display_name"] = member_dict["display_name"].lower()
-        member_dict["display_name"] = re.sub(
-            "\s\(([\s\S]*?\))", "", member_dict["display_name"]
-        ).replace(" ", "_")
-        member_list[member_dict["display_name"]] = member_dict["id"]
+def get_user_ids(user_names, client, user_records: List[PaxminerUser]):
+    if user_records:
+        member_list = {}
+        for user in user_records:
+            user_name_search = user.user_name.lower()
+            user_name_search = re.sub("\s\(([\s\S]*?\))", "", user_name_search).replace(" ", "_")
+            member_list[user_name_search] = user.user_id
+    else:
+        members = client.users_list()["members"]
+        member_list = {}
+        for member in members:
+            member_dict = member["profile"]
+            member_dict.update({"id": member["id"]})
+            if member_dict["display_name"] == "":
+                member_dict["display_name"] = member_dict["real_name"]
+            member_dict["display_name"] = member_dict["display_name"].lower()
+            member_dict["display_name"] = re.sub(
+                "\s\(([\s\S]*?\))", "", member_dict["display_name"]
+            ).replace(" ", "_")
+            member_list[member_dict["display_name"]] = member_dict["id"]
 
     user_ids = []
     for user_name in user_names:
@@ -170,9 +201,9 @@ def get_user_ids(user_names, client):
     return user_ids
 
 
-def parse_moleskin_users(msg, client):
+def parse_moleskin_users(msg, client, user_records: List[PaxminerUser]):
     pattern = "@([A-Za-z0-9-_']+)"
-    user_ids = get_user_ids(re.findall(pattern, msg), client)
+    user_ids = get_user_ids(re.findall(pattern, msg), client, user_records)
 
     msg2 = re.sub(pattern, "{}", msg).format(*user_ids)
     return msg2
@@ -219,8 +250,8 @@ def check_for_duplicate(
             filters=[Attendance.q_user_id == q, Attendance.ao_id == ao, Attendance.date == date],
             schema=region_record.paxminer_schema,
         )
-        logger.info(f"Backblast dups: {backblast_dups}")
-        logger.info(f"og_ts: {og_ts}")
+        logger.debug(f"Backblast dups: {backblast_dups}")
+        logger.debug(f"og_ts: {og_ts}")
         is_duplicate = (
             len(backblast_dups) > 0 or len(attendance_dups) > 0
         ) and og_ts != backblast_dups[0].timestamp
@@ -245,14 +276,13 @@ def get_paxminer_schema(team_id: str, logger) -> str:
 
     paxminer_schema = safe_get(paxminer_dict, team_id)
     if paxminer_schema:
-        logger.info(f"PAXMiner schema for {team_id} is {paxminer_schema}")
+        logger.debug(f"PAXMiner schema for {team_id} is {paxminer_schema}")
         return paxminer_schema
 
     else:
         paxminer_region_records = DbManager.execute_sql_query("select * from paxminer.regions")
 
         for region in paxminer_region_records:
-            print(f'Processing {region["region"]}')
             slack_client = WebClient(region["slack_token"])
 
             ao_index = 0
@@ -273,19 +303,19 @@ def get_paxminer_schema(team_id: str, logger) -> str:
                         ao_index += 1
 
             except Exception as e:
-                logger.info("No AOs table, skipping...")
+                logger.debug("No AOs table, skipping...")
                 continue
 
             pm_team_id = slack_response["channel"]["shared_team_ids"][0]
             if team_id == pm_team_id:
-                logger.info(f'PAXMiner schema for {team_id} is {region["schema_name"]}')
+                logger.debug(f'PAXMiner schema for {team_id} is {region["schema_name"]}')
                 return region["schema_name"]
 
-        logger.info(f"No PAXMiner schema found for {team_id}")
+        logger.debug(f"No PAXMiner schema found for {team_id}")
         return None
 
 
-def replace_slack_user_ids(text: str, client, logger) -> str:
+def replace_slack_user_ids(text: str, client, logger, region_record: Region = None) -> str:
     """Replace slack user ids with their user names
 
     Args:
@@ -294,9 +324,14 @@ def replace_slack_user_ids(text: str, client, logger) -> str:
     Returns:
         str: text with slack ids replaced
     """
+    user_records = None
+    if region_record.paxminer_schema:
+        user_records = DbManager.find_records(PaxminerUser, schema=region_record.paxminer_schema)
 
     slack_user_ids = re.findall(r"<@([A-Z0-9]+)>", text)
-    slack_user_names = get_user_names(slack_user_ids, logger, client, return_urls=False)
+    slack_user_names = get_user_names(
+        slack_user_ids, logger, client, return_urls=False, user_records=user_records
+    )
 
     slack_user_ids = [f"<@{user_id}>" for user_id in slack_user_ids]
     slack_user_names = [f"@{user_name}".replace(" ", "_") for user_name in slack_user_names]

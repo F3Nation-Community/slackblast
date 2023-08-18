@@ -32,9 +32,6 @@ app = App(process_before_response=True, oauth_flow=get_oauth_flow())
 
 
 def handler(event, context):
-    # print("event is {}".format(event))
-    # print("context is {}".format(context))
-    # print("os.environ is {}".format(os.environ))
     if event.get("path") == "/exchange_token":
         return strava_exchange_token(event, context)
     slack_handler = SlackRequestHandler(app=app)
@@ -49,8 +46,8 @@ def respond_to_command(
     context,
 ):
     ack()
-    logger.info("body is {}".format(body))
-    logger.info("context is {}".format(context))
+    logger.debug("body is {}".format(body))
+    logger.debug("context is {}".format(context))
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
@@ -89,15 +86,15 @@ def respond_to_command(
 
 def respond_to_view(ack, body, client, logger, context):
     ack()
-    logger.info("body is {}".format(body))
-    logger.info("context is {}".format(context))
+    logger.debug("body is {}".format(body))
+    logger.debug("context is {}".format(context))
 
     if safe_get(body, "view", "callback_id") in [
         actions.BACKBLAST_CALLBACK_ID,
         actions.BACKBLAST_EDIT_CALLBACK_ID,
     ]:
         backblast_data: dict = forms.BACKBLAST_FORM.get_selected_values(body)
-        logger.info("backblast_data is {}".format(backblast_data))
+        logger.debug("backblast_data is {}".format(backblast_data))
 
         if safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID:
             create_or_edit = "create"
@@ -107,27 +104,20 @@ def respond_to_view(ack, body, client, logger, context):
 
     elif safe_get(body, "view", "callback_id") == actions.PREBLAST_CALLBACK_ID:
         preblast_data: dict = forms.PREBLAST_FORM.get_selected_values(body)
-        logger.info("preblast_data is {}".format(preblast_data))
+        logger.debug("preblast_data is {}".format(preblast_data))
         handle_preblast_post(ack, body, logger, client, context, preblast_data)
 
     elif safe_get(body, "view", "callback_id") == actions.CONFIG_CALLBACK_ID:
         config_data: dict = forms.CONFIG_FORM.get_selected_values(body)
-        logger.info("config_data is {}".format(config_data))
+        logger.debug("config_data is {}".format(config_data))
         handle_config_post(ack, body, logger, client, context, config_data)
 
 
 @app.action(actions.BACKBLAST_EDIT_BUTTON)
 def handle_backblast_edit(ack, body, client, logger, context, say):
     ack()
-    logger.info("body is {}".format(body))
-    logger.info("context is {}".format(context))
-    backblast_data: dict = json.loads(body["actions"][0]["value"])
-    if not safe_get(backblast_data, actions.BACKBLAST_MOLESKIN):
-        backblast_data[actions.BACKBLAST_MOLESKIN] = body["message"]["blocks"][1]["text"]["text"]
-        backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
-            backblast_data[actions.BACKBLAST_MOLESKIN], client, logger
-        )
-    logger.info("backblast_data is {}".format(backblast_data))
+    logger.debug("body is {}".format(body))
+    logger.debug("context is {}".format(context))
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     trigger_id = safe_get(body, "trigger_id")
@@ -135,6 +125,14 @@ def handle_backblast_edit(ack, body, client, logger, context, say):
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
     channel_name = safe_get(body, "channel_name") or safe_get(body, "channel", "name")
     region_record: Region = DbManager.get_record(Region, id=team_id)
+
+    backblast_data: dict = json.loads(body["actions"][0]["value"])
+    if not safe_get(backblast_data, actions.BACKBLAST_MOLESKIN):
+        backblast_data[actions.BACKBLAST_MOLESKIN] = body["message"]["blocks"][1]["text"]["text"]
+        backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
+            backblast_data[actions.BACKBLAST_MOLESKIN], client, logger, region_record
+        )
+    logger.debug("backblast_data is {}".format(backblast_data))
 
     user_info_dict = client.users_info(user=user_id)
     user_admin: bool = user_info_dict["user"]["is_admin"]
@@ -170,8 +168,8 @@ def handle_backblast_edit(ack, body, client, logger, context, say):
 @app.action(actions.BACKBLAST_NEW_BUTTON)
 def handle_backblast_new(ack, body, client, logger, context):
     ack()
-    logger.info("body is {}".format(body))
-    logger.info("context is {}".format(context))
+    logger.debug("body is {}".format(body))
+    logger.debug("context is {}".format(context))
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
@@ -199,8 +197,8 @@ def handle_backblast_new(ack, body, client, logger, context):
 @app.action(actions.BACKBLAST_DATE)
 def handle_duplicate_check(ack, body, client, logger, context):
     ack()
-    logger.info("body is {}".format(body))
-    logger.info("context is {}".format(context))
+    logger.debug("body is {}".format(body))
+    logger.debug("context is {}".format(context))
     view_id = safe_get(body, "container", "view_id")
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
@@ -216,7 +214,7 @@ def handle_duplicate_check(ack, body, client, logger, context):
             currently_duplicate = True
         if not channel_id and block["block_id"] == actions.BACKBLAST_DESTINATION:
             channel_id = block["element"]["options"][1]["value"]
-            channel_name = get_channel_name(channel_id, logger, client)
+            channel_name = get_channel_name(channel_id, logger, client, region_record)
 
     if safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID:
         backblast_method = "edit"
@@ -226,7 +224,7 @@ def handle_duplicate_check(ack, body, client, logger, context):
         parent_metadata = None
 
     backblast_data = forms.BACKBLAST_FORM.get_selected_values(body)
-    logger.info("backblast_data is {}".format(backblast_data))
+    logger.debug("backblast_data is {}".format(backblast_data))
 
     builders.build_backblast_form(
         user_id=user_id,
@@ -249,8 +247,8 @@ def handle_duplicate_check(ack, body, client, logger, context):
 @app.action(actions.CONFIG_EMAIL_ENABLE)
 def handle_config_email_enable(ack, body, client, logger, context):
     ack()
-    logger.info("body is {}".format(body))
-    logger.info("context is {}".format(context))
+    logger.debug("body is {}".format(body))
+    logger.debug("context is {}".format(context))
     view_id = safe_get(body, "container", "view_id")
 
     trigger_id = safe_get(body, "trigger_id")
@@ -258,7 +256,7 @@ def handle_config_email_enable(ack, body, client, logger, context):
     region_record: Region = DbManager.get_record(Region, id=team_id)
 
     config_data = forms.CONFIG_FORM.get_selected_values(body)
-    logger.info("config_data is {}".format(config_data))
+    logger.debug("config_data is {}".format(config_data))
 
     builders.build_config_form(
         client=client,
