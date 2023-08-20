@@ -160,10 +160,10 @@ def get_user_names(
             urls.append(user_icon_url)
         logger.debug("names are {}".format(names))
 
-        if return_urls:
-            return names, urls
-        else:
-            return names
+    if return_urls:
+        return names, urls
+    else:
+        return names
 
 
 def get_user_ids(user_names, client, user_records: List[PaxminerUser]):
