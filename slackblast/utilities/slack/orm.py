@@ -5,6 +5,7 @@ import os, sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 from utilities.helper_functions import safe_get
+from utilities import constants
 
 
 @dataclass
@@ -316,14 +317,18 @@ class MultiUsersSelectElement(BaseElement):
 
 @dataclass
 class ContextBlock(BaseBlock):
-    text: str = ""
-    initial_value: str = None
+    element: BaseElement = None
+    initial_value: str = ""
+
+    def get_selected_value(self, input_data, action):
+        for block in input_data:
+            if block["block_id"] == action:
+                return block["elements"][0]["text"]
+        return None
 
     def as_form_field(self):
-        j = {
-            "type": "context",
-            "elements": [{"type": "mrkdwn", "text": self.initial_value or self.text}],
-        }
+        j = {"type": "context"}
+        j.update({"elements": [self.element.as_form_field()]})
         if self.action:
             j["block_id"] = self.action
         return j
@@ -331,13 +336,12 @@ class ContextBlock(BaseBlock):
 
 @dataclass
 class ContextElement(BaseElement):
-    text: str = ""
     initial_value: str = None
 
-    def as_form_field(self, action: str):
+    def as_form_field(self):
         j = {
             "type": "mrkdwn",
-            "text": self.initial_value or self.text,
+            "text": self.initial_value,
         }
         return j
 
@@ -387,11 +391,14 @@ class BlockView:
 
     def get_selected_values(self, body) -> dict:
         values = body["view"]["state"]["values"]
+        view_blocks = body["view"]["blocks"]
 
         selected_values = {}
         for block in self.blocks:
             if isinstance(block, InputBlock):
                 selected_values[block.action] = block.get_selected_value(values)
+            elif isinstance(block, ContextBlock) and block.action:
+                selected_values[block.action] = block.get_selected_value(view_blocks, block.action)
 
         return selected_values
 
@@ -406,7 +413,12 @@ class BlockView:
     ):
         blocks = self.as_form_field()
         if parent_metadata:
-            blocks.append(ContextBlock(text=parent_metadata).as_form_field())
+            blocks.append(
+                ContextBlock(
+                    action=constants.STATE_METADATA,
+                    element=ContextElement(initial_value=parent_metadata),
+                ).as_form_field()
+            )
 
         view = {
             "type": "modal",

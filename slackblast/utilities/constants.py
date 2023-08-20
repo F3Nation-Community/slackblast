@@ -29,3 +29,5 @@ CONFIG_DESTINATION_CURRENT = {"name": "Current Channel", "value": "current_chann
 DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE = (
     "\n*WARMUP:* \n*THE THANG:* \n*MARY:* \n*ANNOUNCEMENTS:* \n*COT:* "
 )
+
+STATE_METADATA = "STATE_METADATA"

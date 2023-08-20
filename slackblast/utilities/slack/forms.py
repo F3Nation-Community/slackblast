@@ -35,8 +35,10 @@ BACKBLAST_FORM = orm.BlockView(
             dispatch_action=True,
         ),
         orm.ContextBlock(
-            text=":warning: :warning: *WARNING*: duplicate backblast detected in PAXMiner DB for this Q, AO, and date; this backblast will not be saved as-is. Please modify one of these selections",
             action=actions.BACKBLAST_DUPLICATE_WARNING,
+            element=orm.ContextElement(
+                initial_value=":warning: :warning: *WARNING*: duplicate backblast detected in PAXMiner DB for this Q, AO, and date; this backblast will not be saved as-is. Please modify one of these selections",
+            ),
         ),
         orm.InputBlock(
             label="The CoQ(s), if any",
@@ -71,7 +73,9 @@ BACKBLAST_FORM = orm.BlockView(
             element=orm.PlainTextInputElement(placeholder="Total PAX count including FNGs"),
         ),
         orm.ContextBlock(
-            text="If left blank, this will be calculated automatically from the fields above."
+            element=orm.ContextElement(
+                initial_value="If left blank, this will be calculated automatically from the fields above.",
+            ),
         ),
         orm.InputBlock(
             label="The Moleskin",
@@ -85,7 +89,9 @@ BACKBLAST_FORM = orm.BlockView(
             ),
         ),
         orm.ContextBlock(
-            text="If trying to tag PAX in here, substitute _ for spaces and do not include titles in parenthesis (ie, @Moneyball not @Moneyball_(F3_STC)). Spelling is important, capitalization is not!"
+            element=orm.ContextElement(
+                initial_value="If trying to tag PAX in here, substitute _ for spaces and do not include titles in parenthesis (ie, @Moneyball not @Moneyball_(F3_STC)). Spelling is important, capitalization is not!",
+            ),
         ),
         orm.DividerBlock(),
         orm.InputBlock(
@@ -106,7 +112,9 @@ BACKBLAST_FORM = orm.BlockView(
             ),
         ),
         orm.ContextBlock(
-            text="*Do not hit Submit more than once!* Even if you get a timeout error, the backblast has likely already been posted. If using email, this can take time and this form may not automatically close."
+            element=orm.ContextElement(
+                initial_value="*Do not hit Submit more than once!* Even if you get a timeout error, the backblast has likely already been posted. If using email, this can take time and this form may not automatically close.",
+            ),
         ),
     ]
 )
@@ -187,7 +195,9 @@ PREBLAST_FORM = orm.BlockView(
             element=orm.StaticSelectElement(placeholder="Select a destination..."),
         ),
         orm.ContextBlock(
-            text="*Do not hit Submit more than once!* Even if you get a timeout error, the preblast has likely already been posted. This form may not automatically close."
+            element=orm.ContextElement(
+                initial_value="*Do not hit Submit more than once!* Even if you get a timeout error, the preblast has likely already been posted. This form may not automatically close.",
+            ),
         ),
     ]
 )
@@ -252,8 +262,10 @@ CONFIG_FORM = orm.BlockView(
             element=orm.PlainTextInputElement(initial_value="example_pwd_123"),
         ),
         orm.ContextBlock(
-            text="If using gmail, you must use an App Password (https://support.google.com/accounts/answer/185833). Your password will be stored encrypted - however, it is STRONGLY recommended that you use a non-personal email address and password for this purpose, as security cannot be guaranteed.",
             action=actions.CONFIG_PASSWORD_CONTEXT,
+            element=orm.ContextElement(
+                initial_value="If using gmail, you must use an App Password (https://support.google.com/accounts/answer/185833). Your password will be stored encrypted - however, it is STRONGLY recommended that you use a non-personal email address and password for this purpose, as security cannot be guaranteed.",
+            ),
         ),
         orm.InputBlock(
             label="Email To Address",
@@ -271,8 +283,10 @@ CONFIG_FORM = orm.BlockView(
             ),
         ),
         orm.ContextBlock(
-            text="This will put the AO name as a category for the post, and will put PAX names at the end as tags.",
             action=actions.CONFIG_POSTIE_CONTEXT,
+            element=orm.ContextElement(
+                initial_value="This will put the AO name as a category for the post, and will put PAX names at the end as tags.",
+            ),
         ),
         orm.InputBlock(
             label="Lock editing of backblasts?",
@@ -348,8 +362,10 @@ STRAVA_ACTIVITY_MODIFY_FORM = orm.BlockView(
             ),
         ),
         orm.ContextBlock(
-            text="",
             action=actions.STRAVA_ACTIVITY_METADATA,
+            element=orm.ContextElement(
+                initial_value="",
+            ),
         ),
     ]
 )

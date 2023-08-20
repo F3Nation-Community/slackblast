@@ -92,7 +92,7 @@ class Attendance(BaseClass, GetDBClass):
 
 
 class User(BaseClass, GetDBClass):
-    __tablename__ = "users2"
+    __tablename__ = "slackblast_users"
     id = Column("id", Integer, primary_key=True)
     team_id = Column("team_id", String(100))
     user_id = Column("user_id", String(100))
