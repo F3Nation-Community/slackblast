@@ -115,8 +115,7 @@ def handle_backblast_post(
 *Q*: <@{the_q}>{the_coqs_formatted}
 *PAX*: {pax_formatted}
 *FNGs*: {fngs_formatted}
-*COUNT*: {count}
-    """
+*COUNT*: {count}"""
 
     msg_block = {
         "type": "section",
@@ -205,12 +204,12 @@ def handle_backblast_post(
                 subject = title
 
             email_msg = f"""Date: {the_date}
-        AO: {ao_name}
-        Q: {q_name} {the_coqs_names}
-        PAX: {pax_names}
-        FNGs: {fngs_formatted}
-        COUNT: {count}
-        {moleskin_msg}
+AO: {ao_name}
+Q: {q_name} {the_coqs_names}
+PAX: {pax_names}
+FNGs: {fngs_formatted}
+COUNT: {count}
+{moleskin_msg}
             """
 
             try:
