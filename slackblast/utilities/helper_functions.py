@@ -108,6 +108,8 @@ def get_channel_name(id, logger, client, region_record: Region = None):
         channel_name = safe_get(channel_info_dict, "channel", "name") or None
         logger.debug("channel_name is {}".format(channel_name))
         return channel_name
+    else:
+        return ao_record.ao
 
 
 def get_channel_id(name, logger, client):
