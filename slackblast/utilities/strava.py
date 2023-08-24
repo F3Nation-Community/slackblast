@@ -1,11 +1,17 @@
 from datetime import datetime
+import json
+from logging import Logger
 import os, sys
 from typing import Any, Dict, List
+
+from slack_sdk import WebClient
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from utilities.database import DbManager
 from utilities.database.orm import User
 from utilities import constants
+from utilities.slack import actions
+from utilities.helper_functions import safe_get
 import requests
 
 
@@ -146,3 +152,78 @@ def update_strava_activity(
     res.raise_for_status()
     data = res.json()
     return data
+
+
+def get_strava_activity(
+    strava_activity_id: str,
+    user_id: str,
+    team_id: str,
+) -> Dict[str, Any]:
+    """Get a Strava activity.
+
+    Args:
+        strava_activity_id (str): Strava activity ID
+
+    Returns:
+        dict: Strava activity data
+    """
+    user_records: List[User] = DbManager.find_records(
+        User, filters=[User.user_id == user_id, User.team_id == team_id]
+    )
+    user_record = user_records[0]
+
+    access_token = check_and_refresh_strava_token(user_record)
+
+    request_url = f"https://www.strava.com/api/v3/activities/{strava_activity_id}"
+    res = requests.get(
+        request_url,
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    res.raise_for_status()
+    data = res.json()
+    return data
+
+
+def handle_strava_modify(
+    ack,
+    body: dict,
+    logger: Logger,
+    client: WebClient,
+    context: dict,
+    strava_data: dict,
+):
+    ack()
+
+    metadata = json.loads(body["view"]["private_metadata"])
+    strava_activity_id = metadata["strava_activity_id"]
+    channel_id = metadata["channel_id"]
+    backblast_ts = metadata["backblast_ts"]
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
+
+    if strava_data:
+        activity_data = update_strava_activity(
+            strava_activity_id=strava_activity_id,
+            user_id=user_id,
+            team_id=team_id,
+            backblast_title=strava_data[actions.STRAVA_ACTIVITY_TITLE],
+            backblast_moleskine=strava_data[actions.STRAVA_ACTIVITY_DESCRIPTION],
+        )
+    else:
+        activity_data = get_strava_activity(strava_activity_id=strava_activity_id)
+
+    logger.info("activity_data is {}".format(activity_data))
+    msg = f"<@{user_id}> has connected this backblast to a <https://www.strava.com/activities/{strava_activity_id}|Strava activity>!"
+    if safe_get(activity_data, "calories") & safe_get(activity_data, "distance"):
+        msg += f" He traveled {round(activity_data['distance'] * 0.00062137, 1)} miles :runner: and burned {activity_data['calories']} calories :fire:."
+    elif safe_get(activity_data, "calories"):
+        msg += f" He burned {activity_data['calories']} calories :fire:."
+    elif safe_get(activity_data, "distance"):
+        msg += f" He traveled {round(activity_data['distance'] * 0.00062137, 1)} miles :runner:."
+
+    res = client.chat_postMessage(
+        channel=channel_id,
+        thread_ts=backblast_ts,
+        text=msg,
+    )
+    # print({"event_type": "successful_strava_connect", "team_name": team_name})

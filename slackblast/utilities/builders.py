@@ -18,7 +18,7 @@ import copy
 from logging import Logger
 from datetime import datetime, date
 from cryptography.fernet import Fernet
-import requests
+from requests_oauthlib import OAuth2Session
 
 
 def build_backblast_form(
@@ -35,13 +35,12 @@ def build_backblast_form(
     currently_duplicate: bool = False,
     update_view_id: str = None,
     duplicate_check: bool = False,
-    parent_metadata: str = None,
+    parent_metadata: dict = {},
 ):
     backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
 
     if backblast_method == "edit" or duplicate_check:
-        parent_metadata_safe = parent_metadata or "|"
-        og_ts = safe_get(body, "message", "ts") or parent_metadata_safe.split("|")[1]
+        og_ts = safe_get(body, "message", "ts") or safe_get(parent_metadata, "message_ts")
         is_duplicate = check_for_duplicate(
             q=safe_get(initial_backblast_data, actions.BACKBLAST_Q),
             date=safe_get(initial_backblast_data, actions.BACKBLAST_DATE),
@@ -73,11 +72,11 @@ def build_backblast_form(
         backblast_form.set_initial_values(initial_backblast_data)
 
     if backblast_method == "edit":
-        backblast_metadata = parent_metadata or (
-            safe_get(body, "container", "channel_id")
-            + "|"
-            + safe_get(body, "container", "message_ts")
-        )
+        backblast_metadata = parent_metadata or {
+            "channel_id": safe_get(body, "container", "channel_id"),
+            "message_ts": safe_get(body, "container", "message_ts"),
+        }
+
         backblast_form.delete_block(actions.BACKBLAST_EMAIL_SEND)
         backblast_form.delete_block(actions.BACKBLAST_DESTINATION)
         callback_id = actions.BACKBLAST_EDIT_CALLBACK_ID
@@ -276,11 +275,24 @@ def build_strava_form(
 
     if len(user_records) == 0:
         title_text = "Connect Strava"
+        oauth = OAuth2Session(
+            client_id=os.environ[constants.STRAVA_CLIENT_ID],
+            redirect_uri=f"https://{lambda_function_host}/exchange_token",
+            scope=["read,activity:read,activity:write"],
+            state=f"{team_id}-{user_id}",
+        )
+        authorization_url, state = oauth.authorization_url("https://www.strava.com/oauth/authorize")
         strava_blocks = [
             slack_orm.ButtonElement(
-                label="Connect Strava\n(opens in new window)",
+                label="Connect Strava Account",
                 action=actions.STRAVA_CONNECT_BUTTON,
-                url=f"https://strava.com/oauth/authorize?client_id={os.environ[constants.STRAVA_CLIENT_ID]}&response_type=code&redirect_uri=https://{lambda_function_host}/exchange_token&approval_prompt=force&scope=read,activity:read,activity:write&state={team_id}-{user_id}",
+                url=authorization_url,
+            ),
+            slack_orm.ContextBlock(
+                element=slack_orm.ContextElement(
+                    initial_value="Opens in a new window",
+                ),
+                action_id="context",
             ),
         ]
     else:
@@ -332,20 +344,24 @@ def build_strava_modify_form(
     trigger_id: str,
     backblast_title: str,
     backblast_moleskine: str,
-    backblast_metadata: str,
+    backblast_metadata: dict,
+    view_id: str,
 ):
     modify_form = copy.deepcopy(forms.STRAVA_ACTIVITY_MODIFY_FORM)
     modify_form.set_initial_values(
         {
             actions.STRAVA_ACTIVITY_TITLE: backblast_title,
-            actions.STRAVA_ACTIVITY_DESCRIPTION: backblast_moleskine,
-            actions.STRAVA_ACTIVITY_METADATA: backblast_metadata,
+            actions.STRAVA_ACTIVITY_DESCRIPTION: f"{backblast_moleskine.replace('*','')}\n\nLearn more about F3 at https://f3nation.com",
         }
     )
 
-    modify_form.post_modal(
+    modify_form.update_modal(
         client=client,
-        trigger_id=trigger_id,
-        callback_id=actions.STRAVA_MODIFY_CALLBACK_ID,
+        view_id=view_id,
         title_text="Modify Strava Activity",
+        callback_id=actions.STRAVA_MODIFY_CALLBACK_ID,
+        parent_metadata=backblast_metadata,
+        submit_button_text="Modify Strava activity",
+        close_button_text="Close without modifying",
+        notify_on_close=True,
     )

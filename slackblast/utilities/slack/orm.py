@@ -1,3 +1,4 @@
+import json
 from typing import Any, List, Union, Dict
 from dataclasses import dataclass, field
 from slack_sdk.web import WebClient
@@ -409,23 +410,22 @@ class BlockView:
         title_text: str,
         callback_id: str,
         submit_button_text: str = "Submit",
-        parent_metadata: str = None,
+        parent_metadata: dict = None,
+        close_button_text: str = "Close",
+        notify_on_close: bool = False,
     ):
         blocks = self.as_form_field()
-        if parent_metadata:
-            blocks.append(
-                ContextBlock(
-                    action=constants.STATE_METADATA,
-                    element=ContextElement(initial_value=parent_metadata),
-                ).as_form_field()
-            )
 
         view = {
             "type": "modal",
             "callback_id": callback_id,
             "title": {"type": "plain_text", "text": title_text},
+            "close": {"type": "plain_text", "text": close_button_text},
+            "notify_on_close": notify_on_close,
             "blocks": blocks,
         }
+        if parent_metadata:
+            view["private_metadata"] = json.dumps(parent_metadata)
 
         if submit_button_text != "None":  # TODO: would prefer this to use None instead of "None"
             view["submit"] = {"type": "plain_text", "text": submit_button_text}
@@ -439,19 +439,23 @@ class BlockView:
         title_text: str,
         callback_id: str,
         submit_button_text: str = "Submit",
-        parent_metadata: str = None,
+        parent_metadata: dict = None,
+        close_button_text: str = "Close",
+        notify_on_close: bool = False,
     ):
         blocks = self.as_form_field()
-        if parent_metadata:
-            blocks.append(ContextBlock(text=parent_metadata).as_form_field())
 
         view = {
             "type": "modal",
             "callback_id": callback_id,
             "title": {"type": "plain_text", "text": title_text},
             "submit": {"type": "plain_text", "text": submit_button_text},
+            "close": {"type": "plain_text", "text": close_button_text},
+            "notify_on_close": notify_on_close,
             "blocks": blocks,
         }
+        if parent_metadata:
+            view["private_metadata"] = json.dumps(parent_metadata)
 
         res = client.views_update(view_id=view_id, view=view)
 

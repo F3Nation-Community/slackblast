@@ -361,11 +361,11 @@ STRAVA_ACTIVITY_MODIFY_FORM = orm.BlockView(
                 multiline=True,
             ),
         ),
-        orm.ContextBlock(
-            action=actions.STRAVA_ACTIVITY_METADATA,
-            element=orm.ContextElement(
-                initial_value="",
-            ),
-        ),
+        # orm.ContextBlock(
+        #     action=actions.STRAVA_ACTIVITY_METADATA,
+        #     element=orm.ContextElement(
+        #         initial_value="",
+        #     ),
+        # ),
     ]
 )

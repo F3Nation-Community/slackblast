@@ -56,8 +56,9 @@ def handle_backblast_post(
         chan = the_ao
 
     if create_or_edit == "edit":
-        message_metadata = body["view"]["blocks"][-1]["elements"][0]["text"]
-        message_channel, message_ts = message_metadata.split("|")
+        message_metadata = json.loads(body["view"]["private_metadata"])
+        message_channel = safe_get(message_metadata, "channel_id")
+        message_ts = safe_get(message_metadata, "message_ts")
     else:
         message_channel = chan
         message_ts = None

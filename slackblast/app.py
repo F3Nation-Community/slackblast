@@ -26,7 +26,7 @@ import copy
 from pprint import pformat
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 app = App(process_before_response=True, oauth_flow=get_oauth_flow())
 
@@ -111,6 +111,11 @@ def respond_to_view(ack, body, client, logger, context):
         config_data: dict = forms.CONFIG_FORM.get_selected_values(body)
         logger.debug("config_data is {}".format(config_data))
         handle_config_post(ack, body, logger, client, context, config_data)
+
+    elif safe_get(body, "view", "callback_id") == actions.STRAVA_MODIFY_CALLBACK_ID:
+        strava_data: dict = forms.STRAVA_ACTIVITY_MODIFY_FORM.get_selected_values(body)
+        logger.debug("strava_data is {}".format(strava_data))
+        strava.handle_strava_modify(ack, body, logger, client, context, strava_data)
 
 
 @app.action(actions.BACKBLAST_EDIT_BUTTON)
@@ -224,6 +229,7 @@ def handle_strava_activity_action(ack, body, logger, client, context):
     logger.info(body)
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
+    view_id = safe_get(body, "container", "view_id")
     trigger_id = safe_get(body, "trigger_id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
 
@@ -231,28 +237,21 @@ def handle_strava_activity_action(ack, body, logger, client, context):
         "actions"
     ][0]["value"].split("|")
 
+    metadata = {
+        "strava_activity_id": strava_activity_id,
+        "channel_id": channel_id,
+        "backblast_ts": backblast_ts,
+    }
+
     builders.build_strava_modify_form(
         client=client,
         logger=logger,
         trigger_id=trigger_id,
         backblast_title=backblast_title,
         backblast_moleskine=backblast_moleskine,
-        backblast_metadata='|'.join([strava_activity_id, channel_id, backblast_ts]),
+        backblast_metadata=metadata,
+        view_id=view_id,
     )
-
-    # activity_data = strava.update_strava_activity(
-    #     strava_activity_id=strava_activity_id,
-    #     user_id=user_id,
-    #     team_id=team_id,
-    #     backblast_title=backblast_title,
-    #     backblast_moleskine=backblast_moleskine,
-    # )
-    # logger.info("activity_data is {}".format(activity_data))
-    # client.chat_postMessage(
-    #     channel=channel_id,
-    #     thread_ts=backblast_ts,
-    #     text=f"<@{user_id}> has connected this backblast to a <https://www.strava.com/activities/{strava_activity_id}|Strava activity>!",
-    # )
 
 
 @app.action(actions.BACKBLAST_AO)
@@ -281,7 +280,7 @@ def handle_duplicate_check(ack, body, client, logger, context):
 
     if safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID:
         backblast_method = "edit"
-        parent_metadata = body["view"]["blocks"][-1]["elements"][0]["text"]
+        parent_metadata = json.loads(body["view"]["private_metadata"])
     else:
         backblast_method = "create"
         parent_metadata = None
@@ -329,6 +328,19 @@ def handle_config_email_enable(ack, body, client, logger, context):
         initial_config_data=config_data,
         update_view_id=view_id,
     )
+
+
+@app.action(actions.STRAVA_CONNECT_BUTTON)
+def handle_some_action(ack, body, logger):
+    ack()
+    logger.info(body)
+
+
+@app.view_closed(actions.STRAVA_MODIFY_CALLBACK_ID)
+def handle_view_closed_events(ack, body, logger, client, context):
+    ack()
+    logger.info(body)
+    strava.handle_strava_modify(ack, body, logger, client, context, strava_data=None)
 
 
 COMMAND_KWARGS = {}
