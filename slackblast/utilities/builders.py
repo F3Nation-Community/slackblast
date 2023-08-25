@@ -251,3 +251,21 @@ def build_preblast_form(
         callback_id=actions.PREBLAST_CALLBACK_ID,
         title_text="Preblast",
     )
+
+
+def update_modal(msg: str, body: dict, client: WebClient, logger: Logger):
+    try:
+        view_id = safe_get(body, "container", "view_id") or safe_get(body, "view", "id")
+        if view_id:
+            client.views_update(
+                view_id=view_id,
+                view={
+                    "type": "modal",
+                    "title": {"type": "plain_text", "text": "Process Complete"},
+                    "blocks": [{"type": "section", "text": {"type": "mrkdwn", "text": msg}}],
+                    "submit": {"type": "plain_text", "text": "Close"},
+                },
+            )
+    except Exception as e:
+        logger.debug(e)
+        logger.debug("modal no longer present, not updating")
