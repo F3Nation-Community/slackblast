@@ -1,4 +1,5 @@
 import json
+import time
 from slack_bolt import App
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 from slack_sdk.web import WebClient
@@ -100,7 +101,16 @@ def respond_to_view(ack, body, client, logger, context):
             create_or_edit = "create"
         else:
             create_or_edit = "edit"
-        handle_backblast_post(ack, body, logger, client, context, backblast_data, create_or_edit)
+
+        try:
+            handle_backblast_post(
+                ack, body, logger, client, context, backblast_data, create_or_edit
+            )
+            msg = "Backblast successfully posted! This form can now be closed"
+        except Exception as e:
+            msg = f"Error encountered: {e}"
+        finally:
+            builders.update_modal(msg, body, client, logger)
 
     elif safe_get(body, "view", "callback_id") == actions.PREBLAST_CALLBACK_ID:
         preblast_data: dict = forms.PREBLAST_FORM.get_selected_values(body)
