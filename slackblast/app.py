@@ -27,7 +27,7 @@ import re
 import copy
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 app = App(process_before_response=True, oauth_flow=get_oauth_flow())
 
