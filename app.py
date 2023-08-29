@@ -5,9 +5,10 @@ from slack_bolt.adapter.fastapi.async_handler import AsyncSlackRequestHandler
 from slack_bolt.async_app import AsyncApp
 import datetime
 from datetime import datetime, timezone, timedelta
-# import json
+import json
 
 import sendmail
+
 
 # def get_categories():
 #     with open('categories.json') as c:
@@ -338,7 +339,7 @@ async def command(ack, body, respond, client, logger):
                 "type": "plain_text_input",
                 "multiline": True,
                 "action_id": "plain_text_input-action",
-                "initial_value": "Warm-Up: \nThe Thang: \nMary: \nAnnouncements: \nCOT: ",
+                "initial_value": "WARMUP: \nTHE THANG: \nMARY: \nANNOUNCEMENTS: \nCOT: ",
                 "placeholder": {
                     "type": "plain_text",
                     "text": "Tell us what happened\n\n"
@@ -446,18 +447,18 @@ async def view_submission(ack, body, logger, client):
     try:
         # formatting a message
         # todo: change to use json object
-        header_msg = f"*Slackblast!*: "
+        header_msg = f"*Slackblast*: "
         title_msg = f"*" + title + "*"
 
-        date_msg = f"*Date*: " + the_date
+        date_msg = f"*DATE*: " + the_date
         ao_msg = f"*AO*: <#" + the_ao + ">"
+        q_msg = f"*Q*: <@" + the_q + ">"
         pax_msg = f"*PAX*: " + pax_formatted
         fngs_msg = f"*FNGs*: " + fngs
-        q_msg = f"*Q*: <@" + the_q + ">"
-        count_msg = f"*Count*: " + count
+        count_msg = f"*COUNT*: " + count
         moleskine_msg = moleskine
 
-        # Message the channel as the app/bot name
+        # Message the user via the app/bot name
         if config('POST_TO_CHANNEL', cast=bool):
             body = make_body(date_msg, ao_msg, q_msg, pax_msg,
                              fngs_msg, count_msg, moleskine_msg)
