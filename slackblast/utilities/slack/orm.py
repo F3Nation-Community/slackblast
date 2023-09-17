@@ -28,7 +28,7 @@ class BaseBlock:
     element: BaseElement = None
 
     def make_label_field(self, text=None):
-        return {"type": "plain_text", "text": text or self.label, "emoji": True}
+        return {"type": "plain_text", "text": text or self.label or "", "emoji": True}
 
     def as_form_field(self, initial_value=None):
         raise Exception("Not Implemented")

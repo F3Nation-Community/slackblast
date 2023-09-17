@@ -38,6 +38,8 @@ def get_oauth_flow():
 
 
 def safe_get(data, *keys):
+    if not data:
+        return None
     try:
         result = data
         for k in keys:

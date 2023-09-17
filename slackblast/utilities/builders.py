@@ -283,16 +283,20 @@ def build_strava_form(
         )
         authorization_url, state = oauth.authorization_url("https://www.strava.com/oauth/authorize")
         strava_blocks = [
-            slack_orm.ButtonElement(
-                label="Connect Strava Account",
-                action=actions.STRAVA_CONNECT_BUTTON,
-                url=authorization_url,
+            slack_orm.ActionsBlock(
+                elements=[
+                    slack_orm.ButtonElement(
+                        label="Connect Strava Account",
+                        action=actions.STRAVA_CONNECT_BUTTON,
+                        url=authorization_url,
+                    )
+                ]
             ),
             slack_orm.ContextBlock(
                 element=slack_orm.ContextElement(
                     initial_value="Opens in a new window",
                 ),
-                action_id="context",
+                action="context",
             ),
         ]
     else:
@@ -300,11 +304,11 @@ def build_strava_form(
         user_record = user_records[0]
         strava_recent_activities = strava.get_strava_activities(user_record)
 
-        strava_blocks = []
+        button_elements = []
         for activity in strava_recent_activities:
             date = datetime.strptime(activity["start_date_local"], "%Y-%m-%dT%H:%M:%SZ")
             date_fmt = date.strftime("%m-%d %H:%M")
-            strava_blocks.append(
+            button_elements.append(
                 slack_orm.ButtonElement(
                     label=f"{date_fmt} - {activity['name']}",
                     action="-".join([actions.STRAVA_ACTIVITY_BUTTON, str(activity["id"])]),
@@ -320,14 +324,9 @@ def build_strava_form(
                     # TODO: add confirmation modal
                 )
             )
+            strava_blocks = [slack_orm.ActionsBlock(elements=button_elements)]
 
-    strava_form = slack_orm.BlockView(
-        blocks=[
-            slack_orm.ActionsBlock(
-                elements=strava_blocks,
-            ),
-        ]
-    )
+    strava_form = slack_orm.BlockView(blocks=strava_blocks)
 
     strava_form.post_modal(
         client=client,
