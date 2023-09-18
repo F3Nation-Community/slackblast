@@ -47,6 +47,7 @@ CONFIG_EDITING_LOCKED = "editing_locked"
 CONFIG_DEFAULT_DESTINATION = "default_destination"
 CONFIG_BACKBLAST_MOLESKINE_TEMPLATE = "backblast_moleskine_template"
 CONFIG_PREBLAST_MOLESKINE_TEMPLATE = "preblast_moleskine_template"
+CONFIG_ENABLE_STRAVA = "enable_strava"
 
 STRAVA_CONNECT_BUTTON = "strava-connect"
 STRAVA_ACTIVITY_BUTTON = "strava-activity"

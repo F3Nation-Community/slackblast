@@ -157,6 +157,11 @@ def handle_backblast_post(
                 "value": "new",
                 "action_id": actions.BACKBLAST_NEW_BUTTON,
             },
+        ],
+        "block_id": actions.BACKBLAST_EDIT_BUTTON,
+    }
+    if region_record.strava_enabled:
+        edit_block["elements"].append(
             {
                 "type": "button",
                 "text": {
@@ -166,10 +171,8 @@ def handle_backblast_post(
                 },
                 "value": "strava",
                 "action_id": actions.BACKBLAST_STRAVA_BUTTON,
-            },
-        ],
-        "block_id": actions.BACKBLAST_EDIT_BUTTON,
-    }
+            }
+        )
 
     if create_or_edit == "create":
         if region_record.paxminer_schema is None:
@@ -428,6 +431,9 @@ def handle_config_post(ack, body, logger, client, context, config_data) -> str:
             config_data, actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE
         )
         or "",
+        Region.strava_enabled: 1
+        if safe_get(config_data, actions.CONFIG_ENABLE_STRAVA) == "enable"
+        else 0,
     }
     if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable":
         fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())

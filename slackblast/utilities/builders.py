@@ -186,6 +186,9 @@ def build_config_form(
                 actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE: ""
                 if region_record.preblast_moleskin_template is None
                 else region_record.preblast_moleskin_template,
+                actions.CONFIG_ENABLE_STRAVA: "enable"
+                if region_record.strava_enabled == 1
+                else "disable",
             }
         )
 

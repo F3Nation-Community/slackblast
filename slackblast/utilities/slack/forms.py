@@ -335,6 +335,17 @@ CONFIG_FORM = orm.BlockView(
                 multiline=True,
             ),
         ),
+        orm.InputBlock(
+            label="Enable Strava Integration?",
+            action=actions.CONFIG_ENABLE_STRAVA,
+            optional=False,
+            element=orm.RadioButtonsElement(
+                initial_value="no",
+                options=orm.as_selector_options(
+                    names=["Enable", "Disable"], values=["enable", "disable"]
+                ),
+            ),
+        ),
     ]
 )
 

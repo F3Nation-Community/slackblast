@@ -210,11 +210,15 @@ def handle_strava_modify(
             backblast_moleskine=strava_data[actions.STRAVA_ACTIVITY_DESCRIPTION],
         )
     else:
-        activity_data = get_strava_activity(strava_activity_id=strava_activity_id)
+        activity_data = get_strava_activity(
+            strava_activity_id=strava_activity_id, user_id=user_id, team_id=team_id
+        )
 
     logger.info("activity_data is {}".format(activity_data))
     msg = f"<@{user_id}> has connected this backblast to a <https://www.strava.com/activities/{strava_activity_id}|Strava activity>!"
-    if safe_get(activity_data, "calories") & safe_get(activity_data, "distance"):
+    if (safe_get(activity_data, "calories") != None) & (
+        safe_get(activity_data, "distance") != None
+    ):
         msg += f" He traveled {round(activity_data['distance'] * 0.00062137, 1)} miles :runner: and burned {activity_data['calories']} calories :fire:."
     elif safe_get(activity_data, "calories"):
         msg += f" He burned {activity_data['calories']} calories :fire:."

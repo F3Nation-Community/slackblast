@@ -45,6 +45,7 @@ class Region(BaseClass, GetDBClass):
     default_destination = Column("default_destination", String(30))
     backblast_moleskin_template = Column("backblast_moleskin_template", LONGTEXT)
     preblast_moleskin_template = Column("preblast_moleskin_template", LONGTEXT)
+    strava_enabled = Column("strava_enabled", Integer)
     created = Column("created", DateTime, default=datetime.utcnow)
     updated = Column("updated", DateTime, default=datetime.utcnow)
 
