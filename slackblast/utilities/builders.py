@@ -19,6 +19,31 @@ from cryptography.fernet import Fernet
 from requests_oauthlib import OAuth2Session
 
 
+def add_custom_field_blocks(form: slack_orm.BlockView, region_record: Region) -> slack_orm.BlockView:
+    output_form = copy.deepcopy(form)
+    for custom_field in (region_record.custom_fields or {}).values():
+        if safe_get(custom_field, "enabled"):
+            output_form.add_block(
+                slack_orm.InputBlock(
+                    element=forms.CUSTOM_FIELD_TYPE_MAP[custom_field["type"]],
+                    action=actions.CUSTOM_FIELD_PREFIX + custom_field["name"],
+                    label=custom_field["name"],
+                    optional=True,
+                )
+            )
+            if safe_get(custom_field, "type") == "Dropdown":
+                output_form.set_options(
+                    {
+                        actions.CUSTOM_FIELD_PREFIX
+                        + custom_field["name"]: slack_orm.as_selector_options(
+                            names=custom_field["options"],
+                            values=custom_field["options"],
+                        )
+                    }
+                )
+    return output_form
+
+
 def build_backblast_form(
     user_id: str,
     channel_id: str,
@@ -60,28 +85,7 @@ def build_backblast_form(
         ao_id = channel_id
         ao_name = channel_name
 
-    # if duplicate_check and currently_duplicate == is_duplicate:
-    #     return
-    for custom_field in (region_record.custom_fields or {}).values():
-        if safe_get(custom_field, "enabled"):
-            backblast_form.add_block(
-                slack_orm.InputBlock(
-                    element=forms.CUSTOM_FIELD_TYPE_MAP[custom_field["type"]],
-                    action=actions.CUSTOM_FIELD_PREFIX + custom_field["name"],
-                    label=custom_field["name"],
-                    optional=True,
-                )
-            )
-            if safe_get(custom_field, "type") == "Dropdown":
-                backblast_form.set_options(
-                    {
-                        actions.CUSTOM_FIELD_PREFIX
-                        + custom_field["name"]: slack_orm.as_selector_options(
-                            names=custom_field["options"],
-                            values=custom_field["options"],
-                        )
-                    }
-                )
+    backblast_form = add_custom_field_blocks(backblast_form, region_record)
 
     if not is_duplicate:
         backblast_form.delete_block(actions.BACKBLAST_DUPLICATE_WARNING)

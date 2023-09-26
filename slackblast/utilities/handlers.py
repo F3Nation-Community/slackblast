@@ -1,4 +1,6 @@
+import copy
 import json
+import logging
 import os
 from utilities import constants, sendmail, builders
 from utilities.helper_functions import (
@@ -9,14 +11,19 @@ from utilities.helper_functions import (
     parse_moleskin_users,
     get_channel_name,
 )
-from utilities.slack import actions
+from utilities.slack import actions, forms
 from utilities.database.orm import Attendance, Backblast, PaxminerUser, Region
 from utilities.database import DbManager
 from cryptography.fernet import Fernet
+from slack_sdk.web import WebClient
 
 
-def handle_backblast_post(ack, body, logger, client, context, backblast_data, create_or_edit: str) -> str:
-    ack()
+def handle_backblast_post(body: dict, logger: logging.Logger, client: WebClient, context: dict, region_record: Region):
+    create_or_edit = "create" if safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID else "edit"
+
+    backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
+    backblast_form = builders.add_custom_field_blocks(backblast_form, region_record)
+    backblast_data: dict = forms.BACKBLAST_FORM.get_selected_values(body)
 
     title = safe_get(backblast_data, actions.BACKBLAST_TITLE)
     the_date = safe_get(backblast_data, actions.BACKBLAST_DATE)
@@ -34,7 +41,6 @@ def handle_backblast_post(ack, body, logger, client, context, backblast_data, cr
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
-    region_record: Region = DbManager.get_record(Region, id=context["team_id"])
     user_records = None
     if region_record.paxminer_schema:
         user_records = DbManager.find_records(PaxminerUser, filters=[True], schema=region_record.paxminer_schema)
@@ -305,8 +311,8 @@ COUNT: {count}
             print(json.dumps({"event_type": "failed_db_insert", "team_name": region_record.workspace_name}))
 
 
-def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> str:
-    ack()
+def handle_preblast_post(body: dict, logger: logging.Logger, client: WebClient, context: dict, region_record: Region):
+    preblast_data = forms.PREBLAST_FORM.get_selected_values(body)
 
     title = safe_get(preblast_data, actions.PREBLAST_TITLE)
     the_date = safe_get(preblast_data, actions.PREBLAST_DATE)
@@ -319,7 +325,6 @@ def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> s
     moleskin = safe_get(preblast_data, actions.PREBLAST_MOLESKIN)
     destination = safe_get(preblast_data, actions.PREBLAST_DESTINATION)
 
-    region_record: Region = DbManager.get_record(Region, id=context["team_id"])
     user_records = None
     if region_record.paxminer_schema:
         user_records = DbManager.find_records(PaxminerUser, filters=[True], schema=region_record.paxminer_schema)
@@ -354,10 +359,8 @@ def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> s
     print(json.dumps({"event_type": "successful_preblast_post", "team_name": region_record.workspace_name}))
 
 
-def handle_config_post(ack, body, logger, client, context, config_data) -> str:
-    ack()
-
-    region_record: Region = DbManager.get_record(Region, id=context["team_id"])
+def handle_config_post(body: dict, logger: logging.Logger, client: WebClient, context: dict, region_record: Region):
+    config_data = forms.CONFIG_FORM.get_selected_values(body)
 
     fields = {
         # Region.paxminer_schema: paxminer_db,
@@ -397,10 +400,14 @@ def handle_config_post(ack, body, logger, client, context, config_data) -> str:
     print(json.dumps({"event_type": "successful_config_update", "team_name": region_record.workspace_name}))
 
 
-def handle_custom_field_add(ack, body, logger, client, context, config_data) -> str:
-    ack()
-
-    region_record: Region = DbManager.get_record(Region, id=context["team_id"])
+def handle_custom_field_add(
+    body: dict,
+    logger: logging.Logger,
+    client: WebClient,
+    context: dict,
+    region_record: Region,
+):
+    config_data = forms.CUSTOM_FIELD_ADD_EDIT_FORM.get_selected_values(body)
 
     custom_field_name = safe_get(config_data, actions.CUSTOM_FIELD_ADD_NAME)
     custom_field_type = safe_get(config_data, actions.CUSTOM_FIELD_ADD_TYPE)
@@ -430,8 +437,13 @@ def handle_custom_field_add(ack, body, logger, client, context, config_data) -> 
     builders.build_custom_field_menu(client, region_record, trigger_id, update_view_id=previous_view_id)
 
 
-def handle_custom_field_menu(body, client, logger, context):
-    region_record: Region = DbManager.get_record(Region, id=context["team_id"])
+def handle_custom_field_menu(
+    body: dict,
+    logger: logging.Logger,
+    client: WebClient,
+    context: dict,
+    region_record: Region,
+):
     custom_fields = region_record.custom_fields or {}
 
     selected_values: dict = safe_get(body, "view", "state", "values")

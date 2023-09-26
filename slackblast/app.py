@@ -8,14 +8,7 @@ from utilities.helper_functions import (
     replace_slack_user_ids,
     get_region_record,
 )
-from utilities.handlers import (
-    handle_backblast_post,
-    handle_preblast_post,
-    handle_config_post,
-    handle_custom_field_add,
-    handle_custom_field_menu,
-)
-from utilities import constants
+from utilities import constants, routing
 from utilities.slack import forms
 from utilities.slack import actions
 import logging
@@ -86,43 +79,58 @@ def respond_to_command(
 def respond_to_view(ack, body, client, logger, context):
     ack()
     logger.debug("body is {}".format(body))
-    logger.debug("context is {}".format(context))
 
-    if safe_get(body, "view", "callback_id") in [
-        actions.BACKBLAST_CALLBACK_ID,
-        actions.BACKBLAST_EDIT_CALLBACK_ID,
-    ]:
-        backblast_data: dict = forms.BACKBLAST_FORM.get_selected_values(body)
-        logger.debug("backblast_data is {}".format(backblast_data))
+    region_record: Region = DbManager.get_record(Region, id=safe_get(body, "team_id") or safe_get(body, "team", "id"))
 
-        if safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID:
-            create_or_edit = "create"
-        else:
-            create_or_edit = "edit"
-        handle_backblast_post(ack, body, logger, client, context, backblast_data, create_or_edit)
+    run_function = safe_get(routing.VIEW_MAPPER, safe_get(body, "view", "callback_id"))
+    if run_function:
+        run_function(body=body, client=client, logger=logger, context=context, region_record=region_record)
 
-    elif safe_get(body, "view", "callback_id") == actions.PREBLAST_CALLBACK_ID:
-        preblast_data: dict = forms.PREBLAST_FORM.get_selected_values(body)
-        logger.debug("preblast_data is {}".format(preblast_data))
-        handle_preblast_post(ack, body, logger, client, context, preblast_data)
+    # if safe_get(body, "view", "callback_id") in [
+    #     actions.BACKBLAST_CALLBACK_ID,
+    #     actions.BACKBLAST_EDIT_CALLBACK_ID,
+    # ]:
+    #     # backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
+    #     # backblast_form = builders.add_custom_field_blocks(backblast_form, region_record)
+    #     backblast_data: dict = forms.BACKBLAST_FORM.get_selected_values(body)
+    #     for k, v in (safe_get(body, "view", "state", "values") or {}).items():
+    #         if k[: len(actions.CUSTOM_FIELD_PREFIX)] == actions.CUSTOM_FIELD_PREFIX:
+    #             cf_type = safe_get(v, k, "type")  # TODO: better to build the form dynamically, then use the
+    #             # get_selected_values function
+    #             if cf_type == "static_select":
+    #                 backblast_data[k] = safe_get(v, k, "selected_option", "value")
+    #             elif cf_type in ["number_input", "plain_text_input"]:
+    #                 backblast_data[k] = safe_get(v, k, "value")
+    #     logger.debug("backblast_data is {}".format(backblast_data))
 
-    elif safe_get(body, "view", "callback_id") == actions.CONFIG_CALLBACK_ID:
-        config_data: dict = forms.CONFIG_FORM.get_selected_values(body)
-        logger.debug("config_data is {}".format(config_data))
-        handle_config_post(ack, body, logger, client, context, config_data)
+    #     if safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID:
+    #         create_or_edit = "create"
+    #     else:
+    #         create_or_edit = "edit"
+    #     handle_backblast_post(ack, body, logger, client, context, backblast_data, create_or_edit)
 
-    elif safe_get(body, "view", "callback_id") == actions.STRAVA_MODIFY_CALLBACK_ID:
-        strava_data: dict = forms.STRAVA_ACTIVITY_MODIFY_FORM.get_selected_values(body)
-        logger.debug("strava_data is {}".format(strava_data))
-        strava.handle_strava_modify(ack, body, logger, client, context, strava_data)
+    # elif safe_get(body, "view", "callback_id") == actions.PREBLAST_CALLBACK_ID:
+    #     preblast_data: dict = forms.PREBLAST_FORM.get_selected_values(body)
+    #     logger.debug("preblast_data is {}".format(preblast_data))
+    #     handle_preblast_post(ack, body, logger, client, context, preblast_data)
 
-    elif safe_get(body, "view", "callback_id") == actions.CUSTOM_FIELD_ADD_CALLBACK_ID:
-        custom_field_data: dict = forms.CUSTOM_FIELD_ADD_EDIT_FORM.get_selected_values(body)
-        logger.debug("custom_field_data is {}".format(custom_field_data))
-        handle_custom_field_add(ack, body, logger, client, context, custom_field_data)
+    # elif safe_get(body, "view", "callback_id") == actions.CONFIG_CALLBACK_ID:
+    #     config_data: dict = forms.CONFIG_FORM.get_selected_values(body)
+    #     logger.debug("config_data is {}".format(config_data))
+    #     handle_config_post(ack, body, logger, client, context, config_data)
 
-    elif safe_get(body, "view", "callback_id") == actions.CUSTOM_FIELD_MENU_CALLBACK_ID:
-        handle_custom_field_menu(body, client, logger, context)
+    # elif safe_get(body, "view", "callback_id") == actions.STRAVA_MODIFY_CALLBACK_ID:
+    #     strava_data: dict = forms.STRAVA_ACTIVITY_MODIFY_FORM.get_selected_values(body)
+    #     logger.debug("strava_data is {}".format(strava_data))
+    #     strava.handle_strava_modify(ack, body, logger, client, context, strava_data)
+
+    # elif safe_get(body, "view", "callback_id") == actions.CUSTOM_FIELD_ADD_CALLBACK_ID:
+    #     custom_field_data: dict = forms.CUSTOM_FIELD_ADD_EDIT_FORM.get_selected_values(body)
+    #     logger.debug("custom_field_data is {}".format(custom_field_data))
+    #     handle_custom_field_add(ack, body, logger, client, context, custom_field_data)
+
+    # elif safe_get(body, "view", "callback_id") == actions.CUSTOM_FIELD_MENU_CALLBACK_ID:
+    #     handle_custom_field_menu(body, client, logger, context)
 
 
 @app.action(actions.BACKBLAST_EDIT_BUTTON)
