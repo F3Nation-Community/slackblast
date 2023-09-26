@@ -1,12 +1,8 @@
 from dataclasses import dataclass
 from typing import TypeVar, List
-
-import os, sys
+import os
 from sqlalchemy import create_engine, pool, and_
 from sqlalchemy.orm import sessionmaker
-from contextlib import ContextDecorator
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from utilities.database.orm import BaseClass
 from utilities import constants
 
@@ -34,9 +30,7 @@ def get_session(echo=False, schema=None):
         database = schema or os.environ[constants.ADMIN_DATABASE_SCHEMA]
 
         db_url = f"mysql+pymysql://{user}:{passwd}@{host}:3306/{database}?charset=utf8mb4"
-        GLOBAL_ENGINE = create_engine(
-            db_url, echo=echo, poolclass=pool.NullPool, convert_unicode=True
-        )
+        GLOBAL_ENGINE = create_engine(db_url, echo=echo, poolclass=pool.NullPool, convert_unicode=True)
         GLOBAL_SCHEMA = database
     return sessionmaker()(bind=GLOBAL_ENGINE)
 
@@ -78,9 +72,7 @@ class DbManager:
     def update_record(cls: T, id, fields, schema=None):
         session = get_session(schema=schema)
         try:
-            session.query(cls).filter(cls.get_id() == id).update(
-                fields, synchronize_session="fetch"
-            )
+            session.query(cls).filter(cls.get_id() == id).update(fields, synchronize_session="fetch")
             session.flush()
         finally:
             session.commit()

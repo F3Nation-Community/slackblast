@@ -1,8 +1,4 @@
-import os, sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from utilities.slack import orm, actions
-
 from utilities import constants
 
 BACKBLAST_FORM = orm.BlockView(
@@ -37,7 +33,8 @@ BACKBLAST_FORM = orm.BlockView(
         orm.ContextBlock(
             action=actions.BACKBLAST_DUPLICATE_WARNING,
             element=orm.ContextElement(
-                initial_value=":warning: :warning: *WARNING*: duplicate backblast detected in PAXMiner DB for this Q, AO, and date; this backblast will not be saved as-is. Please modify one of these selections",
+                initial_value=":warning: :warning: *WARNING*: duplicate backblast detected in PAXMiner DB for this Q, "
+                "AO, and date; this backblast will not be saved as-is. Please modify one of these selections",
             ),
         ),
         orm.InputBlock(
@@ -90,7 +87,8 @@ BACKBLAST_FORM = orm.BlockView(
         ),
         orm.ContextBlock(
             element=orm.ContextElement(
-                initial_value="If trying to tag PAX in here, substitute _ for spaces and do not include titles in parenthesis (ie, @Moneyball not @Moneyball_(F3_STC)). Spelling is important, capitalization is not!",
+                initial_value="If trying to tag PAX in here, substitute _ for spaces and do not include titles in "
+                "parenthesis (ie, @Moneyball not @Moneyball_(F3_STC)). Spelling is important, capitalization is not!",
             ),
         ),
         orm.DividerBlock(),
@@ -105,15 +103,15 @@ BACKBLAST_FORM = orm.BlockView(
             action=actions.BACKBLAST_EMAIL_SEND,
             optional=False,
             element=orm.RadioButtonsElement(
-                options=orm.as_selector_options(
-                    names=["Send Email", "Don't Send Email"], values=["yes", "no"]
-                ),
+                options=orm.as_selector_options(names=["Send Email", "Don't Send Email"], values=["yes", "no"]),
                 initial_value="yes",
             ),
         ),
         orm.ContextBlock(
             element=orm.ContextElement(
-                initial_value="*Do not hit Submit more than once!* Even if you get a timeout error, the backblast has likely already been posted. If using email, this can take time and this form may not automatically close.",
+                initial_value="*Do not hit Submit more than once!* Even if you get a timeout error, the backblast has "
+                "likely already been posted. If using email, this can take time and this form may not automatically "
+                "close.",
             ),
         ),
     ]
@@ -196,7 +194,8 @@ PREBLAST_FORM = orm.BlockView(
         ),
         orm.ContextBlock(
             element=orm.ContextElement(
-                initial_value="*Do not hit Submit more than once!* Even if you get a timeout error, the preblast has likely already been posted. This form may not automatically close.",
+                initial_value="*Do not hit Submit more than once!* Even if you get a timeout error, the preblast has "
+                "likely already been posted. This form may not automatically close.",
             ),
         ),
     ]
@@ -222,9 +221,7 @@ CONFIG_FORM = orm.BlockView(
             optional=False,
             element=orm.RadioButtonsElement(
                 initial_value="disable",
-                options=orm.as_selector_options(
-                    names=["Enable Email", "Disable Email"], values=["enable", "disable"]
-                ),
+                options=orm.as_selector_options(names=["Enable Email", "Disable Email"], values=["enable", "disable"]),
             ),
             dispatch_action=True,
         ),
@@ -264,7 +261,9 @@ CONFIG_FORM = orm.BlockView(
         orm.ContextBlock(
             action=actions.CONFIG_PASSWORD_CONTEXT,
             element=orm.ContextElement(
-                initial_value="If using gmail, you must use an App Password (https://support.google.com/accounts/answer/185833). Your password will be stored encrypted - however, it is STRONGLY recommended that you use a non-personal email address and password for this purpose, as security cannot be guaranteed.",
+                initial_value="If using gmail, you must use an App Password (https://support.google.com/accounts/answer"
+                "/185833). Your password will be stored encrypted - however, it is STRONGLY recommended that you use "
+                "a non-personal email address and password for this purpose, as security cannot be guaranteed.",
             ),
         ),
         orm.InputBlock(
@@ -285,7 +284,8 @@ CONFIG_FORM = orm.BlockView(
         orm.ContextBlock(
             action=actions.CONFIG_POSTIE_CONTEXT,
             element=orm.ContextElement(
-                initial_value="This will put the AO name as a category for the post, and will put PAX names at the end as tags.",
+                initial_value="This will put the AO name as a category for the post, and will put PAX names at the end"
+                "as tags.",
             ),
         ),
         orm.InputBlock(
@@ -341,10 +341,16 @@ CONFIG_FORM = orm.BlockView(
             optional=False,
             element=orm.RadioButtonsElement(
                 initial_value="no",
-                options=orm.as_selector_options(
-                    names=["Enable", "Disable"], values=["enable", "disable"]
-                ),
+                options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
             ),
+        ),
+        orm.ActionsBlock(
+            elements=[
+                orm.ButtonElement(
+                    label="Custom Fields",
+                    action=actions.CONFIG_CUSTOM_FIELDS,
+                ),
+            ],
         ),
     ]
 )
@@ -378,5 +384,50 @@ STRAVA_ACTIVITY_MODIFY_FORM = orm.BlockView(
         #         initial_value="",
         #     ),
         # ),
+    ]
+)
+
+CUSTOM_FIELD_TYPE_MAP = {
+    "Dropdown": orm.StaticSelectElement(),
+    "Text": orm.PlainTextInputElement(),
+    "Number": orm.NumberInputElement(),
+}
+
+CUSTOM_FIELD_ADD_EDIT_FORM = orm.BlockView(
+    blocks=[
+        orm.InputBlock(
+            element=orm.PlainTextInputElement(
+                initial_value="",
+                multiline=False,
+                placeholder="Enter the name of the new field or metric",
+                max_length=40,
+            ),
+            action=actions.CUSTOM_FIELD_ADD_NAME,
+            label="Field name / metric name",
+            optional=False,
+        ),
+        orm.InputBlock(
+            element=orm.StaticSelectElement(
+                options=orm.as_selector_options(
+                    names=CUSTOM_FIELD_TYPE_MAP.keys(),
+                ),
+                initial_value="Dropdown",
+            ),
+            action=actions.CUSTOM_FIELD_ADD_TYPE,
+            label="Type of entry",
+            optional=False,
+            # dispatch_action=True, TODO: hide dropdown options if not "Dropdown"
+        ),
+        orm.InputBlock(
+            element=orm.PlainTextInputElement(
+                initial_value=" ",
+                multiline=False,
+                placeholder="Enter the options for the dropdown, separated by commas",
+                max_length=100,
+            ),
+            action=actions.CUSTOM_FIELD_ADD_OPTIONS,
+            label="Dropdown options (only required if 'Dropdown' is selected above)",
+            optional=False,
+        ),
     ]
 )

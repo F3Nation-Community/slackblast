@@ -1,12 +1,7 @@
 import json
-from typing import Any, List, Union, Dict
+from typing import Any, List, Dict
 from dataclasses import dataclass, field
-from slack_sdk.web import WebClient
-import os, sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 from utilities.helper_functions import safe_get
-from utilities import constants
 
 
 @dataclass
@@ -140,18 +135,11 @@ class StaticSelectElement(BaseElement):
 
         initial_option = None
         if self.initial_value:
-            initial_option = next(
-                (x for x in option_elements if x["value"] == self.initial_value), None
-            )
+            initial_option = next((x for x in option_elements if x["value"] == self.initial_value), None)
             if initial_option:
                 j["initial_option"] = initial_option
         return j
 
-    # def get_selected_value(self, input_data, action, text_too: bool = False):
-    #   if text_too:
-    #     return safe_get(input_data['actions'][0], 'selected_option', 'value'), safe_get(input_data['actions'][0], 'selected_option', 'text', 'text')
-    #   else:
-    #     return safe_get(input_data['actions'][0], 'selected_option', 'value')
     def get_selected_value(self, input_data, action):
         return safe_get(input_data, action, action, "selected_option", "value")
 
@@ -183,9 +171,7 @@ class RadioButtonsElement(BaseElement):
 
         initial_option = None
         if self.initial_value:
-            initial_option = next(
-                (x for x in option_elements if x["value"] == self.initial_value), None
-            )
+            initial_option = next((x for x in option_elements if x["value"] == self.initial_value), None)
             if initial_option:
                 j["initial_option"] = initial_option
         return j
@@ -218,6 +204,31 @@ class PlainTextInputElement(BaseElement):
             j["multiline"] = True
         if self.max_length:
             j["max_length"] = self.max_length
+        return j
+
+
+@dataclass
+class NumberInputElement(BaseElement):
+    initial_value: float = None
+    min_value: float = None
+    max_value: float = None
+    is_decimal_allowed: bool = True
+
+    def get_selected_value(self, input_data, action):
+        return safe_get(input_data, action, action, "value")
+
+    def as_form_field(self, action: str):
+        j = {
+            "type": "number_input",
+            "action_id": action,
+            "is_decimal_allowed": self.is_decimal_allowed,
+        }
+        if self.initial_value:
+            j["initial_value"] = str(self.initial_value)
+        if self.min_value:
+            j["min_value"] = str(self.min_value)
+        if self.max_value:
+            j["max_value"] = str(self.max_value)
         return j
 
 
@@ -413,6 +424,7 @@ class BlockView:
         parent_metadata: dict = None,
         close_button_text: str = "Close",
         notify_on_close: bool = False,
+        new_or_add: str = "new",
     ):
         blocks = self.as_form_field()
 
@@ -430,7 +442,10 @@ class BlockView:
         if submit_button_text != "None":  # TODO: would prefer this to use None instead of "None"
             view["submit"] = {"type": "plain_text", "text": submit_button_text}
 
-        res = client.views_open(trigger_id=trigger_id, view=view)
+        if new_or_add == "new":
+            client.views_open(trigger_id=trigger_id, view=view)
+        elif new_or_add == "add":
+            client.views_push(trigger_id=trigger_id, view=view)
 
     def update_modal(
         self,
@@ -457,9 +472,4 @@ class BlockView:
         if parent_metadata:
             view["private_metadata"] = json.dumps(parent_metadata)
 
-        res = client.views_update(view_id=view_id, view=view)
-
-
-class DividerBlock(BaseBlock):
-    def as_form_field(self):
-        return {"type": "divider"}
+        client.views_update(view_id=view_id, view=view)

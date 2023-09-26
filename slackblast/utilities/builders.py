@@ -1,8 +1,7 @@
 import json
-import sys, os
+import os
 from typing import Any, Dict, List
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from slack_sdk.web import WebClient
 from utilities.database.orm import Region, User
 from utilities.database import DbManager
@@ -11,7 +10,6 @@ from utilities import constants, strava
 from utilities.helper_functions import (
     get_channel_name,
     safe_get,
-    run_fuzzy_match,
     check_for_duplicate,
 )
 import copy
@@ -64,6 +62,26 @@ def build_backblast_form(
 
     # if duplicate_check and currently_duplicate == is_duplicate:
     #     return
+    for custom_field in (region_record.custom_fields or {}).values():
+        if safe_get(custom_field, "enabled"):
+            backblast_form.add_block(
+                slack_orm.InputBlock(
+                    element=forms.CUSTOM_FIELD_TYPE_MAP[custom_field["type"]],
+                    action=actions.CUSTOM_FIELD_PREFIX + custom_field["name"],
+                    label=custom_field["name"],
+                    optional=True,
+                )
+            )
+            if safe_get(custom_field, "type") == "Dropdown":
+                backblast_form.set_options(
+                    {
+                        actions.CUSTOM_FIELD_PREFIX
+                        + custom_field["name"]: slack_orm.as_selector_options(
+                            names=custom_field["options"],
+                            values=custom_field["options"],
+                        )
+                    }
+                )
 
     if not is_duplicate:
         backblast_form.delete_block(actions.BACKBLAST_DUPLICATE_WARNING)
@@ -115,7 +133,7 @@ def build_backblast_form(
         )
         if channel_id:
             backblast_form.set_initial_values({actions.BACKBLAST_AO: channel_id})
-
+    logger.debug(backblast_form.blocks)
     logger.debug("backblast_form is {}".format(backblast_form.as_form_field()))
 
     if duplicate_check:
@@ -149,9 +167,7 @@ def build_config_form(
     if region_record:
         if region_record.email_password:
             fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
-            email_password_decrypted = fernet.decrypt(
-                region_record.email_password.encode()
-            ).decode()
+            email_password_decrypted = fernet.decrypt(region_record.email_password.encode()).decode()
         else:
             email_password_decrypted = "SamplePassword123!"
 
@@ -165,12 +181,8 @@ def build_config_form(
         config_form.set_initial_values(
             {
                 # actions.CONFIG_PAXMINER_DB: region_record.paxminer_schema,
-                actions.CONFIG_EMAIL_ENABLE: "enable"
-                if region_record.email_enabled == 1
-                else "disable",
-                actions.CONFIG_EMAIL_SHOW_OPTION: "yes"
-                if region_record.email_option_show == 1
-                else "no",
+                actions.CONFIG_EMAIL_ENABLE: "enable" if region_record.email_enabled == 1 else "disable",
+                actions.CONFIG_EMAIL_SHOW_OPTION: "yes" if region_record.email_option_show == 1 else "no",
                 actions.CONFIG_EMAIL_FROM: region_record.email_user or "example_sender@gmail.com",
                 actions.CONFIG_EMAIL_TO: region_record.email_to or "example_destination@gmail.com",
                 actions.CONFIG_EMAIL_SERVER: region_record.email_server or "smtp.gmail.com",
@@ -186,9 +198,7 @@ def build_config_form(
                 actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE: ""
                 if region_record.preblast_moleskin_template is None
                 else region_record.preblast_moleskin_template,
-                actions.CONFIG_ENABLE_STRAVA: "enable"
-                if region_record.strava_enabled == 1
-                else "disable",
+                actions.CONFIG_ENABLE_STRAVA: "enable" if region_record.strava_enabled == 1 else "disable",
             }
         )
 
@@ -268,9 +278,7 @@ def build_strava_form(
     logger: Logger,
     lambda_function_host: str,
 ):
-    user_records: List[User] = DbManager.find_records(
-        User, filters=[User.user_id == user_id, User.team_id == team_id]
-    )
+    user_records: List[User] = DbManager.find_records(User, filters=[User.user_id == user_id, User.team_id == team_id])
 
     backblast_ts = body["message"]["ts"]
     backblast_meta = json.loads(body["message"]["blocks"][-1]["elements"][0]["value"])
@@ -366,4 +374,144 @@ def build_strava_modify_form(
         submit_button_text="Modify Strava activity",
         close_button_text="Close without modifying",
         notify_on_close=True,
+    )
+
+
+def build_custom_field_menu(
+    client: WebClient,
+    region_record: Region,
+    trigger_id: str,
+    update_view_id: str = None,
+) -> None:
+    """Iterates through the custom fields and builds a menu to enable/disable and add/edit/delete them.
+
+    Args:
+        client (WebClient): Slack webclient
+        region_record (Region): Region record
+        trigger_id (str): The event's trigger id
+        callback_id (str): The event's callback id
+    """
+    blocks = []
+    custom_fields = region_record.custom_fields or {}
+    if region_record.custom_fields is None:
+        custom_fields = {
+            "Event Type": {
+                "name": "Event Type",
+                "type": "Dropdown",
+                "options": ["Bootcamp", "QSource", "Rucking", "2nd F"],
+                "enabled": False,
+            }
+        }
+        DbManager.update_record(
+            cls=Region,
+            id=region_record.team_id,
+            fields={"custom_fields": custom_fields},
+        )
+
+    for custom_field in custom_fields.values():
+        label = f"Name: {custom_field['name']}\nType: {custom_field['type']}"
+        if custom_field["type"] == "Dropdown":
+            label += f"\nOptions: {', '.join(custom_field['options'])}"
+
+        blocks.extend(
+            [
+                slack_orm.InputBlock(
+                    element=slack_orm.RadioButtonsElement(
+                        options=slack_orm.as_selector_options(
+                            names=["Enabled", "Disabled"],
+                            values=["enable", "disable"],
+                        ),
+                        initial_value="enable" if custom_field["enabled"] else "disable",
+                    ),
+                    action=f"{actions.CUSTOM_FIELD_ENABLE}_{custom_field['name']}",
+                    label=label,
+                    optional=False,
+                ),
+                slack_orm.ActionsBlock(
+                    elements=[
+                        slack_orm.ButtonElement(
+                            label="Edit field",
+                            action=actions.CUSTOM_FIELD_EDIT,
+                            value=custom_field["name"],
+                        ),
+                        slack_orm.ButtonElement(
+                            label="Delete field",
+                            action=actions.CUSTOM_FIELD_DELETE,
+                            value=custom_field["name"],
+                        ),
+                    ],
+                ),
+                slack_orm.DividerBlock(),
+            ]
+        )
+
+    blocks.append(
+        slack_orm.ActionsBlock(
+            elements=[
+                slack_orm.ButtonElement(
+                    label="New custom field",
+                    action=actions.CUSTOM_FIELD_ADD,
+                ),
+            ],
+        )
+    )
+    view = slack_orm.BlockView(blocks=blocks)
+    if update_view_id:
+        view.update_modal(
+            client=client,
+            view_id=update_view_id,
+            callback_id=actions.CUSTOM_FIELD_MENU_CALLBACK_ID,
+            title_text="Custom Slackblast fields",
+        )
+    else:
+        view.post_modal(
+            client=client,
+            trigger_id=trigger_id,
+            callback_id=actions.CUSTOM_FIELD_MENU_CALLBACK_ID,
+            title_text="Custom Slackblast fields",
+            new_or_add="add",
+        )
+
+
+def build_custom_field_add_edit(
+    client: WebClient,
+    region_record: Region,
+    trigger_id: str,
+    custom_field_name: str = None,
+    logger: Logger = None,
+) -> None:
+    """Builds a form to add or edit a custom field.
+
+    Args:
+        client (WebClient): Slack webclient
+        region_record (Region): Region record
+        trigger_id (str): The event's trigger id
+        callback_id (str): The event's callback id
+        custom_field_name (str): The name of the custom field to edit
+    """
+    custom_field_form = copy.deepcopy(forms.CUSTOM_FIELD_ADD_EDIT_FORM)
+    custom_field = safe_get(region_record.custom_fields, custom_field_name or "")
+
+    if custom_field:
+        custom_field_form.set_initial_values(
+            {
+                actions.CUSTOM_FIELD_ADD_NAME: custom_field["name"],
+                actions.CUSTOM_FIELD_ADD_TYPE: custom_field["type"],
+                actions.CUSTOM_FIELD_ADD_OPTIONS: ",".join(custom_field["options"])
+                if custom_field["type"] == "Dropdown"
+                else " ",
+            }
+        )
+        action_text = "Edit"
+    else:
+        action_text = "Add"
+
+    custom_field_form.post_modal(
+        client=client,
+        trigger_id=trigger_id,
+        callback_id=actions.CUSTOM_FIELD_ADD_CALLBACK_ID,
+        title_text=f"{action_text} custom field",
+        submit_button_text=f"{action_text} field",
+        notify_on_close=True,
+        new_or_add="add",
     )

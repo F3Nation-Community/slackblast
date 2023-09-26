@@ -1,28 +1,28 @@
 import json
 from slack_bolt import App
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
-from slack_sdk.web import WebClient
 from utilities.helper_functions import (
     get_channel_name,
     get_oauth_flow,
     safe_get,
-    get_paxminer_schema,
     replace_slack_user_ids,
     get_region_record,
 )
-from utilities.handlers import handle_backblast_post, handle_preblast_post, handle_config_post
+from utilities.handlers import (
+    handle_backblast_post,
+    handle_preblast_post,
+    handle_config_post,
+    handle_custom_field_add,
+    handle_custom_field_menu,
+)
 from utilities import constants
 from utilities.slack import forms
-from utilities.slack import orm as slack_orm, actions
+from utilities.slack import actions
 import logging
-from logging import Logger
-from datetime import datetime, date
 from utilities.database import DbManager
 from utilities.database.orm import Region
 from utilities import builders, strava
-import os
 import re
-import copy
 from pprint import pformat
 
 logger = logging.getLogger()
@@ -51,7 +51,6 @@ def respond_to_command(
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
-    team_domain = safe_get(body, "team_domain") or safe_get(body, "team", "domain")
     trigger_id = safe_get(body, "trigger_id")
     channel_id = safe_get(body, "channel_id")
     channel_name = safe_get(body, "channel_name")
@@ -117,6 +116,14 @@ def respond_to_view(ack, body, client, logger, context):
         logger.debug("strava_data is {}".format(strava_data))
         strava.handle_strava_modify(ack, body, logger, client, context, strava_data)
 
+    elif safe_get(body, "view", "callback_id") == actions.CUSTOM_FIELD_ADD_CALLBACK_ID:
+        custom_field_data: dict = forms.CUSTOM_FIELD_ADD_EDIT_FORM.get_selected_values(body)
+        logger.debug("custom_field_data is {}".format(custom_field_data))
+        handle_custom_field_add(ack, body, logger, client, context, custom_field_data)
+
+    elif safe_get(body, "view", "callback_id") == actions.CUSTOM_FIELD_MENU_CALLBACK_ID:
+        handle_custom_field_menu(body, client, logger, context)
+
 
 @app.action(actions.BACKBLAST_EDIT_BUTTON)
 def handle_backblast_edit(ack, body, client, logger, context, say):
@@ -164,7 +171,8 @@ def handle_backblast_edit(ack, body, client, logger, context, say):
         )
     else:
         client.chat_postEphemeral(
-            text="Editing this backblast is only allowed for the Q(s), the original poster, or your local Slack admins. Please contact one of them to make changes.",
+            text="Editing this backblast is only allowed for the Q(s), the original poster, or your local Slack admins."
+            "Please contact one of them to make changes.",
             channel=channel_id,
             user=user_id,
         )
@@ -208,7 +216,6 @@ def handle_backblast_strava(ack, body, client, logger, context):
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
     trigger_id = safe_get(body, "trigger_id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
-    channel_name = safe_get(body, "channel_name") or safe_get(body, "channel", "name")
     lambda_function_host = safe_get(context, "lambda_request", "headers", "Host")
 
     builders.build_strava_form(
@@ -227,15 +234,13 @@ def handle_backblast_strava(ack, body, client, logger, context):
 def handle_strava_activity_action(ack, body, logger, client, context):
     ack()
     logger.info(body)
-    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
-    team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
     view_id = safe_get(body, "container", "view_id")
     trigger_id = safe_get(body, "trigger_id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
 
-    strava_activity_id, channel_id, backblast_ts, backblast_title, backblast_moleskine = body[
-        "actions"
-    ][0]["value"].split("|")
+    strava_activity_id, channel_id, backblast_ts, backblast_title, backblast_moleskine = body["actions"][0][
+        "value"
+    ].split("|")
 
     metadata = {
         "strava_activity_id": strava_activity_id,
@@ -341,6 +346,60 @@ def handle_view_closed_events(ack, body, logger, client, context):
     ack()
     logger.info(body)
     strava.handle_strava_modify(ack, body, logger, client, context, strava_data=None)
+
+
+@app.action(actions.CONFIG_CUSTOM_FIELDS)
+def handle_custom_field_menu_button(ack, body, logger, client, context):
+    ack()
+    region_record: Region = DbManager.get_record(Region, id=safe_get(body, "team_id") or safe_get(body, "team", "id"))
+    trigger_id = safe_get(body, "trigger_id")
+    builders.build_custom_field_menu(client, region_record, trigger_id)
+
+
+@app.action(actions.CUSTOM_FIELD_ADD)
+@app.action(actions.CUSTOM_FIELD_EDIT)
+def handle_custom_field_add_edit(ack, body, logger, client, context):
+    ack()
+    logger.info(body)
+
+    if safe_get(body, "actions", 0, "action_id") == actions.CUSTOM_FIELD_EDIT:
+        custom_field_name = safe_get(body, "actions", 0, "value")
+    else:
+        custom_field_name = None
+
+    trigger_id = safe_get(body, "trigger_id")
+    team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
+    region_record: Region = DbManager.get_record(Region, id=team_id)
+
+    builders.build_custom_field_add_edit(
+        client=client,
+        trigger_id=trigger_id,
+        region_record=region_record,
+        logger=logger,
+        custom_field_name=custom_field_name,
+    )
+
+
+@app.action(actions.CUSTOM_FIELD_DELETE)
+def delete_custom_field(ack, body, logger, client, context):
+    ack()
+    logger.info(body)
+    custom_field_name = safe_get(body, "actions", 0, "value")
+    team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
+    trigger_id = safe_get(body, "trigger_id")
+    view_id = safe_get(body, "container", "view_id")
+
+    region_record: Region = DbManager.get_record(Region, id=team_id)
+    custom_fields: dict = region_record.custom_fields
+    custom_fields.pop(custom_field_name)
+    DbManager.update_record(cls=Region, id=team_id, fields={"custom_fields": custom_fields})
+    builders.build_custom_field_menu(client, region_record, trigger_id, update_view_id=view_id)
+
+
+@app.view_closed("custom_field_add_id")
+def handle_view_closed_custom_add(ack, body, logger, client, context):
+    ack()
+    logger.info(body)
 
 
 COMMAND_KWARGS = {}

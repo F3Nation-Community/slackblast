@@ -1,12 +1,9 @@
 from datetime import datetime
 import json
 from logging import Logger
-import os, sys
+import os
 from typing import Any, Dict, List
-
 from slack_sdk import WebClient
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from utilities.database import DbManager
 from utilities.database.orm import User
 from utilities import constants
@@ -41,7 +38,7 @@ def strava_exchange_token(event, context) -> dict:
 
     response_json = response.json()
     print("response is {}".format(response.json()))
-    user_record: User = DbManager.create_record(  # TODO: make this a function that updates the record if it already exists
+    DbManager.create_record(  # TODO: make this a function that updates the record if it already exists
         User(
             team_id=team_id,
             user_id=user_id,
@@ -102,9 +99,7 @@ def get_strava_activities(user_record: User) -> List[Dict]:
 
     access_token = check_and_refresh_strava_token(user_record)
     request_url = "https://www.strava.com/api/v3/athlete/activities"
-    res = requests.get(
-        request_url, headers={"Authorization": f"Bearer {access_token}"}, params={"per_page": 10}
-    )
+    res = requests.get(request_url, headers={"Authorization": f"Bearer {access_token}"}, params={"per_page": 10})
     res.raise_for_status()
     data = res.json()
     # print("data is {}".format(data))
@@ -130,9 +125,7 @@ def update_strava_activity(
     Returns:
         dict: Updated Strava activity data
     """
-    user_records: List[User] = DbManager.find_records(
-        User, filters=[User.user_id == user_id, User.team_id == team_id]
-    )
+    user_records: List[User] = DbManager.find_records(User, filters=[User.user_id == user_id, User.team_id == team_id])
     user_record = user_records[0]
 
     access_token = check_and_refresh_strava_token(user_record)
@@ -167,9 +160,7 @@ def get_strava_activity(
     Returns:
         dict: Strava activity data
     """
-    user_records: List[User] = DbManager.find_records(
-        User, filters=[User.user_id == user_id, User.team_id == team_id]
-    )
+    user_records: List[User] = DbManager.find_records(User, filters=[User.user_id == user_id, User.team_id == team_id])
     user_record = user_records[0]
 
     access_token = check_and_refresh_strava_token(user_record)
@@ -210,22 +201,20 @@ def handle_strava_modify(
             backblast_moleskine=strava_data[actions.STRAVA_ACTIVITY_DESCRIPTION],
         )
     else:
-        activity_data = get_strava_activity(
-            strava_activity_id=strava_activity_id, user_id=user_id, team_id=team_id
-        )
+        activity_data = get_strava_activity(strava_activity_id=strava_activity_id, user_id=user_id, team_id=team_id)
 
     logger.info("activity_data is {}".format(activity_data))
-    msg = f"<@{user_id}> has connected this backblast to a <https://www.strava.com/activities/{strava_activity_id}|Strava activity>!"
-    if (safe_get(activity_data, "calories") != None) & (
-        safe_get(activity_data, "distance") != None
-    ):
-        msg += f" He traveled {round(activity_data['distance'] * 0.00062137, 1)} miles :runner: and burned {activity_data['calories']} calories :fire:."
+    msg = f"<@{user_id}> has connected this backblast to a "
+    "<https://www.strava.com/activities/{strava_activity_id}|Strava activity>!"
+    if (safe_get(activity_data, "calories") is not None) & (safe_get(activity_data, "distance") is not None):
+        msg += f" He traveled {round(activity_data['distance'] * 0.00062137, 1)} miles :runner: and burned "
+        "{activity_data['calories']} calories :fire:."
     elif safe_get(activity_data, "calories"):
         msg += f" He burned {activity_data['calories']} calories :fire:."
     elif safe_get(activity_data, "distance"):
         msg += f" He traveled {round(activity_data['distance'] * 0.00062137, 1)} miles :runner:."
 
-    res = client.chat_postMessage(
+    client.chat_postMessage(
         channel=channel_id,
         thread_ts=backblast_ts,
         text=msg,
