@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Any, Dict, List
+from typing import List
 
 from slack_sdk.web import WebClient
 from utilities.database.orm import Region, User
@@ -9,6 +9,7 @@ from utilities.slack import forms, orm as slack_orm, actions
 from utilities import constants, strava
 from utilities.helper_functions import (
     get_channel_name,
+    replace_slack_user_ids,
     safe_get,
     check_for_duplicate,
 )
@@ -45,21 +46,62 @@ def add_custom_field_blocks(form: slack_orm.BlockView, region_record: Region) ->
 
 
 def build_backblast_form(
-    user_id: str,
-    channel_id: str,
-    channel_name: str,
+    # user_id: str,
+    # channel_id: str,
+    # channel_name: str,
     body: dict,
     client: WebClient,
     logger: Logger,
+    context: dict,
     region_record: Region,
-    backblast_method: str,
+    # backblast_method: str,
     trigger_id: str = None,
-    initial_backblast_data: dict = None,
-    currently_duplicate: bool = False,
-    update_view_id: str = None,
-    duplicate_check: bool = False,
-    parent_metadata: dict = {},
+    # initial_backblast_data: dict = None,
+    # currently_duplicate: bool = False,
+    # update_view_id: str = None,
+    # duplicate_check: bool = False,
+    # parent_metadata: dict = {},
 ):
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
+    channel_name = safe_get(body, "channel_name") or safe_get(body, "channel", "name")
+
+    for block in safe_get(body, "view", "blocks") or []:
+        if not channel_id and block["block_id"] == actions.BACKBLAST_DESTINATION:
+            channel_id = block["element"]["options"][1]["value"]
+            channel_name = get_channel_name(channel_id, logger, client, region_record)
+
+    if (
+        (safe_get(body, "command") in ["/backblast", "/slackblast"])
+        or (safe_get(body, "actions", 0, "action_id") == actions.BACKBLAST_NEW_BUTTON)
+        and (safe_get(body, "view", "callback_id") != actions.BACKBLAST_EDIT_CALLBACK_ID)
+    ):
+        backblast_method = "create"
+        update_view_id = None
+        duplicate_check = False
+        parent_metadata = {}
+    else:
+        backblast_method = "edit"
+        update_view_id = safe_get(body, "view", "id") or safe_get(body, "container", "view_id")
+        duplicate_check = safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID
+        parent_metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
+
+    if safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID:
+        initial_backblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
+        if not safe_get(initial_backblast_data, actions.BACKBLAST_MOLESKIN):
+            initial_backblast_data[actions.BACKBLAST_MOLESKIN] = safe_get(body, "message", "blocks", 1, "text", "text")
+            initial_backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
+                initial_backblast_data[actions.BACKBLAST_MOLESKIN], client, logger, region_record
+            )
+    elif safe_get(body, "actions", 0, "action_id") in [
+        actions.BACKBLAST_AO,
+        actions.BACKBLAST_DATE,
+        actions.BACKBLAST_Q,
+    ]:
+        initial_backblast_data = forms.BACKBLAST_FORM.get_selected_values(body)
+    else:
+        initial_backblast_data = None
+
     backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
 
     if backblast_method == "edit" or duplicate_check:
@@ -159,13 +201,20 @@ def build_backblast_form(
 
 
 def build_config_form(
+    body: dict,
     client: WebClient,
-    trigger_id: str,
-    region_record: Region,
     logger: Logger,
-    initial_config_data: dict = None,
-    update_view_id: str = None,
+    context: dict,
+    region_record: Region,
+    trigger_id: str = None,
 ):
+    if safe_get(body, "command") == "/config-slackblast":
+        initial_config_data = None
+        update_view_id = None
+    else:
+        initial_config_data = forms.CONFIG_FORM.get_selected_values(body)
+        update_view_id = safe_get(body, "view", "id") or safe_get(body, "container", "view_id")
+
     config_form = copy.deepcopy(forms.CONFIG_FORM)
 
     if region_record:
@@ -239,13 +288,28 @@ def build_config_form(
         )
 
 
-def build_preblast_form(
-    user_id: str,
-    channel_id: str,
+def ignore_event(
+    body: dict,
+    logger: Logger,
     client: WebClient,
-    trigger_id: str,
+    context: dict,
     region_record: Region,
+    trigger_id: str = None,
 ):
+    logger.debug("Ignoring event")
+
+
+def build_preblast_form(
+    body: dict,
+    client: WebClient,
+    logger: Logger,
+    context: dict,
+    region_record: Region,
+    trigger_id: str,
+):
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
+
     preblast_form = copy.deepcopy(forms.PREBLAST_FORM)
     preblast_form.set_options(
         {
@@ -273,15 +337,24 @@ def build_preblast_form(
 
 
 def build_strava_form(
-    team_id: str,
-    user_id: str,
+    # team_id: str,
+    # user_id: str,
+    body: dict,
     client: WebClient,
-    body: Dict[str, Any],
-    trigger_id: str,
-    channel_id: str,
     logger: Logger,
-    lambda_function_host: str,
+    context: dict,
+    region_record: Region,
+    # trigger_id: str,
+    # channel_id: str,
+    # logger: Logger,
+    # lambda_function_host: str,
 ):
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
+    trigger_id = safe_get(body, "trigger_id")
+    channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
+    lambda_function_host = safe_get(context, "lambda_request", "headers", "Host")
+
     user_records: List[User] = DbManager.find_records(User, filters=[User.user_id == user_id, User.team_id == team_id])
 
     backblast_ts = body["message"]["ts"]
@@ -353,14 +426,27 @@ def build_strava_form(
 
 
 def build_strava_modify_form(
+    body: dict,
     client: WebClient,
     logger: Logger,
+    context: dict,
+    region_record: Region,
     trigger_id: str,
-    backblast_title: str,
-    backblast_moleskine: str,
-    backblast_metadata: dict,
-    view_id: str,
+    # backblast_title: str,
+    # backblast_moleskine: str,
+    # backblast_metadata: dict,
+    # view_id: str,
 ):
+    strava_activity_id, channel_id, backblast_ts, backblast_title, backblast_moleskine = body["actions"][0][
+        "value"
+    ].split("|")
+    view_id = safe_get(body, "container", "view_id")
+    backblast_metadata = {
+        "strava_activity_id": strava_activity_id,
+        "channel_id": channel_id,
+        "backblast_ts": backblast_ts,
+    }
+
     modify_form = copy.deepcopy(forms.STRAVA_ACTIVITY_MODIFY_FORM)
     modify_form.set_initial_values(
         {
@@ -382,10 +468,13 @@ def build_strava_modify_form(
 
 
 def build_custom_field_menu(
+    body: dict,
     client: WebClient,
+    logger: Logger,
+    context: dict,
     region_record: Region,
-    trigger_id: str,
-    update_view_id: str = None,
+    trigger_id: str = None,
+    # update_view_id: str = None,
 ) -> None:
     """Iterates through the custom fields and builds a menu to enable/disable and add/edit/delete them.
 
@@ -395,6 +484,11 @@ def build_custom_field_menu(
         trigger_id (str): The event's trigger id
         callback_id (str): The event's callback id
     """
+    if safe_get(body, "actions", 0, "action_id") == actions.CONFIG_CUSTOM_FIELDS:
+        update_view_id = None
+    else:
+        update_view_id = safe_get(body, "view", "id") or safe_get(body, "container", "view_id")
+
     blocks = []
     custom_fields = region_record.custom_fields or {}
     if region_record.custom_fields is None:
@@ -478,11 +572,13 @@ def build_custom_field_menu(
 
 
 def build_custom_field_add_edit(
+    body: dict,
     client: WebClient,
+    logger: Logger,
+    context: dict,
     region_record: Region,
     trigger_id: str,
-    custom_field_name: str = None,
-    logger: Logger = None,
+    # custom_field_name: str = None,
 ) -> None:
     """Builds a form to add or edit a custom field.
 
@@ -493,6 +589,12 @@ def build_custom_field_add_edit(
         callback_id (str): The event's callback id
         custom_field_name (str): The name of the custom field to edit
     """
+
+    if safe_get(body, "actions", 0, "action_id") == actions.CUSTOM_FIELD_EDIT:
+        custom_field_name = safe_get(body, "actions", 0, "value")
+    else:
+        custom_field_name = None
+
     custom_field_form = copy.deepcopy(forms.CUSTOM_FIELD_ADD_EDIT_FORM)
     custom_field = safe_get(region_record.custom_fields, custom_field_name or "")
 
@@ -519,3 +621,62 @@ def build_custom_field_add_edit(
         notify_on_close=True,
         new_or_add="add",
     )
+
+
+def handle_custom_field_delete(
+    body: dict,
+    client: WebClient,
+    logger: Logger,
+    context: dict,
+    region_record: Region,
+    trigger_id: str,
+):
+    custom_fields: dict = region_record.custom_fields or {}
+    custom_fields.pop(safe_get(body, "actions", 0, "value"))
+    build_custom_field_menu(
+        body=body,
+        client=client,
+        logger=logger,
+        context=context,
+        region_record=region_record,
+        trigger_id=trigger_id,
+    )
+
+
+def handle_backblast_edit_button(
+    body: dict,
+    logger: Logger,
+    client: WebClient,
+    context: dict,
+    region_record: Region,
+):
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
+
+    backblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
+
+    user_info_dict = client.users_info(user=user_id)
+    user_admin: bool = user_info_dict["user"]["is_admin"]
+    allow_edit: bool = (
+        (region_record.editing_locked == 0)
+        or user_admin
+        or (user_id == backblast_data[actions.BACKBLAST_Q])
+        or (user_id in backblast_data[actions.BACKBLAST_COQ] or [])
+        or (user_id in backblast_data[actions.BACKBLAST_OP])
+    )
+
+    if allow_edit:
+        build_backblast_form(
+            body=body,
+            client=client,
+            logger=logger,
+            context=context,
+            region_record=region_record,
+        )
+    else:
+        client.chat_postEphemeral(
+            text="Editing this backblast is only allowed for the Q(s), the original poster, or your local Slack admins."
+            "Please contact one of them to make changes.",
+            channel=channel_id,
+            user=user_id,
+        )
