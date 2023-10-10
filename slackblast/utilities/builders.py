@@ -9,7 +9,6 @@ from utilities import constants
 from utilities.helper_functions import (
     get_channel_name,
     safe_get,
-    run_fuzzy_match,
     check_for_duplicate,
 )
 import copy
@@ -71,9 +70,7 @@ def build_backblast_form(
 
     if backblast_method == "edit":
         backblast_metadata = parent_metadata or (
-            safe_get(body, "container", "channel_id")
-            + "|"
-            + safe_get(body, "container", "message_ts")
+            safe_get(body, "container", "channel_id") + "|" + safe_get(body, "container", "message_ts")
         )
         backblast_form.delete_block(actions.BACKBLAST_EMAIL_SEND)
         backblast_form.delete_block(actions.BACKBLAST_DESTINATION)
@@ -95,9 +92,9 @@ def build_backblast_form(
         callback_id = actions.BACKBLAST_CALLBACK_ID
 
     if backblast_method == "create":
-        if region_record.default_destination or "" == constants.CONFIG_DESTINATION_CURRENT["value"]:
+        if (region_record.default_destination or "") == constants.CONFIG_DESTINATION_CURRENT["value"]:
             default_destination_id = channel_id
-        elif region_record.default_destination or "" == constants.CONFIG_DESTINATION_AO["value"]:
+        elif (region_record.default_destination or "") == constants.CONFIG_DESTINATION_AO["value"]:
             default_destination_id = "The_AO"
         else:
             default_destination_id = None
@@ -147,9 +144,7 @@ def build_config_form(
     if region_record:
         if region_record.email_password:
             fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
-            email_password_decrypted = fernet.decrypt(
-                region_record.email_password.encode()
-            ).decode()
+            email_password_decrypted = fernet.decrypt(region_record.email_password.encode()).decode()
         else:
             email_password_decrypted = "SamplePassword123!"
 
@@ -163,12 +158,8 @@ def build_config_form(
         config_form.set_initial_values(
             {
                 # actions.CONFIG_PAXMINER_DB: region_record.paxminer_schema,
-                actions.CONFIG_EMAIL_ENABLE: "enable"
-                if region_record.email_enabled == 1
-                else "disable",
-                actions.CONFIG_EMAIL_SHOW_OPTION: "yes"
-                if region_record.email_option_show == 1
-                else "no",
+                actions.CONFIG_EMAIL_ENABLE: "enable" if region_record.email_enabled == 1 else "disable",
+                actions.CONFIG_EMAIL_SHOW_OPTION: "yes" if region_record.email_option_show == 1 else "no",
                 actions.CONFIG_EMAIL_FROM: region_record.email_user or "example_sender@gmail.com",
                 actions.CONFIG_EMAIL_TO: region_record.email_to or "example_destination@gmail.com",
                 actions.CONFIG_EMAIL_SERVER: region_record.email_server or "smtp.gmail.com",
