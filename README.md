@@ -6,31 +6,206 @@
 
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
-Slackblast is a simple application you can get up and running in your Slack environment that will pop up a simple Backblast form for someone to fill out in the Slack App (mobile or desktop or web) when they type /slackblast. The advantage of slackblast is that it puts the backblast in a format that is compatible with [PAXminer](https://github.com/F3Nation-Community/PAXminer), which makes it easier to compile stats on users each month.
+Slackblast is an application that you integrate with your F3 region's Slack, compatible with mobile, desktop, and web. This way, anyone in your region can type `/slackblast` and hit send in a Slack channel, and a simple Backblast form pops up, as shown in the following figure. 
 
-When the user types the /slackblast command and hits send, a window like the one below will pop up:
+> [!TIP]
+> For a short tutorial on how to fill out a backblast, you can [share this video](https://www.loom.com/share/705b67bfd30f40ae902fae7a6c1a7421) with the Pax!
 
-![Screenshot](https://raw.githubusercontent.com/F3Nation-Community/slackblast/main/SlackBlast%20Modal.png)
+![Screenshot](img/SlackBlast-Modal.png)
 
-For a short tutorial on how to use the app, go to https://www.loom.com/share/705b67bfd30f40ae902fae7a6c1a7421
+## Background
 
-# Getting started
+From a technical perspective, Slackblast is a Python web application that utilizes the modal window inside Slack to make posting backblasts easier for PAX. The advantage of this Slackblast app is that it puts the backblast in a format that is compatible with [PAXminer](https://github.com/F3Nation-Community/PAXminer), which makes it easier to compile stats on users each month. The formatted backblast can also be emailed to automatically post to your region's website in WordPress.
 
-From a technical perspective, Slackblast is a Python web application that utilizes the modal window inside slack to make posting backblasts easier for PAX.
+The overall flow goes like this:
 
-Go to https://api.slack.com/start/overview#creating to read up on how to create a slack app. Click their `Create a Slack app` while signed into your F3 region's Slack. The main idea is that you will set up a slashcommand, e.g. `/slackblast` or `/backblast`, that will send the request to your server that is running this web application (we recommend using a free Azure App Service) that will respond with a command to tell Slack to open up a modal with the fields to fill out a backblast post. When the user hits submit on the modal, the information will be sent to your server where it will then format it and post to the designated Slack channel!
+1. You configure an app for Slackblast in Slack to set up the `/slackblast` command (or a similar name).
+2. You configure an app for Slackblast in a cloud server like Microsoft Azure.
+3. Pax enter the command `/slackblast` in a channel.
+4. The Slack app sends a request to the backend app that runs in your cloud server. 
+5. The backend cloud server app responds to tell Slack to open up a modal with the fields to fill out a backblast post. 
+6. Pax fill out the backblast and click submit.
+7. The information from the backblast form is sent back to the cloud server app. 
+8. The cloud server app formats the information in a style that is compatible with Paxminer.
+9. The cloud server app sends the information back to the Slack channel that the Pax entered the `/slackblast` command in.
 
-Bonus: the post will be in a format friendly for Paxminer to mine and gather stats.
+## Before you begin
 
-Bonus 2: the post can be emailed to automatically post to Wordpress
+As part of setting up Slackblast, you will need access to a few different accounts. Although this might seem super techy, you do not need to write any code. Pax who work in tech, like system admins or project managers, would be good people to ask if you need help.
 
-Go to https://azure.microsoft.com/en-us/services/app-service/ to create a Free Azure App Service to host this web application. The [VSCode Azure Extensions](https://code.visualstudio.com/docs/azure/extensions) will be helpful to upload your own .env file with your region's specific Slack and opinionated settings. See how to [integrate your Azure App Service with Github](https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/app-service/deploy-continuous-deployment.md) for easy deployments.
+* A [GitHub account](https://github.com/signup) to fork this repo. You will also want a tool to interact with GitHub from your local computer, such as GitHub Desktop and the `git` command line interface (CLI) for the terminal.
+* [VScode](https://code.visualstudio.com/) for local development, including enabling the [Azure extension](https://code.visualstudio.com/docs/azure/extensions).
+* A cloud account to host the Slackblast app on a server, such as [Microsoft Azure](https://portal.azure.com/). Note that the Azure account and the app service is free, but you will still need a credit card to sign up for it.
+* Admin access to your region's Slack account to create a Slackblast app. Particularly, [this backend Slack app site](https://api.slack.com/apps/) that you work with in your browser (not the mobile app you use for mumblechatter and other channels).
+* **Optional**: For local devleopment, the following CLI tools installed in your terminal:
+  * `git` [docs](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+  * `python3` [downloads](https://www.python.org/downloads/)
+  * `pip` [docs](https://pip.pypa.io/en/stable/installation/): Note that when you run `pip` commands, you might have to run them through python, such as `python3 -m pip` instead of just `pip`.
+  * `gunicorn` [docs](https://docs.gunicorn.org/en/stable/install.html)
+  * `ngrok` [docs](https://ngrok.com/download)
 
-When you finish setting up and installing the slackblast app in Slack, you will get a bot token also available under the OAuth & Permissions settings. You'll also get a verification token and signing secret on the Basic Information settings. You will plug that information into your own .env file. When you finish creating the Azure app, you will need to get the URL and add it (with `/slack/events` added to it) into three locations within the slackblast app settings. Lastly, you will need to add several Scopes to the Bot Token Scopes on the OAuth & Permissions settings. Read on for the nitty gritty details.
+## Step 1: Copy the Slackblast app in GitHub
 
-# All environment variables
+Get your own copy of the Slackblast app in GitHub. This way, you can add the custom settings you need to deploy the app to a cloud server in the next step.
 
-slackblast requires the following environment variables:
+1. [Fork](https://docs.github.com/en/get-started/quickstart/fork-a-repo) this repo in GitHub. Note that you might want to make a separate GitHub organization or use your personal account org for this repo, because you have to authorize your cloud app to it later. 
+
+2. [Clone](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) the fork to your local working environment so you can make changes to it.
+
+You'll come back to your clone of the app later when you deploy the app to the cloud.
+
+## Step 2: Set up a Slackblast app in Slack
+
+Set up the Slackblast app in Slack. For more help creating a Slack app, [see the Slack docs](https://api.slack.com/start/overview#creating). 
+
+1. Open the [Slack admin portal for apps](https://api.slack.com/apps/). 
+2. Click **Create an App**.
+3. Enter a name for the app, such as `Backblast`.
+4. Set up the scopes that the Slack app needs to post backblasts.
+   
+   1. From the **Features** section, click **OAuth & Permissions**.
+   2. Scroll down to the **Scopes** section.
+   3. In the **Bot Token Scopes** section, click **Add an OAuth Scope**.
+   4. Repeat the previous step for all of the following scopes.
+
+      ```
+      app_mentions:read
+      channels:read
+      chat:write
+      chat:write.public
+      commands
+      im:write
+      users:read
+      users:read.email
+      ```
+
+5. Get the basic information that you need to configure a cloud app.
+   
+   1. In the **Settings** section, click **Basic Information**.
+   2. Scroll to the **App Credentials** section, and copy the following values:
+      * Signing Secret
+      * Verification Token
+   3. Scroll to the **Display Information** section and configure your app details, such as uploading an icon.
+
+6. Install the app in your Slack workspace.
+   
+   1. In the **Settings** section, click **Install App**.
+   2. Click **Install to Workspace**. 
+   3. Review the app actions, which looks like the following figure, then click **Allow**.
+
+   ![Slack installation confirmation screen](img/slack-install-confirm.png)
+
+   1. Now that the app is installed, copy the **Bot User OAuth Token**, in a format such as `xoxb-12345...`
+
+7. Get the Slack channel ID that you want the backblasts to post to.
+   1. Open Slack in desktop or web (not mobile).
+   2. Go to the channel, such as `#1stf`.
+   3. Click the channel name to expand its details.
+   4. Scroll down and copy the **Channel ID**, such as `C0...` 
+
+The Slack app is not completely done yet, but you have enough information now to start configuring your cloud app.
+
+## Step 3: Set up a Slackblast app in a cloud server
+
+The following steps are for a free Azure app service. If your region has a different cloud provider, you can adapt these steps accordingly. For more information, see the **Resources** section later in this document.
+
+1. In [Azure](https://portal.azure.com/), go to **App Services**.
+2. Click **Create > Web App**.
+3. Fill out the **Basics**.
+   1. Subscription: You can use the default, such as `Azure subscription 1`.
+   2. Resource Group: If you don't have one, you can create one, such as the name of your region.
+   3. Name: Give the app a unique name, such as `your-region-backblast`.
+   4. Runtime stack: Select a Python 3 runtime.
+   5. Pricing plan: From the dropdown, find the `Free F1 (Shared infrastructure)` plan.
+   6. Click **Next**.
+4. Fill out the **Deployment**.
+   1. GitHub Actions settings: Toggle **Enable**.
+   2. GitHub account: Click **Authorize**. A pop-up opens to let you sign in to the GitHub account that you used to fork and clone the Slackblast code repo.
+   3. Still in the GitHub authorization pop-up, find the organization that your cloned the Slackblast code repo to and click **Grant**.
+   4. Click **Authorize AzureAppService**. You are returned back to the Azure > Create Web App > Deployment page.
+   5. Organization: Select the organization from the dropdown.
+   6. Repository: Select the repo that you forked.
+   7. Branch: You can leave this as `main`.
+5. Click **Review + create**.
+6. Review the details that you just filled out, then click **Create**.
+7. After the app finishes creating, click **Go to resource**.
+8. Copy the **Default domain**, such as `your-region-backblast.azurewebsites.net`
+
+## Step 4: Deploy the Slackblast code to your cloud app
+
+Now that you have a cloud app set up, deploy the Slackblast code from your forked GitHub repo.
+
+> [!IMPORTANT]  
+> The following steps only configure details for Slack. If you also want to use the cloud app for automatically posting to WordPress, see the **Environment Variables** section later in this doc.
+
+1. Follow this [Azure guide](https://learn.microsoft.com/en-us/azure/app-service/deploy-continuous-deployment?tabs=github) to set up automatic deployments from your GitHub repo to the cloud. Azure will create a `main\_<your-azure-appname>.yml` file in the `.github/workflows` folder of your GitHub repo. This file is hidden by default, and you should not need to worry about it. Whenever you make any change to your `main` branch in the GitHub repo, it will deploy the most recent code up to your cloud app.
+2. In your local clone of the GitHub repo, pull down the changes that Azure made in your repo, such as by running the following command from the directory in your terminal.
+   ```
+   git pull
+   ```
+3. Create an `.env` file in your local clone of the GitHub repo.
+4. Open the `.env` file, add the Slack values that you previously gathered, and save the file.
+   ```
+   SLACK_BOT_TOKEN=<xoxb-12345...>
+   SLACK_VERFICIATION_TOKEN=<pPB8...>
+   SLACK_SIGNING_SECRET=<f98...>
+   POST_TO_CHANNEL=true
+   CHANNEL=<C0...>
+   ```
+5. Sync the environment variables from your local file to your Azure app. You can do this by using the [Azure VScode extension](https://code.visualstudio.com/docs/azure/extensions), or [entering the variables into the web app manually](https://learn.microsoft.com/en-us/azure/app-service/configure-common?tabs=portal#configure-app-settings).
+   1. In VScode, click the **Azure** extension.
+   2. Expand the **APP SERVICE** menu option.
+   3. Expand your Azure subscription, and then your app name, such as `Azure subscription 1 > carpex-backblast` in the following example.
+   4. Right-click `Application Settings`, then click **Upload Local Settings**.
+   5. In the command pallet at the top of your VScode window, click the `.env` file that you just created. If you do not see the correct filepath, click **Browse** and find your file.
+   
+   ![Azure sync env var](img/azure-sync-env.png)
+
+## Step 5: Configure the Slack app
+
+Now that you have your cloud app deployed, return to your Slack app to finish configuring the Slack app.
+
+1. Open the [Slack admin portal for apps](https://api.slack.com/apps/).
+2. Click your Slackblast app.
+3. Set up the slash command to trigger the backblast form.
+   
+   1. From the **Features** section, click **Slash Commands**.
+   2. **Command**: Enter the name you want Pax to use to launch the app, such as `/slackblast` or `/backblast`.
+   3. **Request URL**: Enter the URL of your cloud app in the following format.
+      ```
+      https://your-region-backblast.azurewebsites.net/slack/events
+      ```
+   4. **Short Description**: Brief description of the app, such as `Fill out the backblast form`.
+   5. Click **Save**.
+
+4. Set up interactivity so that the cloud app can collect data from the backblast form.
+   
+   1. From the **Features** section, click **Interactivity & Shortcuts**.
+   2. Toggle on **Interactivity**.
+   3. **Request URL**: Enter the URL of your cloud app in the following format.
+      ```
+      https://your-region-backblast.azurewebsites.net/slack/events
+      ```
+   4. Scroll down to the **Select Menus** section.
+   5. **Options Load URL**: Enter the URL of your cloud app again in the following format.
+      ```
+      https://your-region-backblast.azurewebsites.net/slack/events
+      ```
+   6. Click **Save Changes**.
+
+Now, the Slack app is configured to send data to your cloud app.
+
+## Step 6: Try it out
+
+You're almost done! Now that everything is set up, you can test out that the command works.
+
+1. Open Slack and go to a channel like `#1stf`.
+2. Enter your `/slackblast` command.
+3. Fill out the backblast form.
+
+## Environment variables
+
+Slackblast requires the following environment variables:
 
 | Variable                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -48,70 +223,22 @@ slackblast requires the following environment variables:
 
 <br><br>
 
-# Slack App Configuration
-
-The url for your deployed app needs to be placed in three locations in the slackblast app in Slack:
-
-1. Interactivity and Shortcuts
-   - Request URL
-   - Options Load URL
-2. Slash Commands
-   - Request URL
-
-**Format of the URL to be used**
-
-```
-https://<YOUR-AZURE-APP-NAME>/slack/events
-```
-
-**Scopes**
-
-```
-app_mentions:read
-channels:read
-chat:write
-chat:write.public
-commands
-im:write
-users:read
-users:read.email
-```
-
-<br>
-
-# Email
+## Email for WordPress
 
 All of the email user and password variables will need to be set in order to send an email with the modal contents to the address specified.
 
-## Create Posts by email
+## Create WordPress posts by email
 
-Wordpress allows you to send a post to a special address via email and it will convert it to a post.
+WordPress allows you to send a post to a special address via email and it will convert it to a post.
 
 If you are using hosted wordpress set the `EMAIL_TO` address to the random Wordpress email generated by Wordpress, [more information](<https://wordpress.com/support/post-by-email/#:~:text=Go%20to%20My%20Site(s,posts%20by%20sending%20an%20email%E2%80%9D)>).
 
 If you are not using hosted wordpress, then you can create a dedicated gmail or other account and use this address.
 
-See .env-f3nation-community file for help on local development.
+See `.env-f3nation-community` file for help on local development.
 <br><br>
 
-# Deployment
-
-Go to Azure App Services > Deployment Center and set up an integration with your Github repo where you forked this repo and have the Slackblast code. Azure will create a main\_<your-azure-appname>.yml file under .github/workflows folder, but it should be hidden by default and you should not need to worry about it. Whenever you make any change to your `main` branch, it will deploy the most recent code.
-
-Here is further reading if you want to know what is going on under the hood.
-
-- Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-- More GitHub Actions for Azure: https://github.com/Azure/actions
-- More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
-
-# Notes
-
-Use vscode locally with a `.env` file with the above variables. With vscode Azure extension, you can right-click on 'Application Settings' and it will upload your `.env` variables right into the AppService.
-
-Pushing to the github repo should trigger a new deployment to Azure if you set up the AppService correct.
-<br><br>
-
-# Startup command(s)
+# Local development
 
 To run locally:
 
@@ -128,6 +255,19 @@ ngrok http 8000
 
 See .env-f3nation-community file for more details on local development
 <br><br>
+
+## More resources
+
+Azure
+* [Azure App Service product page](https://azure.microsoft.com/en-us/services/app-service/).
+* [VSCode Azure Extensions](https://code.visualstudio.com/docs/azure/extensions) will be helpful to upload your own `.env` file with your region's specific Slack and opinionated settings. 
+* See how to [integrate your Azure App Service with Github](https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/app-service/deploy-continuous-deployment.md) for easy deployments.
+
+Here is further reading if you want to know what is going on under the hood.
+
+- [Docs for the Azure Web Apps Deploy action](https://github.com/Azure/webapps-deploy)
+- [More GitHub Actions for Azure](https://github.com/Azure/actions)
+- [More info on Python, GitHub Actions, and Azure App Service](https://aka.ms/python-webapps-actions)
 
 # Contributors ✨
 
