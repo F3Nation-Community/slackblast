@@ -153,9 +153,9 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
         callback_id = actions.BACKBLAST_CALLBACK_ID
 
     if backblast_method == "create":
-        if region_record.default_destination or "" == constants.CONFIG_DESTINATION_CURRENT["value"]:
+        if (region_record.default_destination or "") == constants.CONFIG_DESTINATION_CURRENT["value"]:
             default_destination_id = channel_id
-        elif region_record.default_destination or "" == constants.CONFIG_DESTINATION_AO["value"]:
+        elif (region_record.default_destination or "") == constants.CONFIG_DESTINATION_AO["value"]:
             default_destination_id = "The_AO"
         else:
             default_destination_id = None
