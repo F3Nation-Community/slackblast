@@ -332,12 +332,12 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
             User, filters=[User.user_id == user_id, User.team_id == team_id]
         )
 
-        # TODO: only allow strava connection if user is on PAX, Q, or CO-Q list
         if len(user_records) == 0:
             title_text = "Connect Strava"
+            redirect_stage = "" if constants.LOCAL_DEVELOPMENT else "Prod/"
             oauth = OAuth2Session(
                 client_id=os.environ[constants.STRAVA_CLIENT_ID],
-                redirect_uri=f"https://{lambda_function_host}/exchange_token",
+                redirect_uri=f"https://{lambda_function_host}/{redirect_stage}exchange_token",
                 scope=["read,activity:read,activity:write"],
                 state=f"{team_id}-{user_id}",
             )
