@@ -215,16 +215,16 @@ CONFIG_FORM = orm.BlockView(
         #     optional=False,
         #     element=orm.PlainTextInputElement(initial_value="OtherDBName"),
         # ),
-        orm.InputBlock(
-            label="Enable Strava Integration?",
-            action=actions.CONFIG_ENABLE_STRAVA,
-            optional=False,
-            element=orm.RadioButtonsElement(
-                initial_value="no",
-                options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
-            ),
-        ),
-        orm.DividerBlock(),
+        # orm.InputBlock(
+        #     label="Enable Strava Integration?",
+        #     action=actions.CONFIG_ENABLE_STRAVA,
+        #     optional=False,
+        #     element=orm.RadioButtonsElement(
+        #         initial_value="no",
+        #         options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
+        #     ),
+        # ),
+        # orm.DividerBlock(),
         orm.ActionsBlock(
             elements=[
                 orm.ButtonElement(
