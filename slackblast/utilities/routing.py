@@ -37,10 +37,17 @@ ACTION_MAPPER = {
     actions.CONFIG_CUSTOM_FIELDS: builders.build_custom_field_menu,
     actions.CUSTOM_FIELD_ADD: builders.build_custom_field_add_edit,
     actions.CUSTOM_FIELD_EDIT: builders.build_custom_field_add_edit,
-    actions.CUSTOM_FIELD_DELETE: builders.build_custom_field_delete,
+    actions.CUSTOM_FIELD_DELETE: builders.delete_custom_field,
 }
 
 VIEW_CLOSED_MAPPER = {
-    "custom_field_add_id": None,
+    actions.CUSTOM_FIELD_ADD_FORM: builders.ignore_event,
     actions.STRAVA_MODIFY_CALLBACK_ID: strava.handle_strava_modify,
+}
+
+MAIN_MAPPER = {
+    "command": COMMAND_MAPPER,
+    "block_actions": ACTION_MAPPER,
+    "view_submission": VIEW_MAPPER,
+    "view_closed": VIEW_CLOSED_MAPPER,
 }

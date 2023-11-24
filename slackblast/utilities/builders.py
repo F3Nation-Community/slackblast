@@ -45,26 +45,11 @@ def add_custom_field_blocks(form: slack_orm.BlockView, region_record: Region) ->
     return output_form
 
 
-def build_backblast_form(
-    # user_id: str,
-    # channel_id: str,
-    # channel_name: str,
-    body: dict,
-    client: WebClient,
-    logger: Logger,
-    context: dict,
-    region_record: Region,
-    # backblast_method: str,
-    trigger_id: str = None,
-    # initial_backblast_data: dict = None,
-    # currently_duplicate: bool = False,
-    # update_view_id: str = None,
-    # duplicate_check: bool = False,
-    # parent_metadata: dict = {},
-):
+def build_backblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
     channel_name = safe_get(body, "channel_name") or safe_get(body, "channel", "name")
+    trigger_id = safe_get(body, "trigger_id")
 
     for block in safe_get(body, "view", "blocks") or []:
         if not channel_id and block["block_id"] == actions.BACKBLAST_DESTINATION:
@@ -74,7 +59,7 @@ def build_backblast_form(
     if (
         (safe_get(body, "command") in ["/backblast", "/slackblast"])
         or (safe_get(body, "actions", 0, "action_id") == actions.BACKBLAST_NEW_BUTTON)
-        and (safe_get(body, "view", "callback_id") != actions.BACKBLAST_EDIT_CALLBACK_ID)
+        or (safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID)
     ):
         backblast_method = "create"
         update_view_id = None
@@ -86,19 +71,24 @@ def build_backblast_form(
         duplicate_check = safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID
         parent_metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
 
-    if safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID:
+    if safe_get(body, "actions", 0, "action_id") in [
+        actions.BACKBLAST_AO,
+        actions.BACKBLAST_DATE,
+        actions.BACKBLAST_Q,
+    ]:
+        logger.debug("running duplicate check")
+        duplicate_check = True
+        update_view_id = safe_get(body, "view", "id") or safe_get(body, "container", "view_id")
+        initial_backblast_data = forms.BACKBLAST_FORM.get_selected_values(body)
+    elif (safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID) or (
+        safe_get(body, "actions", 0, "action_id") == actions.BACKBLAST_EDIT_BUTTON
+    ):
         initial_backblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
         if not safe_get(initial_backblast_data, actions.BACKBLAST_MOLESKIN):
             initial_backblast_data[actions.BACKBLAST_MOLESKIN] = safe_get(body, "message", "blocks", 1, "text", "text")
             initial_backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
                 initial_backblast_data[actions.BACKBLAST_MOLESKIN], client, logger, region_record
             )
-    elif safe_get(body, "actions", 0, "action_id") in [
-        actions.BACKBLAST_AO,
-        actions.BACKBLAST_DATE,
-        actions.BACKBLAST_Q,
-    ]:
-        initial_backblast_data = forms.BACKBLAST_FORM.get_selected_values(body)
     else:
         initial_backblast_data = None
 
@@ -129,6 +119,8 @@ def build_backblast_form(
 
     backblast_form = add_custom_field_blocks(backblast_form, region_record)
 
+    logger.debug("is_duplicate is {}".format(is_duplicate))
+    logger.debug("backblast_form is {}".format(backblast_form.blocks))
     if not is_duplicate:
         backblast_form.delete_block(actions.BACKBLAST_DUPLICATE_WARNING)
 
@@ -200,14 +192,8 @@ def build_backblast_form(
         )
 
 
-def build_config_form(
-    body: dict,
-    client: WebClient,
-    logger: Logger,
-    context: dict,
-    region_record: Region,
-    trigger_id: str = None,
-):
+def build_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    trigger_id = safe_get(body, "trigger_id")
     if safe_get(body, "command") == "/config-slackblast":
         initial_config_data = None
         update_view_id = None
@@ -288,27 +274,14 @@ def build_config_form(
         )
 
 
-def ignore_event(
-    body: dict,
-    logger: Logger,
-    client: WebClient,
-    context: dict,
-    region_record: Region,
-    trigger_id: str = None,
-):
+def ignore_event(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     logger.debug("Ignoring event")
 
 
-def build_preblast_form(
-    body: dict,
-    client: WebClient,
-    logger: Logger,
-    context: dict,
-    region_record: Region,
-    trigger_id: str,
-):
+def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
+    trigger_id = safe_get(body, "trigger_id")
 
     preblast_form = copy.deepcopy(forms.PREBLAST_FORM)
     preblast_form.set_options(
@@ -336,107 +309,102 @@ def build_preblast_form(
     )
 
 
-def build_strava_form(
-    # team_id: str,
-    # user_id: str,
-    body: dict,
-    client: WebClient,
-    logger: Logger,
-    context: dict,
-    region_record: Region,
-    # trigger_id: str,
-    # channel_id: str,
-    # logger: Logger,
-    # lambda_function_host: str,
-):
+def build_strava_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
     trigger_id = safe_get(body, "trigger_id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
     lambda_function_host = safe_get(context, "lambda_request", "headers", "Host")
 
-    user_records: List[User] = DbManager.find_records(User, filters=[User.user_id == user_id, User.team_id == team_id])
-
     backblast_ts = body["message"]["ts"]
     backblast_meta = json.loads(body["message"]["blocks"][-1]["elements"][0]["value"])
     moleskine_text = body["message"]["blocks"][1]["text"]["text"]
 
-    if len(user_records) == 0:
-        title_text = "Connect Strava"
-        oauth = OAuth2Session(
-            client_id=os.environ[constants.STRAVA_CLIENT_ID],
-            redirect_uri=f"https://{lambda_function_host}/exchange_token",
-            scope=["read,activity:read,activity:write"],
-            state=f"{team_id}-{user_id}",
-        )
-        authorization_url, state = oauth.authorization_url("https://www.strava.com/oauth/authorize")
-        strava_blocks = [
-            slack_orm.ActionsBlock(
-                elements=[
-                    slack_orm.ButtonElement(
-                        label="Connect Strava Account",
-                        action=actions.STRAVA_CONNECT_BUTTON,
-                        url=authorization_url,
-                    )
-                ]
-            ),
-            slack_orm.ContextBlock(
-                element=slack_orm.ContextElement(
-                    initial_value="Opens in a new window",
-                ),
-                action="context",
-            ),
-        ]
-    else:
-        title_text = "Choose Activity"
-        user_record = user_records[0]
-        strava_recent_activities = strava.get_strava_activities(user_record)
-
-        button_elements = []
-        for activity in strava_recent_activities:
-            date = datetime.strptime(activity["start_date_local"], "%Y-%m-%dT%H:%M:%SZ")
-            date_fmt = date.strftime("%m-%d %H:%M")
-            button_elements.append(
-                slack_orm.ButtonElement(
-                    label=f"{date_fmt} - {activity['name']}",
-                    action="-".join([actions.STRAVA_ACTIVITY_BUTTON, str(activity["id"])]),
-                    value="|".join(
-                        [
-                            str(activity["id"]),
-                            channel_id,
-                            backblast_ts,
-                            backblast_meta["title"],
-                            moleskine_text[:2000],
-                        ]
-                    ),
-                    # TODO: add confirmation modal
-                )
-            )
-            strava_blocks = [slack_orm.ActionsBlock(elements=button_elements)]
-
-    strava_form = slack_orm.BlockView(blocks=strava_blocks)
-
-    strava_form.post_modal(
-        client=client,
-        trigger_id=trigger_id,
-        callback_id=actions.STRAVA_CALLBACK_ID,
-        title_text=title_text,
-        submit_button_text="None",
+    allow_strava: bool = (
+        (user_id == backblast_meta[actions.BACKBLAST_Q])
+        or (user_id in backblast_meta[actions.BACKBLAST_COQ] or [])
+        or (user_id in backblast_meta[actions.BACKBLAST_PAX])
+        or (user_id in backblast_meta[actions.BACKBLAST_OP])
     )
 
+    if allow_strava:
+        user_records: List[User] = DbManager.find_records(
+            User, filters=[User.user_id == user_id, User.team_id == team_id]
+        )
 
-def build_strava_modify_form(
-    body: dict,
-    client: WebClient,
-    logger: Logger,
-    context: dict,
-    region_record: Region,
-    trigger_id: str,
-    # backblast_title: str,
-    # backblast_moleskine: str,
-    # backblast_metadata: dict,
-    # view_id: str,
-):
+        # TODO: only allow strava connection if user is on PAX, Q, or CO-Q list
+        if len(user_records) == 0:
+            title_text = "Connect Strava"
+            oauth = OAuth2Session(
+                client_id=os.environ[constants.STRAVA_CLIENT_ID],
+                redirect_uri=f"https://{lambda_function_host}/exchange_token",
+                scope=["read,activity:read,activity:write"],
+                state=f"{team_id}-{user_id}",
+            )
+            authorization_url, state = oauth.authorization_url("https://www.strava.com/oauth/authorize")
+            strava_blocks = [
+                slack_orm.ActionsBlock(
+                    elements=[
+                        slack_orm.ButtonElement(
+                            label="Connect Strava Account",
+                            action=actions.STRAVA_CONNECT_BUTTON,
+                            url=authorization_url,
+                        )
+                    ]
+                ),
+                slack_orm.ContextBlock(
+                    element=slack_orm.ContextElement(
+                        initial_value="Opens in a new window",
+                    ),
+                    action="context",
+                ),
+            ]
+        else:
+            title_text = "Choose Activity"
+            user_record = user_records[0]
+            strava_recent_activities = strava.get_strava_activities(user_record)
+
+            button_elements = []
+            for activity in strava_recent_activities:
+                date = datetime.strptime(activity["start_date_local"], "%Y-%m-%dT%H:%M:%SZ")
+                date_fmt = date.strftime("%m-%d %H:%M")
+                button_elements.append(
+                    slack_orm.ButtonElement(
+                        label=f"{date_fmt} - {activity['name']}",
+                        action="-".join([actions.STRAVA_ACTIVITY_BUTTON, str(activity["id"])]),
+                        value="|".join(
+                            [
+                                str(activity["id"]),
+                                channel_id,
+                                backblast_ts,
+                                backblast_meta["title"],
+                                moleskine_text[:2000],
+                            ]
+                        ),
+                        # TODO: add confirmation modal
+                    )
+                )
+                strava_blocks = [slack_orm.ActionsBlock(elements=button_elements)]
+
+        strava_form = slack_orm.BlockView(blocks=strava_blocks)
+
+        strava_form.post_modal(
+            client=client,
+            trigger_id=trigger_id,
+            callback_id=actions.STRAVA_CALLBACK_ID,
+            title_text=title_text,
+            submit_button_text="None",
+        )
+    else:
+        client.chat_postEphemeral(
+            text="Connecting Strava to this Slackblast is only allowed for the tagged PAX."
+            "Please contact one of them to make changes.",
+            channel=channel_id,
+            user=user_id,
+        )
+
+
+def build_strava_modify_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     strava_activity_id, channel_id, backblast_ts, backblast_title, backblast_moleskine = body["actions"][0][
         "value"
     ].split("|")
@@ -468,13 +436,7 @@ def build_strava_modify_form(
 
 
 def build_custom_field_menu(
-    body: dict,
-    client: WebClient,
-    logger: Logger,
-    context: dict,
-    region_record: Region,
-    trigger_id: str = None,
-    # update_view_id: str = None,
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region, update_view_id: str = None
 ) -> None:
     """Iterates through the custom fields and builds a menu to enable/disable and add/edit/delete them.
 
@@ -484,6 +446,7 @@ def build_custom_field_menu(
         trigger_id (str): The event's trigger id
         callback_id (str): The event's callback id
     """
+    trigger_id = safe_get(body, "trigger_id")
     if safe_get(body, "actions", 0, "action_id") == actions.CONFIG_CUSTOM_FIELDS:
         update_view_id = None
     else:
@@ -572,13 +535,7 @@ def build_custom_field_menu(
 
 
 def build_custom_field_add_edit(
-    body: dict,
-    client: WebClient,
-    logger: Logger,
-    context: dict,
-    region_record: Region,
-    trigger_id: str,
-    # custom_field_name: str = None,
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region
 ) -> None:
     """Builds a form to add or edit a custom field.
 
@@ -589,7 +546,7 @@ def build_custom_field_add_edit(
         callback_id (str): The event's callback id
         custom_field_name (str): The name of the custom field to edit
     """
-
+    trigger_id = safe_get(body, "trigger_id")
     if safe_get(body, "actions", 0, "action_id") == actions.CUSTOM_FIELD_EDIT:
         custom_field_name = safe_get(body, "actions", 0, "value")
     else:
@@ -643,13 +600,7 @@ def handle_custom_field_delete(
     )
 
 
-def handle_backblast_edit_button(
-    body: dict,
-    logger: Logger,
-    client: WebClient,
-    context: dict,
-    region_record: Region,
-):
+def handle_backblast_edit_button(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
 
@@ -680,3 +631,14 @@ def handle_backblast_edit_button(
             channel=channel_id,
             user=user_id,
         )
+
+
+def delete_custom_field(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    custom_field_name = safe_get(body, "actions", 0, "value")
+    team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
+    view_id = safe_get(body, "container", "view_id")
+
+    custom_fields: dict = region_record.custom_fields
+    custom_fields.pop(custom_field_name)
+    DbManager.update_record(cls=Region, id=team_id, fields={"custom_fields": custom_fields})
+    build_custom_field_menu(body, client, logger, context, region_record, update_view_id=view_id)

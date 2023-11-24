@@ -3,9 +3,10 @@ import pickle
 from utilities import constants
 from utilities.database.orm import PaxminerAO, PaxminerUser, Region, Backblast, Attendance
 from utilities.database import DbManager
+from utilities.slack import actions
 from datetime import datetime
 from utilities.constants import LOCAL_DEVELOPMENT
-from typing import List
+from typing import List, Tuple
 from fuzzywuzzy import fuzz
 from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
 from slack_bolt.oauth.oauth_settings import OAuthSettings
@@ -188,6 +189,7 @@ def check_for_duplicate(
     og_ts: str = None,
 ) -> bool:
     """Check if there is already a backblast for this AO and Q on this date"""
+    logger.debug(f"Checking for duplicate backblast for {q} at {ao} on {date}")
     if region_record.paxminer_schema:
         backblast_dups = DbManager.find_records(
             cls=Backblast,
@@ -271,7 +273,7 @@ def replace_slack_user_ids(text: str, client, logger, region_record: Region = No
     if region_record.paxminer_schema:
         user_records = DbManager.find_records(PaxminerUser, filters=[True], schema=region_record.paxminer_schema)
 
-    slack_user_ids = re.findall(r"<@([A-Z0-9]+)>", text)
+    slack_user_ids = re.findall(r"<@([A-Z0-9]+)>", text or "")
     slack_user_names = get_user_names(slack_user_ids, logger, client, return_urls=False, user_records=user_records)
 
     slack_user_ids = [f"<@{user_id}>" for user_id in slack_user_ids]
@@ -306,3 +308,23 @@ def get_region_record(team_id: str, body, context, client, logger) -> Region:
         )
 
     return region_record
+
+
+def get_request_type(body: dict) -> Tuple[str]:
+    request_type = safe_get(body, "type")
+    if request_type == "event_callback":
+        return ("event_callback", safe_get(body, "event", "type"))
+    elif request_type == "block_actions":
+        block_action = safe_get(body, "actions", 0, "action_id")
+        if block_action[: len(actions.STRAVA_ACTIVITY_BUTTON)] == actions.STRAVA_ACTIVITY_BUTTON:
+            return ("block_actions", actions.STRAVA_ACTIVITY_BUTTON)
+        else:
+            return ("block_actions", block_action)
+    elif request_type == "view_submission":
+        return ("view_submission", safe_get(body, "view", "callback_id"))
+    elif not request_type and "command" in body:
+        return ("command", safe_get(body, "command"))
+    elif request_type == "view_closed":
+        return ("view_closed", safe_get(body, "view", "callback_id"))
+    else:
+        return ("unknown", "unknown")

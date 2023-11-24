@@ -2,9 +2,9 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Slackblast is a simple application you can get up and running in your Slack environment that will pop up a simple Backblast form for someone to fill out in the Slack App (mobile or desktop or web) when they type `/slackblast`, `/backblast`, or even `/preblast`. Slackblast interfaces with your PAXminer database directly, and its posts do not need to be scraped by PAXminer (PAXminer will ignore them).
+Slackblast is a simple application you can get up and running in your Slack environment that will pop up a simple Backblast form for someone to fill out in the Slack App (mobile or desktop or web) when they type `/slackblast`, `/backblast`, or `/preblast`. Slackblast interfaces with your PAXminer database directly, and its posts do not need to be scraped by PAXminer (PAXminer will ignore them).
 
-This is my fork and revamp of the [original Slackblast](https://github.com/F3Nation-Community/slackblast) made by the awesome HIMs from that project. This version can serve any number of regions and runs on AWS Lambda - installation is as simple as a [simple link click](#getting-started-), without the need for you to get your own server up and running.
+Slackblast can serve any number of regions and runs on AWS Lambda - installation is as simple as a [simple link click](#getting-started-), without the need for you to get your own server up and running.
 
 When the user types `/slackblast`, `/backblast`, or `/preblast` and hits send, a window like the one below will pop up:
 
@@ -12,20 +12,41 @@ When the user types `/slackblast`, `/backblast`, or `/preblast` and hits send, a
 
 # Getting started
 
-Installation to your Slack Space is simple:
+Installation to your Slack Space is simple. For best results, please make sure you have a working install of PAXMiner in your region.
 1. Click [this link](https://n1tbdh3ak9.execute-api.us-east-2.amazonaws.com/Prod/slack/install) from a desktop computer
 2. Make sure to select your region in the upper right if you are signed into multiple spaces
-3. To change email settings (and more to come!), you will need to run `/config-slackblast` and select your region's PAXminer database so Slackblast knows which region to write to
 
 To use, simply type `/slackblast`, `/backblast` or `/preblast` from any channel and a form should come up.
                                                                          
-# Slack App Configuration (email)
+# Slack App Configuration
 
-If you'd like to enable Slackblast for sending an email containing your backblast, type `/config-slackblast` to change your region's email settings and defaults. Follow the instructions on the form that follows.
+Slackblast has a number of region-configurable settings. To access and set these, use the `/config-slackblast` command.
+
+## Strava Integration
+
+When enabled, slackblast will put a "Connect to Strava" button on the post, which tagged users can use to connect the slackblast to an existing Strava activity. When clicked, the following process is used:
+- If the user has not used this button before, they will be prompted to allow Slackblast access to their Strava account
+- Otherwise, a list of recent Strava activities will be shown to the user, which they select
+- On the next screen, the user can modify the title / text of the Strava activity, which defaults to the title / moleskine of the Slackblast post
+- After closing / submitting, Slackblast will make a callout in the post thread, recording how far the PAX traveled and how many calories they burned
+
+## Custom Fields
+
+Slackblast now allows regions to add fields to backblasts for other things they might want to track. For example, you could track the distance traveled, calories burned, or the category of F3 activity the post is for. This information will be stored in JSON format alongside the backblast, which can later be queried with MySQL's JSON functions (https://dev.mysql.com/doc/refman/8.0/en/json.html). I'll provide some examples / tutorials soon.
+
+To get started, click the Enable / Edit Custom Fields button in `/config-slackblast`. This will bring up a secondary menu where you can add / delete / edit / enable new fields. Once added and enabled, Custom Fields will be added to the bottom of your Slackblast forms.
 
 ## Create Posts by email
 
-Wordpress allows you to send a post to a special address via email and it will convert it to a post. If you are not using hosted wordpress, then you can create a dedicated gmail or other account and use this address.
+Wordpress allows you to send a post to a special address via email and it will convert it to a post. If you are not using hosted wordpress, then you can create a dedicated gmail or other account and use this address. The `/config-slackblast` menu allows you to set a email server, port, address, and password to the email account you would like the email to come from (gmail is probably best), as well as the email-to-post address you would like it to go to. For those using Postie, you can also enable a format so that users are tagged and the AO is used as a category.
+
+## Lock Editing of Backblasts
+
+If enabled, this will lock down editing of backblasts to the Q / Co-Qs, the original poster, or Slack admins.
+
+## Moleskine Templates
+
+These templates will serve as the default when your users start a new backblast or preblast.
 
 # Contributing
 

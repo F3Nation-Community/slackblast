@@ -1,6 +1,6 @@
 import copy
 import json
-import logging
+from logging import Logger
 import os
 from utilities import constants, sendmail, builders
 from utilities.helper_functions import (
@@ -18,12 +18,13 @@ from cryptography.fernet import Fernet
 from slack_sdk.web import WebClient
 
 
-def handle_backblast_post(body: dict, logger: logging.Logger, client: WebClient, context: dict, region_record: Region):
+def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     create_or_edit = "create" if safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID else "edit"
 
     backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
     backblast_form = builders.add_custom_field_blocks(backblast_form, region_record)
-    backblast_data: dict = forms.BACKBLAST_FORM.get_selected_values(body)
+    backblast_data: dict = backblast_form.get_selected_values(body)
+    logger.debug(f"Backblast data: {backblast_data}")
 
     title = safe_get(backblast_data, actions.BACKBLAST_TITLE)
     the_date = safe_get(backblast_data, actions.BACKBLAST_DATE)
@@ -105,6 +106,12 @@ def handle_backblast_post(body: dict, logger: logging.Logger, client: WebClient,
 *PAX*: {pax_formatted}
 *FNGs*: {fngs_formatted}
 *COUNT*: {count}"""
+
+    custom_fields = {}
+    for field, value in backblast_data.items():
+        if (field[: len(actions.CUSTOM_FIELD_PREFIX)] == actions.CUSTOM_FIELD_PREFIX) and value:
+            post_msg += f"\n*{field[len(actions.CUSTOM_FIELD_PREFIX):]}*: {str(value)}"
+            custom_fields[field[len(actions.CUSTOM_FIELD_PREFIX) :]] = value
 
     msg_block = {
         "type": "section",
@@ -266,6 +273,7 @@ COUNT: {count}
                     backblast=f"{post_msg}\n{moleskin_formatted}".replace("*", ""),
                     fngs=fngs_formatted if fngs else "None listed",
                     fng_count=fng_count,
+                    json=custom_fields,
                 ),
             )
 
@@ -311,7 +319,7 @@ COUNT: {count}
             print(json.dumps({"event_type": "failed_db_insert", "team_name": region_record.workspace_name}))
 
 
-def handle_preblast_post(body: dict, logger: logging.Logger, client: WebClient, context: dict, region_record: Region):
+def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     preblast_data = forms.PREBLAST_FORM.get_selected_values(body)
 
     title = safe_get(preblast_data, actions.PREBLAST_TITLE)
@@ -359,7 +367,7 @@ def handle_preblast_post(body: dict, logger: logging.Logger, client: WebClient, 
     print(json.dumps({"event_type": "successful_preblast_post", "team_name": region_record.workspace_name}))
 
 
-def handle_config_post(body: dict, logger: logging.Logger, client: WebClient, context: dict, region_record: Region):
+def handle_config_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     config_data = forms.CONFIG_FORM.get_selected_values(body)
 
     fields = {
@@ -400,13 +408,7 @@ def handle_config_post(body: dict, logger: logging.Logger, client: WebClient, co
     print(json.dumps({"event_type": "successful_config_update", "team_name": region_record.workspace_name}))
 
 
-def handle_custom_field_add(
-    body: dict,
-    logger: logging.Logger,
-    client: WebClient,
-    context: dict,
-    region_record: Region,
-):
+def handle_custom_field_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     config_data = forms.CUSTOM_FIELD_ADD_EDIT_FORM.get_selected_values(body)
 
     custom_field_name = safe_get(config_data, actions.CUSTOM_FIELD_ADD_NAME)
@@ -437,20 +439,14 @@ def handle_custom_field_add(
     builders.build_custom_field_menu(client, region_record, trigger_id, update_view_id=previous_view_id)
 
 
-def handle_custom_field_menu(
-    body: dict,
-    logger: logging.Logger,
-    client: WebClient,
-    context: dict,
-    region_record: Region,
-):
+def handle_custom_field_menu(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     custom_fields = region_record.custom_fields or {}
 
     selected_values: dict = safe_get(body, "view", "state", "values")
 
     for key, value in selected_values.items():
         if key[: len(actions.CUSTOM_FIELD_ENABLE)] == actions.CUSTOM_FIELD_ENABLE:
-            custom_fields[key[len(actions.CUSTOM_FIELD_ENABLE) + 1 :]]["enabled"] = (
+            custom_fields[key[len(actions.CUSTOM_FIELD_ENABLE) :]]["enabled"] = (
                 value[key]["selected_option"]["value"] == "enable"
             )
 

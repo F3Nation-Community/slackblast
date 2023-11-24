@@ -216,6 +216,25 @@ CONFIG_FORM = orm.BlockView(
         #     element=orm.PlainTextInputElement(initial_value="OtherDBName"),
         # ),
         orm.InputBlock(
+            label="Enable Strava Integration?",
+            action=actions.CONFIG_ENABLE_STRAVA,
+            optional=False,
+            element=orm.RadioButtonsElement(
+                initial_value="no",
+                options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
+            ),
+        ),
+        orm.DividerBlock(),
+        orm.ActionsBlock(
+            elements=[
+                orm.ButtonElement(
+                    label="Enable / Edit Custom Fields",
+                    action=actions.CONFIG_CUSTOM_FIELDS,
+                ),
+            ],
+        ),
+        orm.DividerBlock(),
+        orm.InputBlock(
             label="Slackblast Email",
             action=actions.CONFIG_EMAIL_ENABLE,
             optional=False,
@@ -288,6 +307,7 @@ CONFIG_FORM = orm.BlockView(
                 "as tags.",
             ),
         ),
+        orm.DividerBlock(),
         orm.InputBlock(
             label="Lock editing of backblasts?",
             action=actions.CONFIG_EDITING_LOCKED,
@@ -297,6 +317,7 @@ CONFIG_FORM = orm.BlockView(
                 options=orm.as_selector_options(names=["Yes", "No"], values=["yes", "no"]),
             ),
         ),
+        orm.DividerBlock(),
         orm.InputBlock(
             label="Default Slack channel desination for backblasts",
             action=actions.CONFIG_DEFAULT_DESTINATION,
@@ -315,6 +336,7 @@ CONFIG_FORM = orm.BlockView(
                 ),
             ),
         ),
+        orm.DividerBlock(),
         orm.InputBlock(
             label="Backblast Moleskine Template / Starter",
             action=actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE,
@@ -334,23 +356,6 @@ CONFIG_FORM = orm.BlockView(
                 max_length=3000,
                 multiline=True,
             ),
-        ),
-        orm.InputBlock(
-            label="Enable Strava Integration?",
-            action=actions.CONFIG_ENABLE_STRAVA,
-            optional=False,
-            element=orm.RadioButtonsElement(
-                initial_value="no",
-                options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
-            ),
-        ),
-        orm.ActionsBlock(
-            elements=[
-                orm.ButtonElement(
-                    label="Custom Fields",
-                    action=actions.CONFIG_CUSTOM_FIELDS,
-                ),
-            ],
         ),
     ]
 )

@@ -4,8 +4,9 @@ from logging import Logger
 import os
 from typing import Any, Dict, List
 from slack_sdk import WebClient
+from utilities.slack import forms
 from utilities.database import DbManager
-from utilities.database.orm import User
+from utilities.database.orm import Region, User
 from utilities import constants
 from utilities.slack import actions
 from utilities.helper_functions import safe_get
@@ -15,7 +16,6 @@ import requests
 def strava_exchange_token(event, context) -> dict:
     """Exchanges a Strava auth code for an access token."""
     team_id, user_id = event.get("queryStringParameters", {}).get("state").split("-")
-    print("team_id is {}".format(team_id))
     code = event.get("queryStringParameters", {}).get("code")
     if not code:
         r = {
@@ -37,7 +37,6 @@ def strava_exchange_token(event, context) -> dict:
     response.raise_for_status()
 
     response_json = response.json()
-    print("response is {}".format(response.json()))
     DbManager.create_record(  # TODO: make this a function that updates the record if it already exists
         User(
             team_id=team_id,
@@ -102,7 +101,6 @@ def get_strava_activities(user_record: User) -> List[Dict]:
     res = requests.get(request_url, headers={"Authorization": f"Bearer {access_token}"}, params={"per_page": 10})
     res.raise_for_status()
     data = res.json()
-    # print("data is {}".format(data))
     return data
 
 
@@ -175,16 +173,9 @@ def get_strava_activity(
     return data
 
 
-def handle_strava_modify(
-    ack,
-    body: dict,
-    logger: Logger,
-    client: WebClient,
-    context: dict,
-    strava_data: dict,
-):
-    ack()
-
+def handle_strava_modify(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    strava_data: dict = forms.STRAVA_ACTIVITY_MODIFY_FORM.get_selected_values(body)
+    event_type = safe_get(body, "type")
     metadata = json.loads(body["view"]["private_metadata"])
     strava_activity_id = metadata["strava_activity_id"]
     channel_id = metadata["channel_id"]
@@ -192,7 +183,7 @@ def handle_strava_modify(
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
 
-    if strava_data:
+    if (event_type != "view_closed") and strava_data:
         activity_data = update_strava_activity(
             strava_activity_id=strava_activity_id,
             user_id=user_id,
@@ -203,12 +194,10 @@ def handle_strava_modify(
     else:
         activity_data = get_strava_activity(strava_activity_id=strava_activity_id, user_id=user_id, team_id=team_id)
 
-    logger.info("activity_data is {}".format(activity_data))
-    msg = f"<@{user_id}> has connected this backblast to a "
-    "<https://www.strava.com/activities/{strava_activity_id}|Strava activity>!"
+    msg = f"<@{user_id}> has connected this backblast to a <https://www.strava.com/activities/{strava_activity_id}|Strava activity>!"
     if (safe_get(activity_data, "calories") is not None) & (safe_get(activity_data, "distance") is not None):
         msg += f" He traveled {round(activity_data['distance'] * 0.00062137, 1)} miles :runner: and burned "
-        "{activity_data['calories']} calories :fire:."
+        f"{activity_data['calories']} calories :fire:."
     elif safe_get(activity_data, "calories"):
         msg += f" He burned {activity_data['calories']} calories :fire:."
     elif safe_get(activity_data, "distance"):
@@ -219,4 +208,3 @@ def handle_strava_modify(
         thread_ts=backblast_ts,
         text=msg,
     )
-    # print({"event_type": "successful_strava_connect", "team_name": team_name})

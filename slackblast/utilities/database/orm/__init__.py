@@ -67,6 +67,7 @@ class Backblast(BaseClass, GetDBClass):
     backblast = Column("backblast", LONGTEXT)
     fngs = Column("fngs", String(45))
     fng_count = Column("fng_count", Integer)
+    json = Column("json", JSON)
 
     # def get_id(self):
     #     return self.timestamp
@@ -83,6 +84,7 @@ class Attendance(BaseClass, GetDBClass):
     ao_id = Column("ao_id", String(45))
     date = Column("date", String(45))
     q_user_id = Column("q_user_id", String(45))
+    json = Column("json", JSON)
 
     # def get_id(self):
     #     return self.timestamp

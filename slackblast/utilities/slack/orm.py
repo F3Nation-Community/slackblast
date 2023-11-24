@@ -390,7 +390,7 @@ class BlockView:
 
     def set_initial_values(self, values: dict):
         for block in self.blocks:
-            if block.action in values:
+            if block.action in values and isinstance(block, InputBlock):
                 block.element.initial_value = values[block.action]
 
     def set_options(self, options: Dict[str, List[SelectorOption]]):
