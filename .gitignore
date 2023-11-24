@@ -151,3 +151,4 @@ testing_code.py
 env.json
 
 .aws-sam/
+.aws-sam-old/

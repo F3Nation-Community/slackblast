@@ -1,10 +1,8 @@
+import copy
 import json
-import os, sys
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
-from utilities import constants, sendmail
-
+from logging import Logger
+import os
+from utilities import constants, sendmail, builders
 from utilities.helper_functions import (
     get_channel_id,
     safe_get,
@@ -13,16 +11,20 @@ from utilities.helper_functions import (
     parse_moleskin_users,
     get_channel_name,
 )
-from utilities.slack import actions
-from utilities.database.orm import Attendance, Backblast, PaxminerAO, PaxminerUser, Region
+from utilities.slack import actions, forms
+from utilities.database.orm import Attendance, Backblast, PaxminerUser, Region
 from utilities.database import DbManager
 from cryptography.fernet import Fernet
+from slack_sdk.web import WebClient
 
 
-def handle_backblast_post(
-    ack, body, logger, client, context, backblast_data, create_or_edit: str
-) -> str:
-    ack()
+def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    create_or_edit = "create" if safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID else "edit"
+
+    backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
+    backblast_form = builders.add_custom_field_blocks(backblast_form, region_record)
+    backblast_data: dict = backblast_form.get_selected_values(body)
+    logger.debug(f"Backblast data: {backblast_data}")
 
     title = safe_get(backblast_data, actions.BACKBLAST_TITLE)
     the_date = safe_get(backblast_data, actions.BACKBLAST_DATE)
@@ -40,32 +42,24 @@ def handle_backblast_post(
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
-    region_record: Region = DbManager.get_record(Region, id=context["team_id"])
     user_records = None
-    ao_records = None
     if region_record.paxminer_schema:
-        user_records = DbManager.find_records(
-            PaxminerUser, filters=[True], schema=region_record.paxminer_schema
-        )
-        ao_records = DbManager.find_records(
-            PaxminerAO, filters=[True], schema=region_record.paxminer_schema
-        )
+        user_records = DbManager.find_records(PaxminerUser, filters=[True], schema=region_record.paxminer_schema)
 
     chan = destination
     if chan == "The_AO":
         chan = the_ao
 
     if create_or_edit == "edit":
-        message_metadata = body["view"]["blocks"][-1]["elements"][0]["text"]
-        message_channel, message_ts = message_metadata.split("|")
+        message_metadata = json.loads(body["view"]["private_metadata"])
+        message_channel = safe_get(message_metadata, "channel_id")
+        message_ts = safe_get(message_metadata, "message_ts")
     else:
         message_channel = chan
         message_ts = None
 
     auto_count = len(set(list([the_q] + (the_coq or []) + pax)))
-    pax_names_list = get_user_names(
-        pax, logger, client, return_urls=False, user_records=user_records
-    ) or [""]
+    pax_names_list = get_user_names(pax, logger, client, return_urls=False, user_records=user_records) or [""]
     # names, urls = get_user_names(
     #     [pax, the_coq or [], the_q], logger, client, return_urls=True, region_record=region_record
     # )
@@ -86,24 +80,20 @@ def handle_backblast_post(
     pax_formatted = ", ".join(pax_full_list)
     pax_names = ", ".join(pax_names_list)
 
-    if the_coq == None:
+    if the_coq is None:
         the_coqs_formatted = ""
         the_coqs_names = ""
     else:
         the_coqs_formatted = get_pax(the_coq)
         the_coqs_full_list = [the_coqs_formatted]
-        the_coqs_names_list = get_user_names(
-            the_coq, logger, client, return_urls=False, user_records=user_records
-        )
+        the_coqs_names_list = get_user_names(the_coq, logger, client, return_urls=False, user_records=user_records)
         the_coqs_formatted = ", " + ", ".join(the_coqs_full_list)
         the_coqs_names = ", " + ", ".join(the_coqs_names_list)
 
     moleskin_formatted = parse_moleskin_users(moleskin, client, user_records)
 
     ao_name = get_channel_name(the_ao, logger, client, region_record)
-    q_name, q_url = get_user_names(
-        [the_q], logger, client, return_urls=True, user_records=user_records
-    )
+    q_name, q_url = get_user_names([the_q], logger, client, return_urls=True, user_records=user_records)
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
 
@@ -117,6 +107,12 @@ def handle_backblast_post(
 *FNGs*: {fngs_formatted}
 *COUNT*: {count}"""
 
+    custom_fields = {}
+    for field, value in backblast_data.items():
+        if (field[: len(actions.CUSTOM_FIELD_PREFIX)] == actions.CUSTOM_FIELD_PREFIX) and value:
+            post_msg += f"\n*{field[len(actions.CUSTOM_FIELD_PREFIX):]}*: {str(value)}"
+            custom_fields[field[len(actions.CUSTOM_FIELD_PREFIX) :]] = value
+
     msg_block = {
         "type": "section",
         "text": {"type": "mrkdwn", "text": post_msg},
@@ -129,7 +125,7 @@ def handle_backblast_post(
         "block_id": "moleskin_text",
     }
 
-    ignore = backblast_data.pop(actions.BACKBLAST_MOLESKIN, None)
+    backblast_data.pop(actions.BACKBLAST_MOLESKIN, None)
 
     backblast_data[actions.BACKBLAST_OP] = user_id
 
@@ -159,6 +155,19 @@ def handle_backblast_post(
         ],
         "block_id": actions.BACKBLAST_EDIT_BUTTON,
     }
+    if region_record.strava_enabled:
+        edit_block["elements"].append(
+            {
+                "type": "button",
+                "text": {
+                    "type": "plain_text",
+                    "text": ":runner: Connect to Strava",
+                    "emoji": True,
+                },
+                "value": "strava",
+                "action_id": actions.BACKBLAST_STRAVA_BUTTON,
+            }
+        )
 
     if create_or_edit == "create":
         if region_record.paxminer_schema is None:
@@ -177,14 +186,8 @@ def handle_backblast_post(
                 blocks=[msg_block, moleskin_block, edit_block],
             )
         logger.debug("\nMessage posted to Slack! \n{}".format(post_msg))
-        print(
-            json.dumps(
-                {"event_type": "successful_slack_post", "team_name": region_record.workspace_name}
-            )
-        )
-        if (email_send and email_send == "yes") or (
-            email_send is None and region_record.email_enabled == 1
-        ):
+        print(json.dumps({"event_type": "successful_slack_post", "team_name": region_record.workspace_name}))
+        if (email_send and email_send == "yes") or (email_send is None and region_record.email_enabled == 1):
             moleskin_msg = moleskin.replace("*", "")
 
             if region_record.postie_format:
@@ -205,9 +208,7 @@ COUNT: {count}
             try:
                 # Decrypt password
                 fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
-                email_password_decrypted = fernet.decrypt(
-                    region_record.email_password.encode()
-                ).decode()
+                email_password_decrypted = fernet.decrypt(region_record.email_password.encode()).decode()
                 sendmail.send(
                     subject=subject,
                     body=email_msg,
@@ -229,11 +230,7 @@ COUNT: {count}
             except Exception as sendmail_err:
                 logger.error("Error with sendmail: {}".format(sendmail_err))
                 logger.debug("\nEmail Sent! \n{}".format(email_msg))
-                print(
-                    json.dumps(
-                        {"event_type": "failed_email", "team_name": region_record.workspace_name}
-                    )
-                )
+                print(json.dumps({"event_type": "failed_email", "team_name": region_record.workspace_name}))
 
     elif create_or_edit == "edit":
         res = client.chat_update(
@@ -245,11 +242,7 @@ COUNT: {count}
             blocks=[msg_block, moleskin_block, edit_block],
         )
         logger.debug("\nBackblast updated in Slack! \n{}".format(post_msg))
-        print(
-            json.dumps(
-                {"event_type": "successful_slack_edit", "team_name": region_record.workspace_name}
-            )
-        )
+        print(json.dumps({"event_type": "successful_slack_edit", "team_name": region_record.workspace_name}))
 
         if message_ts:
             DbManager.delete_records(
@@ -263,13 +256,7 @@ COUNT: {count}
                 filters=[Attendance.timestamp == message_ts],
             )
         logger.debug("\nBackblast deleted from database! \n{}".format(post_msg))
-        print(
-            json.dumps(
-                {"event_type": "successful_db_delete", "team_name": region_record.workspace_name}
-            )
-        )
-
-    res_link = client.chat_getPermalink(channel=chan or message_channel, message_ts=res["ts"])
+        print(json.dumps({"event_type": "successful_db_delete", "team_name": region_record.workspace_name}))
 
     if region_record.paxminer_schema is not None:
         try:
@@ -286,6 +273,7 @@ COUNT: {count}
                     backblast=f"{post_msg}\n{moleskin_formatted}".replace("*", ""),
                     fngs=fngs_formatted if fngs else "None listed",
                     fng_count=fng_count,
+                    json=custom_fields,
                 ),
             )
 
@@ -302,9 +290,7 @@ COUNT: {count}
                     )
                 )
 
-            DbManager.create_records(
-                schema=region_record.paxminer_schema, records=attendance_records
-            )
+            DbManager.create_records(schema=region_record.paxminer_schema, records=attendance_records)
             print(
                 json.dumps(
                     {
@@ -314,30 +300,27 @@ COUNT: {count}
                 )
             )
 
-            paxminer_log_channel = get_channel_id(
-                name="paxminer_logs", client=client, logger=logger
-            )
+            paxminer_log_channel = get_channel_id(name="paxminer_logs", client=client, logger=logger)
             if paxminer_log_channel:
                 import_or_edit = "imported" if create_or_edit == "create" else "edited"
                 client.chat_postMessage(
                     channel=paxminer_log_channel,
-                    text=f"Backblast successfully {import_or_edit} for AO: <#{ao or chan}> Date: {the_date} Q: {q_name}\nLink: {res_link['permalink']}",
+                    text=f"Backblast successfully {import_or_edit} for AO: <#{ao or chan}> Date: {the_date} Q: {q_name}"
+                    "\nLink: {res_link['permalink']}",
                 )
         except Exception as e:
             logger.error("Error saving backblast to database: {}".format(e))
             client.chat_postMessage(
                 channel=context["user_id"],
-                text=f"WARNING: The backblast you just posted was not saved to the database. There is already a backblast for this AO and Q on this date. Please edit the backblast using the `Edit this backblast` button. Thanks!",
+                text="WARNING: The backblast you just posted was not saved to the database. There is already a "
+                "backblast for this AO and Q on this date. Please edit the backblast using the `Edit this backblast`"
+                "button. Thanks!",
             )
-            print(
-                json.dumps(
-                    {"event_type": "failed_db_insert", "team_name": region_record.workspace_name}
-                )
-            )
+            print(json.dumps({"event_type": "failed_db_insert", "team_name": region_record.workspace_name}))
 
 
-def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> str:
-    ack()
+def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    preblast_data = forms.PREBLAST_FORM.get_selected_values(body)
 
     title = safe_get(preblast_data, actions.PREBLAST_TITLE)
     the_date = safe_get(preblast_data, actions.PREBLAST_DATE)
@@ -350,73 +333,51 @@ def handle_preblast_post(ack, body, logger, client, context, preblast_data) -> s
     moleskin = safe_get(preblast_data, actions.PREBLAST_MOLESKIN)
     destination = safe_get(preblast_data, actions.PREBLAST_DESTINATION)
 
-    region_record: Region = DbManager.get_record(Region, id=context["team_id"])
     user_records = None
     if region_record.paxminer_schema:
-        user_records = DbManager.find_records(
-            PaxminerUser, filters=[True], schema=region_record.paxminer_schema
-        )
+        user_records = DbManager.find_records(PaxminerUser, filters=[True], schema=region_record.paxminer_schema)
 
     chan = destination
     if chan == "The_AO":
         chan = the_ao
 
-    q_name, q_url = get_user_names(
-        [the_q], logger, client, return_urls=True, user_records=user_records
-    )
+    q_name, q_url = get_user_names([the_q], logger, client, return_urls=True, user_records=user_records)
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
 
-    header_msg = f"*Preblast: " + title + "*"
-    date_msg = f"*Date*: " + the_date
-    time_msg = f"*Time*: " + the_time
-    ao_msg = f"*Where*: <#" + the_ao + ">"
-    q_msg = f"*Q*: <@" + the_q + ">"  # + the_coqs_formatted
+    header_msg = f"*Preblast: {title}*"
+    date_msg = f"*Date*: {the_date}"
+    time_msg = f"*Time*: {the_time}"
+    ao_msg = f"*Where*: <#{the_ao}>"
+    q_msg = f"*Q*: <@{the_q}>"  # + the_coqs_formatted
 
     body_list = [header_msg, date_msg, time_msg, ao_msg, q_msg]
     if the_why:
-        body_list.append(f"*Why*: " + the_why)
+        body_list.append(f"*Why*: {the_why}")
     if coupons:
-        body_list.append(f"*Coupons*: " + coupons)
+        body_list.append(f"*Coupons*: {coupons}")
     if fngs:
-        body_list.append(f"*FNGs*: " + fngs)
+        body_list.append(f"*FNGs*: {fngs}")
     if moleskin:
         body_list.append(moleskin)
 
     msg = "\n".join(body_list)
-    client.chat_postMessage(
-        channel=chan, text=msg, username=f"{q_name} (via Slackblast)", icon_url=q_url
-    )
+    client.chat_postMessage(channel=chan, text=msg, username=f"{q_name} (via Slackblast)", icon_url=q_url)
     logger.debug("\nMessage posted to Slack! \n{}".format(msg))
-    print(
-        json.dumps(
-            {"event_type": "successful_preblast_post", "team_name": region_record.workspace_name}
-        )
-    )
+    print(json.dumps({"event_type": "successful_preblast_post", "team_name": region_record.workspace_name}))
 
 
-def handle_config_post(ack, body, logger, client, context, config_data) -> str:
-    ack()
-
-    region_record: Region = DbManager.get_record(Region, id=context["team_id"])
+def handle_config_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    config_data = forms.CONFIG_FORM.get_selected_values(body)
 
     fields = {
         # Region.paxminer_schema: paxminer_db,
-        Region.email_enabled: 1
-        if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable"
-        else 0,
-        Region.editing_locked: 1
-        if safe_get(config_data, actions.CONFIG_EDITING_LOCKED) == "yes"
-        else 0,
+        Region.email_enabled: 1 if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable" else 0,
+        Region.editing_locked: 1 if safe_get(config_data, actions.CONFIG_EDITING_LOCKED) == "yes" else 0,
         Region.default_destination: safe_get(config_data, actions.CONFIG_DEFAULT_DESTINATION),
-        Region.backblast_moleskin_template: safe_get(
-            config_data, actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE
-        )
-        or "",
-        Region.preblast_moleskin_template: safe_get(
-            config_data, actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE
-        )
-        or "",
+        Region.backblast_moleskin_template: safe_get(config_data, actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE) or "",
+        Region.preblast_moleskin_template: safe_get(config_data, actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE) or "",
+        Region.strava_enabled: 1 if safe_get(config_data, actions.CONFIG_ENABLE_STRAVA) == "enable" else 0,
     }
     if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable":
         fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
@@ -429,17 +390,13 @@ def handle_config_post(ack, body, logger, client, context, config_data) -> str:
             email_password_encrypted = None
         fields.update(
             {
-                Region.email_option_show: 1
-                if safe_get(config_data, actions.CONFIG_EMAIL_SHOW_OPTION) == "yes"
-                else 0,
+                Region.email_option_show: 1 if safe_get(config_data, actions.CONFIG_EMAIL_SHOW_OPTION) == "yes" else 0,
                 Region.email_server: safe_get(config_data, actions.CONFIG_EMAIL_SERVER),
                 Region.email_server_port: safe_get(config_data, actions.CONFIG_EMAIL_PORT),
                 Region.email_user: safe_get(config_data, actions.CONFIG_EMAIL_FROM),
                 Region.email_to: safe_get(config_data, actions.CONFIG_EMAIL_TO),
                 Region.email_password: email_password_encrypted,
-                Region.postie_format: 1
-                if safe_get(config_data, actions.CONFIG_POSTIE_ENABLE) == "yes"
-                else 0,
+                Region.postie_format: 1 if safe_get(config_data, actions.CONFIG_POSTIE_ENABLE) == "yes" else 0,
             }
         )
 
@@ -448,8 +405,49 @@ def handle_config_post(ack, body, logger, client, context, config_data) -> str:
         id=context["team_id"],
         fields=fields,
     )
+    print(json.dumps({"event_type": "successful_config_update", "team_name": region_record.workspace_name}))
+
+
+def handle_custom_field_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    config_data = forms.CUSTOM_FIELD_ADD_EDIT_FORM.get_selected_values(body)
+
+    custom_field_name = safe_get(config_data, actions.CUSTOM_FIELD_ADD_NAME)
+    custom_field_type = safe_get(config_data, actions.CUSTOM_FIELD_ADD_TYPE)
+    custom_field_options = safe_get(config_data, actions.CUSTOM_FIELD_ADD_OPTIONS)
+
+    custom_fields = region_record.custom_fields or {}
+    custom_fields[custom_field_name] = {
+        "name": custom_field_name,
+        "type": custom_field_type,
+        "options": custom_field_options.split(",") if custom_field_options else [],
+        "enabled": True,
+    }
+
+    DbManager.update_record(cls=Region, id=region_record.team_id, fields={Region.custom_fields: custom_fields})
+
     print(
         json.dumps(
-            {"event_type": "successful_config_update", "team_name": region_record.workspace_name}
+            {
+                "event_type": "successful_custom_field_add_edit",
+                "team_name": region_record.workspace_name,
+            }
         )
     )
+
+    trigger_id = safe_get(body, "trigger_id")
+    previous_view_id = safe_get(body, "view", "previous_view_id")
+    builders.build_custom_field_menu(client, region_record, trigger_id, update_view_id=previous_view_id)
+
+
+def handle_custom_field_menu(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    custom_fields = region_record.custom_fields or {}
+
+    selected_values: dict = safe_get(body, "view", "state", "values")
+
+    for key, value in selected_values.items():
+        if key[: len(actions.CUSTOM_FIELD_ENABLE)] == actions.CUSTOM_FIELD_ENABLE:
+            custom_fields[key[len(actions.CUSTOM_FIELD_ENABLE) :]]["enabled"] = (
+                value[key]["selected_option"]["value"] == "enable"
+            )
+
+    DbManager.update_record(cls=Region, id=region_record.team_id, fields={Region.custom_fields: custom_fields})

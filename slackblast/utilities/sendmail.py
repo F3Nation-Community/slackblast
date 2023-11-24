@@ -1,5 +1,4 @@
 import smtplib
-import os
 from email.message import EmailMessage
 
 

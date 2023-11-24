@@ -1,11 +1,9 @@
 from datetime import datetime
-from enum import Enum
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import *
+from sqlalchemy import Column, Integer, String, DateTime, Date
 from sqlalchemy.types import JSON
 from sqlalchemy.dialects.mysql import LONGTEXT
-from sqlalchemy.orm import relationship
 
 BaseClass = declarative_base(mapper=sqlalchemy.orm.mapper)
 
@@ -45,11 +43,13 @@ class Region(BaseClass, GetDBClass):
     default_destination = Column("default_destination", String(30))
     backblast_moleskin_template = Column("backblast_moleskin_template", LONGTEXT)
     preblast_moleskin_template = Column("preblast_moleskin_template", LONGTEXT)
+    strava_enabled = Column("strava_enabled", Integer)
+    custom_fields = Column("custom_fields", JSON)
     created = Column("created", DateTime, default=datetime.utcnow)
     updated = Column("updated", DateTime, default=datetime.utcnow)
 
-    def get_id(self):
-        return self.team_id
+    # def get_id(self):
+    #     return self.team_id
 
     def get_id():
         return Region.team_id
@@ -67,9 +67,10 @@ class Backblast(BaseClass, GetDBClass):
     backblast = Column("backblast", LONGTEXT)
     fngs = Column("fngs", String(45))
     fng_count = Column("fng_count", Integer)
+    json = Column("json", JSON)
 
-    def get_id(self):
-        return self.timestamp
+    # def get_id(self):
+    #     return self.timestamp
 
     def get_id():
         return Backblast.timestamp
@@ -83,16 +84,17 @@ class Attendance(BaseClass, GetDBClass):
     ao_id = Column("ao_id", String(45))
     date = Column("date", String(45))
     q_user_id = Column("q_user_id", String(45))
+    json = Column("json", JSON)
 
-    def get_id(self):
-        return self.timestamp
+    # def get_id(self):
+    #     return self.timestamp
 
     def get_id():
         return Attendance.timestamp
 
 
 class User(BaseClass, GetDBClass):
-    __tablename__ = "users2"
+    __tablename__ = "slackblast_users"
     id = Column("id", Integer, primary_key=True)
     team_id = Column("team_id", String(100))
     user_id = Column("user_id", String(100))
@@ -103,11 +105,11 @@ class User(BaseClass, GetDBClass):
     created = Column("created", DateTime, default=datetime.utcnow)
     updated = Column("updated", DateTime, default=datetime.utcnow)
 
-    def get_id(self):
-        return self.id
+    # def get_id(self):
+    #     return self.id
 
     def get_id():
-        return User.user_id
+        return User.id
 
 
 class PaxminerUser(BaseClass, GetDBClass):
@@ -120,8 +122,8 @@ class PaxminerUser(BaseClass, GetDBClass):
     start_date = Column("start_date", String(45))
     app = Column("app", Integer)
 
-    def get_id(self):
-        return self.user_id
+    # def get_id(self):
+    #     return self.user_id
 
     def get_id():
         return PaxminerUser.user_id
@@ -135,8 +137,8 @@ class PaxminerAO(BaseClass, GetDBClass):
     archived = Column("archived", Integer)
     backblast = Column("backblast", Integer)
 
-    def get_id(self):
-        return self.channel_id
+    # def get_id(self):
+    #     return self.channel_id
 
     def get_id():
         return PaxminerAO.channel_id

@@ -1,25 +1,17 @@
-import os, sys
+import os
 import pickle
-
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-
-from utilities import sendmail, constants
-from utilities.database.orm import PaxminerAO, PaxminerUser, Region, Backblast, Attendance, User
+from utilities import constants
+from utilities.database.orm import PaxminerAO, PaxminerUser, Region, Backblast, Attendance
 from utilities.database import DbManager
-from datetime import datetime
 from utilities.slack import actions
+from datetime import datetime
 from utilities.constants import LOCAL_DEVELOPMENT
-from typing import List
+from typing import List, Tuple
 from fuzzywuzzy import fuzz
 from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 import re
-from cryptography.fernet import Fernet
 from slack_sdk.web import WebClient
-import json
-from sqlalchemy.exc import IntegrityError
-from pymysql.err import IntegrityError as PymysqlIntegrityError
-import requests
 
 
 def get_oauth_flow():
@@ -37,55 +29,15 @@ def get_oauth_flow():
         )
 
 
-def strava_exchange_token(event, context) -> dict:
-    """Exchanges a Strava auth code for an access token."""
-    team_id, user_id = event.get("queryStringParameters", {}).get("state").split("-")
-    code = event.get("queryStringParameters", {}).get("code")
-    if not code:
-        r = {
-            "statusCode": 400,
-            "body": {"error": "No code provided."},
-            "headers": {},
-        }
-        return r
-
-    response = requests.post(
-        url="https://www.strava.com/oauth/token",
-        data={
-            "client_id": os.environ[constants.STRAVA_CLIENT_ID],
-            "client_secret": os.environ[constants.STRAVA_CLIENT_SECRET],
-            "code": code,
-            "grant_type": "authorization_code",
-        },
-    )
-    response.raise_for_status()
-
-    response_json = response.json()
-    user_record: User = DbManager.create_record(  # TODO: make this a function that updates the record if it already exists
-        User(
-            team_id=team_id,
-            user_id=user_id,
-            strava_access_token=response_json["access_token"],
-            strava_refresh_token=response_json["refresh_token"],
-            strava_expires_at=datetime.fromtimestamp(response_json["expires_at"]),
-            strava_athlete_id=response_json["athlete"]["id"],
-        )
-    )
-
-    r = {
-        "statusCode": 200,
-        "body": {"message": "Authorization successful! You can return to Slack."},
-        "headers": {},
-    }
-
-    return r
-
-
 def safe_get(data, *keys):
+    if not data:
+        return None
     try:
         result = data
         for k in keys:
-            if result.get(k):
+            if isinstance(k, int) and isinstance(result, list):
+                result = result[k]
+            elif result.get(k):
                 result = result[k]
             else:
                 return None
@@ -184,9 +136,7 @@ def get_user_ids(user_names, client, user_records: List[PaxminerUser]):
             if member_dict["display_name"] == "":
                 member_dict["display_name"] = member_dict["real_name"]
             member_dict["display_name"] = member_dict["display_name"].lower()
-            member_dict["display_name"] = re.sub(
-                "\s\(([\s\S]*?\))", "", member_dict["display_name"]
-            ).replace(" ", "_")
+            member_dict["display_name"] = re.sub("\s\(([\s\S]*?\))", "", member_dict["display_name"]).replace(" ", "_")
             member_list[member_dict["display_name"]] = member_dict["id"]
 
     user_ids = []
@@ -220,9 +170,7 @@ def get_pax(pax):
 
 def run_fuzzy_match(workspace_name: str) -> List[str]:
     """Run the fuzz match on the workspace name and return a list of possible matches"""
-    paxminer_region_records = DbManager.execute_sql_query(
-        "select schema_name from paxminer.regions"
-    )
+    paxminer_region_records = DbManager.execute_sql_query("select schema_name from paxminer.regions")
     regions_list = [r["schema_name"] for r in paxminer_region_records]
 
     ratio_dict = {}
@@ -241,6 +189,7 @@ def check_for_duplicate(
     og_ts: str = None,
 ) -> bool:
     """Check if there is already a backblast for this AO and Q on this date"""
+    logger.debug(f"Checking for duplicate backblast for {q} at {ao} on {date}")
     if region_record.paxminer_schema:
         backblast_dups = DbManager.find_records(
             cls=Backblast,
@@ -254,9 +203,7 @@ def check_for_duplicate(
         )
         logger.debug(f"Backblast dups: {backblast_dups}")
         logger.debug(f"og_ts: {og_ts}")
-        is_duplicate = (
-            len(backblast_dups) > 0 or len(attendance_dups) > 0
-        ) and og_ts != backblast_dups[0].timestamp
+        is_duplicate = (len(backblast_dups) > 0 or len(attendance_dups) > 0) and og_ts != backblast_dups[0].timestamp
     else:
         is_duplicate = False
 
@@ -289,22 +236,18 @@ def get_paxminer_schema(team_id: str, logger) -> str:
 
             ao_index = 0
             try:
-                ao_records = DbManager.execute_sql_query(
-                    f"select * from {region['schema_name']}.aos"
-                )
+                ao_records = DbManager.execute_sql_query(f"select * from {region['schema_name']}.aos")
                 ao_records = [ao for ao in ao_records if ao["channel_id"] is not None]
 
                 keep_trying = True
                 while keep_trying and ao_index < len(ao_records):
                     try:
-                        slack_response = slack_client.conversations_info(
-                            channel=ao_records[ao_index]["channel_id"]
-                        )
+                        slack_response = slack_client.conversations_info(channel=ao_records[ao_index]["channel_id"])
                         keep_trying = False
-                    except Exception as e:
+                    except Exception:
                         ao_index += 1
 
-            except Exception as e:
+            except Exception:
                 logger.debug("No AOs table, skipping...")
                 continue
 
@@ -328,14 +271,10 @@ def replace_slack_user_ids(text: str, client, logger, region_record: Region = No
     """
     user_records = None
     if region_record.paxminer_schema:
-        user_records = DbManager.find_records(
-            PaxminerUser, filters=[True], schema=region_record.paxminer_schema
-        )
+        user_records = DbManager.find_records(PaxminerUser, filters=[True], schema=region_record.paxminer_schema)
 
-    slack_user_ids = re.findall(r"<@([A-Z0-9]+)>", text)
-    slack_user_names = get_user_names(
-        slack_user_ids, logger, client, return_urls=False, user_records=user_records
-    )
+    slack_user_ids = re.findall(r"<@([A-Z0-9]+)>", text or "")
+    slack_user_names = get_user_names(slack_user_ids, logger, client, return_urls=False, user_records=user_records)
 
     slack_user_ids = [f"<@{user_id}>" for user_id in slack_user_ids]
     slack_user_names = [f"@{user_name}".replace(" ", "_") for user_name in slack_user_names or []]
@@ -353,7 +292,7 @@ def get_region_record(team_id: str, body, context, client, logger) -> Region:
         try:
             team_info = client.team_info()
             team_name = team_info["team"]["name"]
-        except Exception as error:
+        except Exception:
             team_name = team_domain
         paxminer_schema = get_paxminer_schema(team_id, logger)
         region_record: Region = DbManager.create_record(
@@ -369,3 +308,23 @@ def get_region_record(team_id: str, body, context, client, logger) -> Region:
         )
 
     return region_record
+
+
+def get_request_type(body: dict) -> Tuple[str]:
+    request_type = safe_get(body, "type")
+    if request_type == "event_callback":
+        return ("event_callback", safe_get(body, "event", "type"))
+    elif request_type == "block_actions":
+        block_action = safe_get(body, "actions", 0, "action_id")
+        if block_action[: len(actions.STRAVA_ACTIVITY_BUTTON)] == actions.STRAVA_ACTIVITY_BUTTON:
+            return ("block_actions", actions.STRAVA_ACTIVITY_BUTTON)
+        else:
+            return ("block_actions", block_action)
+    elif request_type == "view_submission":
+        return ("view_submission", safe_get(body, "view", "callback_id"))
+    elif not request_type and "command" in body:
+        return ("command", safe_get(body, "command"))
+    elif request_type == "view_closed":
+        return ("view_closed", safe_get(body, "view", "callback_id"))
+    else:
+        return ("unknown", "unknown")
