@@ -436,7 +436,7 @@ def handle_custom_field_add(body: dict, client: WebClient, logger: Logger, conte
 
     trigger_id = safe_get(body, "trigger_id")
     previous_view_id = safe_get(body, "view", "previous_view_id")
-    builders.build_custom_field_menu(client, region_record, trigger_id, update_view_id=previous_view_id)
+    builders.build_custom_field_menu(body, client, logger, context, region_record, update_view_id=previous_view_id)
 
 
 def handle_custom_field_menu(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
@@ -446,7 +446,7 @@ def handle_custom_field_menu(body: dict, client: WebClient, logger: Logger, cont
 
     for key, value in selected_values.items():
         if key[: len(actions.CUSTOM_FIELD_ENABLE)] == actions.CUSTOM_FIELD_ENABLE:
-            custom_fields[key[len(actions.CUSTOM_FIELD_ENABLE) :]]["enabled"] = (
+            custom_fields[key[len(actions.CUSTOM_FIELD_ENABLE) + 1 :]]["enabled"] = (
                 value[key]["selected_option"]["value"] == "enable"
             )
 
