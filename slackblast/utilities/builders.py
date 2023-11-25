@@ -284,28 +284,49 @@ def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: 
     trigger_id = safe_get(body, "trigger_id")
 
     preblast_form = copy.deepcopy(forms.PREBLAST_FORM)
-    preblast_form.set_options(
-        {
-            actions.PREBLAST_DESTINATION: slack_orm.as_selector_options(
-                names=["The AO Channel", "My DMs"], values=["The_AO", user_id]
-            )
+
+    if (safe_get(body, "command") in ["/preblast"]) or (
+        safe_get(body, "actions", 0, "action_id") == actions.PREBLAST_NEW_BUTTON
+    ):
+        preblast_method = "New"
+        parent_metadata = {}
+        preblast_metadata = None
+        callback_id = actions.PREBLAST_CALLBACK_ID
+        preblast_form.set_options(
+            {
+                actions.PREBLAST_DESTINATION: slack_orm.as_selector_options(
+                    names=["The AO Channel", "My DMs"], values=["The_AO", user_id]
+                )
+            }
+        )
+        preblast_form.set_initial_values(
+            {
+                actions.PREBLAST_Q: user_id,
+                actions.PREBLAST_DATE: datetime.now().strftime("%Y-%m-%d"),
+                actions.PREBLAST_DESTINATION: "The_AO",
+                actions.PREBLAST_MOLESKIN: region_record.preblast_moleskin_template or "",
+            }
+        )
+        if channel_id:
+            preblast_form.set_initial_values({actions.PREBLAST_AO: channel_id})
+    else:
+        preblast_method = "Edit"
+        parent_metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
+        preblast_metadata = parent_metadata or {
+            "channel_id": safe_get(body, "container", "channel_id"),
+            "message_ts": safe_get(body, "container", "message_ts"),
         }
-    )
-    preblast_form.set_initial_values(
-        {
-            actions.PREBLAST_Q: user_id,
-            actions.PREBLAST_DATE: datetime.now().strftime("%Y-%m-%d"),
-            actions.PREBLAST_DESTINATION: "The_AO",
-            actions.PREBLAST_MOLESKIN: region_record.preblast_moleskin_template or "",
-        }
-    )
-    if channel_id:
-        preblast_form.set_initial_values({actions.PREBLAST_AO: channel_id})
+        callback_id = actions.PREBLAST_EDIT_CALLBACK_ID
+        preblast_form.delete_block(actions.PREBLAST_DESTINATION)
+        initial_preblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
+        preblast_form.set_initial_values(initial_preblast_data)
+
     preblast_form.post_modal(
         client=client,
         trigger_id=trigger_id,
-        callback_id=actions.PREBLAST_CALLBACK_ID,
-        title_text="Preblast",
+        callback_id=callback_id,
+        title_text=f"{preblast_method} Preblast",
+        parent_metadata=preblast_metadata,
     )
 
 
@@ -642,3 +663,35 @@ def delete_custom_field(body: dict, client: WebClient, logger: Logger, context: 
     custom_fields.pop(custom_field_name)
     DbManager.update_record(cls=Region, id=team_id, fields={"custom_fields": custom_fields})
     build_custom_field_menu(body, client, logger, context, region_record, update_view_id=view_id)
+
+
+def handle_preblast_edit_button(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
+
+    preblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
+
+    user_info_dict = client.users_info(user=user_id)
+    user_admin: bool = user_info_dict["user"]["is_admin"]
+    allow_edit: bool = (
+        (region_record.editing_locked == 0)
+        or user_admin
+        or (user_id == preblast_data[actions.PREBLAST_Q])
+        or (user_id in preblast_data[actions.PREBLAST_OP])
+    )
+
+    if allow_edit:
+        build_preblast_form(
+            body=body,
+            client=client,
+            logger=logger,
+            context=context,
+            region_record=region_record,
+        )
+    else:
+        client.chat_postEphemeral(
+            text="Editing this preblast is only allowed for the Q, the original poster, or your local Slack admins. "
+            "Please contact one of them to make changes.",
+            channel=channel_id,
+            user=user_id,
+        )
