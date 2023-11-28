@@ -258,6 +258,8 @@ COUNT: {count}
         logger.debug("\nBackblast deleted from database! \n{}".format(post_msg))
         print(json.dumps({"event_type": "successful_db_delete", "team_name": region_record.workspace_name}))
 
+    res_link = client.chat_getPermalink(channel=chan or message_channel, message_ts=res["ts"])
+
     if region_record.paxminer_schema is not None:
         try:
             DbManager.create_record(
@@ -306,7 +308,7 @@ COUNT: {count}
                 client.chat_postMessage(
                     channel=paxminer_log_channel,
                     text=f"Backblast successfully {import_or_edit} for AO: <#{ao or chan}> Date: {the_date} Q: {q_name}"
-                    "\nLink: {res_link['permalink']}",
+                    f"\nLink: {res_link['permalink']}",
                 )
         except Exception as e:
             logger.error("Error saving backblast to database: {}".format(e))
