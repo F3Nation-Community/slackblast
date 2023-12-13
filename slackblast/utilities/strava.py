@@ -37,16 +37,31 @@ def strava_exchange_token(event, context) -> dict:
     response.raise_for_status()
 
     response_json = response.json()
-    DbManager.create_record(  # TODO: make this a function that updates the record if it already exists
-        User(
-            team_id=team_id,
-            user_id=user_id,
-            strava_access_token=response_json["access_token"],
-            strava_refresh_token=response_json["refresh_token"],
-            strava_expires_at=datetime.fromtimestamp(response_json["expires_at"]),
-            strava_athlete_id=response_json["athlete"]["id"],
+
+    user_records: List[User] = DbManager.find_records(User, filters=[User.user_id == user_id, User.team_id == team_id])
+    if user_records:
+        user_record = user_records[0]
+        DbManager.update_record(
+            cls=User,
+            id=user_record.id,
+            fields={
+                User.strava_access_token: response_json["access_token"],
+                User.strava_refresh_token: response_json["refresh_token"],
+                User.strava_expires_at: datetime.fromtimestamp(response_json["expires_at"]),
+                User.strava_athlete_id: response_json["athlete"]["id"],
+            },
         )
-    )
+    else:
+        DbManager.create_record(
+            User(
+                team_id=team_id,
+                user_id=user_id,
+                strava_access_token=response_json["access_token"],
+                strava_refresh_token=response_json["refresh_token"],
+                strava_expires_at=datetime.fromtimestamp(response_json["expires_at"]),
+                strava_athlete_id=response_json["athlete"]["id"],
+            )
+        )
 
     r = {
         "statusCode": 200,
