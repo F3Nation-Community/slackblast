@@ -28,8 +28,9 @@ def handler(event, context):
     exchange_prefix = "" if LOCAL_DEVELOPMENT else "/Prod"
     if event.get("path") == f"{exchange_prefix}/exchange_token":
         return strava.strava_exchange_token(event, context)
-    slack_handler = SlackRequestHandler(app=app)
-    return slack_handler.handle(event, context)
+    else:
+        slack_handler = SlackRequestHandler(app=app)
+        return slack_handler.handle(event, context)
 
 
 def main_response(body, logger, client, ack, context):

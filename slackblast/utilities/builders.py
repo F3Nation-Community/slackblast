@@ -1,6 +1,7 @@
 import json
 import os
 from typing import List
+import pytz
 
 from slack_sdk.web import WebClient
 from utilities.database.orm import Region, User
@@ -15,7 +16,7 @@ from utilities.helper_functions import (
 )
 import copy
 from logging import Logger
-from datetime import datetime, date
+from datetime import datetime
 from cryptography.fernet import Fernet
 from requests_oauthlib import OAuth2Session
 
@@ -109,7 +110,7 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
     else:
         is_duplicate = check_for_duplicate(
             q=user_id,
-            date=date.today(),
+            date=datetime.now(pytz.timezone("US/Central")).date(),
             ao=channel_id,
             region_record=region_record,
             logger=logger,
@@ -163,7 +164,7 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
         backblast_form.set_initial_values(
             {
                 actions.BACKBLAST_Q: user_id,
-                actions.BACKBLAST_DATE: datetime.now().strftime("%Y-%m-%d"),
+                actions.BACKBLAST_DATE: datetime.now(pytz.timezone("US/Central")).strftime("%Y-%m-%d"),
                 actions.BACKBLAST_DESTINATION: default_destination_id or "The_AO",
                 actions.BACKBLAST_MOLESKIN: region_record.backblast_moleskin_template
                 or constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE,
@@ -302,7 +303,7 @@ def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: 
         preblast_form.set_initial_values(
             {
                 actions.PREBLAST_Q: user_id,
-                actions.PREBLAST_DATE: datetime.now().strftime("%Y-%m-%d"),
+                actions.PREBLAST_DATE: datetime.now(pytz.timezone("US/Central")).strftime("%Y-%m-%d"),
                 actions.PREBLAST_DESTINATION: "The_AO",
                 actions.PREBLAST_MOLESKIN: region_record.preblast_moleskin_template or "",
             }
