@@ -26,6 +26,7 @@ app = App(
 
 def handler(event, context):
     exchange_prefix = "" if LOCAL_DEVELOPMENT else "/Prod"
+    print(event.get("path"))
     if event.get("path") == f"{exchange_prefix}/exchange_token":
         return strava.strava_exchange_token(event, context)
     else:
