@@ -62,6 +62,12 @@ STRAVA_ACTIVITY_DESCRIPTION = "strava-description"
 STRAVA_ACTIVITY_METADATA = "strava-metadata"
 STRAVA_MODIFY_CALLBACK_ID = "strava-modify-id"
 
+STRAVA_ACTIVITY_ID = "strava-activity-id"
+STRAVA_CHANNEL_ID = "strava-channel-id"
+STRAVA_BACKBLAST_TS = "strava-ts"
+STRAVA_BACKBLAST_TITLE = "strava-title"
+STRAVA_BACKBLAST_MOLESKINE = "strava-moleskine"
+
 CUSTOM_FIELD_ENABLE = "custom_field_enable_disable"
 CUSTOM_FIELD_EDIT = "custom_field_edit"
 CUSTOM_FIELD_ADD = "custom_field_add"

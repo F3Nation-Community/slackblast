@@ -394,14 +394,14 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
                     slack_orm.ButtonElement(
                         label=f"{date_fmt} - {activity['name']}",
                         action="-".join([actions.STRAVA_ACTIVITY_BUTTON, str(activity["id"])]),
-                        value="|".join(
-                            [
-                                str(activity["id"]),
-                                channel_id,
-                                backblast_ts,
-                                backblast_meta["title"],
-                                moleskine_text[:2000],
-                            ]
+                        value=json.dumps(
+                            {
+                                actions.STRAVA_ACTIVITY_ID: activity["id"],
+                                actions.STRAVA_CHANNEL_ID: channel_id,
+                                actions.STRAVA_BACKBLAST_TS: backblast_ts,
+                                actions.STRAVA_BACKBLAST_TITLE: backblast_meta["title"],
+                                actions.STRAVA_BACKBLAST_MOLESKINE: moleskine_text[:2000],
+                            }
                         ),
                         # TODO: add confirmation modal
                     )
@@ -427,9 +427,13 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
 
 
 def build_strava_modify_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    strava_activity_id, channel_id, backblast_ts, backblast_title, backblast_moleskine = body["actions"][0][
-        "value"
-    ].split("|")
+    strava_metadata = json.loads(safe_get(body, "actions", 0, "value") or "{}")
+    strava_activity_id = strava_metadata[actions.STRAVA_ACTIVITY_ID]
+    channel_id = strava_metadata[actions.STRAVA_CHANNEL_ID]
+    backblast_ts = strava_metadata[actions.STRAVA_BACKBLAST_TS]
+    backblast_title = strava_metadata[actions.STRAVA_BACKBLAST_TITLE]
+    backblast_moleskine = strava_metadata[actions.STRAVA_BACKBLAST_MOLESKINE]
+
     view_id = safe_get(body, "container", "view_id")
     backblast_metadata = {
         "strava_activity_id": strava_activity_id,
