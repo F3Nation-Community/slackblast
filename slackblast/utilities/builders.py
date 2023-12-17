@@ -344,9 +344,9 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
 
     allow_strava: bool = (
         (user_id == backblast_meta[actions.BACKBLAST_Q])
-        or (user_id in backblast_meta[actions.BACKBLAST_COQ] or [])
-        or (user_id in backblast_meta[actions.BACKBLAST_PAX])
-        or (user_id in backblast_meta[actions.BACKBLAST_OP])
+        or (user_id in (backblast_meta[actions.BACKBLAST_COQ] or []))
+        or (user_id in (backblast_meta[actions.BACKBLAST_PAX] or []))
+        or (user_id in (backblast_meta[actions.BACKBLAST_OP] or []))
     )
 
     if allow_strava:
