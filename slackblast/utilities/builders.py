@@ -399,7 +399,7 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
                                 actions.STRAVA_CHANNEL_ID: channel_id,
                                 actions.STRAVA_BACKBLAST_TS: backblast_ts,
                                 actions.STRAVA_BACKBLAST_TITLE: backblast_meta["title"],
-                                actions.STRAVA_BACKBLAST_MOLESKINE: moleskine_text[:2000],
+                                actions.STRAVA_BACKBLAST_MOLESKINE: moleskine_text[:1500],
                             }
                         ),
                         # TODO: add confirmation modal
