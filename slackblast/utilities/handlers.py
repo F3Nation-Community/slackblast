@@ -10,6 +10,7 @@ from utilities.helper_functions import (
     get_pax,
     parse_moleskin_users,
     get_channel_name,
+    update_local_region_records,
 )
 from utilities.slack import actions, forms
 from utilities.database.orm import Attendance, Backblast, PaxminerUser, Region
@@ -468,6 +469,7 @@ def handle_config_post(body: dict, client: WebClient, logger: Logger, context: d
         id=context["team_id"],
         fields=fields,
     )
+    update_local_region_records()
     print(json.dumps({"event_type": "successful_config_update", "team_name": region_record.workspace_name}))
 
 
@@ -487,6 +489,7 @@ def handle_custom_field_add(body: dict, client: WebClient, logger: Logger, conte
     }
 
     DbManager.update_record(cls=Region, id=region_record.team_id, fields={Region.custom_fields: custom_fields})
+    update_local_region_records()
 
     print(
         json.dumps(
@@ -513,3 +516,4 @@ def handle_custom_field_menu(body: dict, client: WebClient, logger: Logger, cont
             )
 
     DbManager.update_record(cls=Region, id=region_record.team_id, fields={Region.custom_fields: custom_fields})
+    update_local_region_records()

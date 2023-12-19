@@ -1,3 +1,5 @@
+LOADING = "loading"
+
 BACKBLAST_CALLBACK_ID = "backblast-id"
 BACKBLAST_TITLE = "title"
 BACKBLAST_AO = "The_AO"

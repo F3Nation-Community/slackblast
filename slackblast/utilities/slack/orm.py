@@ -73,9 +73,13 @@ class SectionBlock(BaseBlock):
     def get_selected_value(self, input_data, **kwargs):
         return self.element.get_selected_value(input_data, self.action, **kwargs)
 
+    def make_label_field(self, text=None):
+        return {"type": "mrkdwn", "text": text or self.label or ""}
+
     def as_form_field(self):
         block = {"type": "section", "block_id": self.action, "text": self.make_label_field()}
-        block.update({"accessory": self.element.as_form_field(action=self.action)})
+        if self.element:
+            block.update({"accessory": self.element.as_form_field(action=self.action)})
         return block
 
 
@@ -425,7 +429,7 @@ class BlockView:
         close_button_text: str = "Close",
         notify_on_close: bool = False,
         new_or_add: str = "new",
-    ):
+    ) -> dict:
         blocks = self.as_form_field()
 
         view = {
@@ -443,9 +447,11 @@ class BlockView:
             view["submit"] = {"type": "plain_text", "text": submit_button_text}
 
         if new_or_add == "new":
-            client.views_open(trigger_id=trigger_id, view=view)
+            res = client.views_open(trigger_id=trigger_id, view=view)
         elif new_or_add == "add":
-            client.views_push(trigger_id=trigger_id, view=view)
+            res = client.views_push(trigger_id=trigger_id, view=view)
+
+        return res
 
     def update_modal(
         self,
