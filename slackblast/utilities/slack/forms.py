@@ -436,3 +436,9 @@ CUSTOM_FIELD_ADD_EDIT_FORM = orm.BlockView(
         ),
     ]
 )
+
+LOADING_FORM = orm.BlockView(
+    blocks=[
+        orm.SectionBlock(label=":hourglass: Loading, do not close...", action=actions.LOADING),
+    ]
+)

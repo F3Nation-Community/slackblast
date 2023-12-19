@@ -7,6 +7,7 @@ from utilities.helper_functions import (
     safe_get,
     get_region_record,
     get_request_type,
+    update_local_region_records,
 )
 from utilities.constants import LOCAL_DEVELOPMENT
 from utilities.routing import MAIN_MAPPER
@@ -14,6 +15,7 @@ import logging
 from utilities.database.orm import Region
 from utilities import strava
 import re
+from typing import Callable
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -39,9 +41,15 @@ def main_response(body, logger, client, ack, context):
     region_record: Region = get_region_record(team_id, body, context, client, logger)
 
     request_type, request_id = get_request_type(body)
-    run_function = safe_get(safe_get(MAIN_MAPPER, request_type), request_id)
+    run_function: Callable = safe_get(safe_get(MAIN_MAPPER, request_type), request_id)
     if run_function:
-        run_function(body=body, client=client, logger=logger, context=context, region_record=region_record)
+        run_function(
+            body=body,
+            client=client,
+            logger=logger,
+            context=context,
+            region_record=region_record,
+        )
     else:
         logger.error(
             f"no handler for path: {safe_get(safe_get(MAIN_MAPPER, request_type), request_id) or request_type+', '+request_id}"
@@ -67,3 +75,4 @@ app.view_closed(MATCH_ALL_PATTERN)(*ARGS, **LAZY_KWARGS)
 
 if __name__ == "__main__":
     app.start(3000)
+    update_local_region_records()

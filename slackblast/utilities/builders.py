@@ -13,6 +13,7 @@ from utilities.helper_functions import (
     replace_slack_user_ids,
     safe_get,
     check_for_duplicate,
+    update_local_region_records,
 )
 import copy
 from logging import Logger
@@ -46,6 +47,18 @@ def add_custom_field_blocks(form: slack_orm.BlockView, region_record: Region) ->
     return output_form
 
 
+def add_loading_form(body: dict, client: WebClient) -> str:
+    trigger_id = safe_get(body, "trigger_id")
+    loading_form_response = forms.LOADING_FORM.post_modal(
+        client=client,
+        trigger_id=trigger_id,
+        title_text="Loading...",
+        submit_button_text="None",
+        callback_id="loading-id",
+    )
+    return safe_get(loading_form_response, "view", "id")
+
+
 def build_backblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
@@ -63,12 +76,14 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
         or (safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID)
     ):
         backblast_method = "create"
-        update_view_id = None
+        update_view_id = add_loading_form(body, client)
         duplicate_check = False
         parent_metadata = {}
     else:
         backblast_method = "edit"
-        update_view_id = safe_get(body, "view", "id") or safe_get(body, "container", "view_id")
+        update_view_id = (
+            safe_get(body, "view", "id") or safe_get(body, "container", "view_id") or add_loading_form(body, client)
+        )
         duplicate_check = safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID
         parent_metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
 
@@ -175,7 +190,7 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
     logger.debug(backblast_form.blocks)
     logger.debug("backblast_form is {}".format(backblast_form.as_form_field()))
 
-    if duplicate_check:
+    if duplicate_check or update_view_id:
         backblast_form.update_modal(
             client=client,
             view_id=update_view_id,
@@ -194,10 +209,9 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
 
 
 def build_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    trigger_id = safe_get(body, "trigger_id")
     if safe_get(body, "command") == "/config-slackblast":
         initial_config_data = None
-        update_view_id = None
+        update_view_id = add_loading_form(body, client)
     else:
         initial_config_data = forms.CONFIG_FORM.get_selected_values(body)
         update_view_id = safe_get(body, "view", "id") or safe_get(body, "container", "view_id")
@@ -210,13 +224,6 @@ def build_config_form(body: dict, client: WebClient, logger: Logger, context: di
             email_password_decrypted = fernet.decrypt(region_record.email_password.encode()).decode()
         else:
             email_password_decrypted = "SamplePassword123!"
-
-        # logger.debug("running fuzzy match")
-        # schema_best_guesses = run_fuzzy_match(region_record.workspace_name)
-        # schema_best_guesses.append("Other (enter below)")
-        # config_form.set_options(
-        #     {actions.CONFIG_PAXMINER_DB: slack_orm.as_selector_options(schema_best_guesses)}
-        # )
 
         config_form.set_initial_values(
             {
@@ -259,20 +266,12 @@ def build_config_form(body: dict, client: WebClient, logger: Logger, context: di
         config_form.delete_block(actions.CONFIG_PASSWORD_CONTEXT)
         config_form.delete_block(actions.CONFIG_POSTIE_CONTEXT)
 
-    if update_view_id:
-        config_form.update_modal(
-            client=client,
-            view_id=update_view_id,
-            callback_id=actions.CONFIG_CALLBACK_ID,
-            title_text="Configure Slackblast",
-        )
-    else:
-        config_form.post_modal(
-            client=client,
-            trigger_id=trigger_id,
-            callback_id=actions.CONFIG_CALLBACK_ID,
-            title_text="Configure Slackblast",
-        )
+    config_form.update_modal(
+        client=client,
+        view_id=update_view_id,
+        callback_id=actions.CONFIG_CALLBACK_ID,
+        title_text="Configure Slackblast",
+    )
 
 
 def ignore_event(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
@@ -282,8 +281,8 @@ def ignore_event(body: dict, client: WebClient, logger: Logger, context: dict, r
 def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
-    trigger_id = safe_get(body, "trigger_id")
 
+    update_view_id = add_loading_form(body, client)
     preblast_form = copy.deepcopy(forms.PREBLAST_FORM)
 
     if (safe_get(body, "command") in ["/preblast"]) or (
@@ -322,9 +321,9 @@ def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: 
         initial_preblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
         preblast_form.set_initial_values(initial_preblast_data)
 
-    preblast_form.post_modal(
+    preblast_form.update_modal(
         client=client,
-        trigger_id=trigger_id,
+        view_id=update_view_id,
         callback_id=callback_id,
         title_text=f"{preblast_method} Preblast",
         parent_metadata=preblast_metadata,
@@ -334,7 +333,6 @@ def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: 
 def build_strava_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
-    trigger_id = safe_get(body, "trigger_id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
     lambda_function_host = safe_get(context, "lambda_request", "headers", "Host")
 
@@ -350,6 +348,7 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
     )
 
     if allow_strava:
+        update_view_id = add_loading_form(body, client)
         user_records: List[User] = DbManager.find_records(
             User, filters=[User.user_id == user_id, User.team_id == team_id]
         )
@@ -410,9 +409,9 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
 
         strava_form = slack_orm.BlockView(blocks=strava_blocks)
 
-        strava_form.post_modal(
+        strava_form.update_modal(
             client=client,
-            trigger_id=trigger_id,
+            view_id=update_view_id,
             callback_id=actions.STRAVA_CALLBACK_ID,
             title_text=title_text,
             submit_button_text="None",
@@ -494,6 +493,7 @@ def build_custom_field_menu(
             id=region_record.team_id,
             fields={"custom_fields": custom_fields},
         )
+        update_local_region_records()
 
     for custom_field in custom_fields.values():
         label = f"Name: {custom_field['name']}\nType: {custom_field['type']}"
@@ -667,6 +667,7 @@ def delete_custom_field(body: dict, client: WebClient, logger: Logger, context: 
     custom_fields: dict = region_record.custom_fields
     custom_fields.pop(custom_field_name)
     DbManager.update_record(cls=Region, id=team_id, fields={"custom_fields": custom_fields})
+    update_local_region_records()
     build_custom_field_menu(body, client, logger, context, region_record, update_view_id=view_id)
 
 

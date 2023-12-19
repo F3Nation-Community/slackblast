@@ -6,12 +6,14 @@ from utilities.database import DbManager
 from utilities.slack import actions
 from datetime import datetime
 from utilities.constants import LOCAL_DEVELOPMENT
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 from fuzzywuzzy import fuzz
 from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 import re
 from slack_sdk.web import WebClient
+
+REGION_RECORDS: Dict[str, Region] = {}
 
 
 def get_oauth_flow():
@@ -285,7 +287,10 @@ def replace_slack_user_ids(text: str, client, logger, region_record: Region = No
 
 
 def get_region_record(team_id: str, body, context, client, logger) -> Region:
-    region_record: Region = DbManager.get_record(Region, id=team_id)
+    if not REGION_RECORDS:
+        update_local_region_records()
+
+    region_record = safe_get(REGION_RECORDS, team_id)
     team_domain = safe_get(body, "team", "domain")
 
     if not region_record:
@@ -306,6 +311,7 @@ def get_region_record(team_id: str, body, context, client, logger) -> Region:
                 editing_locked=0,
             )
         )
+        REGION_RECORDS[team_id] = region_record
 
     return region_record
 
@@ -328,3 +334,10 @@ def get_request_type(body: dict) -> Tuple[str]:
         return ("view_closed", safe_get(body, "view", "callback_id"))
     else:
         return ("unknown", "unknown")
+
+
+def update_local_region_records() -> None:
+    print("Updating local region records...")
+    region_records: List[Region] = DbManager.find_records(Region, filters=[True])
+    global REGION_RECORDS
+    REGION_RECORDS = {region.team_id: region for region in region_records}

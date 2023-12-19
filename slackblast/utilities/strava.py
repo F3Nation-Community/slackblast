@@ -212,7 +212,7 @@ def handle_strava_modify(body: dict, client: WebClient, logger: Logger, context:
     msg = f"<@{user_id}> has connected this backblast to a <https://www.strava.com/activities/{strava_activity_id}|Strava activity>!"
     if (safe_get(activity_data, "calories") is not None) & (safe_get(activity_data, "distance") is not None):
         msg += f" He traveled {round(activity_data['distance'] * 0.00062137, 1)} miles :runner: and burned "
-        f"{activity_data['calories']} calories :fire:."
+        msg += f"{activity_data['calories']} calories :fire:."
     elif safe_get(activity_data, "calories"):
         msg += f" He burned {activity_data['calories']} calories :fire:."
     elif safe_get(activity_data, "distance"):
