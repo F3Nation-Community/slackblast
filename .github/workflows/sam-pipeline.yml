@@ -1,0 +1,102 @@
+on:
+  push:
+    branches:
+      - main
+      # - staging
+jobs:
+  sam-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      # - name: Determine deployment stack name
+      #   uses: haya14busa/action-cond@v1
+      #   id: STACK_NAME
+      #   with:
+      #     cond: ${{ github.ref == 'refs/heads/master' }}
+      #     if_true: 'slackblast-prod'
+      #     if_false: 'slackblast-test'
+
+      # - name: Pull appropriate client secret
+      #   uses: haya14busa/action-cond@v1
+      #   id: ENV_SLACK_CLIENT_SECRET
+      #   with:
+      #     cond: ${{ github.ref == 'refs/heads/master' }}
+      #     if_true: ${{ secrets.SLACK_CLIENT_SECRET_PROD }}
+      #     if_false: ${{ secrets.SLACK_CLIENT_SECRET_TEST }}
+
+      # - name: Pull appropriate signing secret
+      #   uses: haya14busa/action-cond@v1
+      #   id: ENV_SLACK_SIGNING_SECRET
+      #   with:
+      #     cond: ${{ github.ref == 'refs/heads/master' }}
+      #     if_true: ${{ secrets.SLACK_SIGNING_SECRET_PROD }}
+      #     if_false: ${{ secrets.SLACK_SIGNING_SECRET_TEST }}
+
+      # - name: Set stage for other variables
+      #   uses: haya14busa/action-cond@v1
+      #   id: STAGE
+      #   with:
+      #     cond: ${{ github.ref == 'refs/heads/master' }}
+      #     if_true: prod
+      #     if_false: staging
+
+      # sam build
+      - run: sam build --use-container
+      # Run Unit tests- Specify unit tests here
+
+      # Publish artifact (need to publish app?)
+      - name: Publish artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifact
+          path: './.aws-sam/build'
+
+  sam-deploy-test:
+    runs-on: "ubuntu-latest"
+    environment: "test"
+    needs: sam-build
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: build-artifact
+          path: './.aws-sam/build'
+
+      - run: sam deploy -t .aws-sam/build/template.yaml --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ vars.AWS_STACK_NAME }} --s3-bucket ${{ vars.AWS_S3_BUCKET }} --capabilities CAPABILITY_IAM --region us-east-2 --no-disable-rollback --force-upload --parameter-overrides "SlackClientSecret=${{ secrets.SLACK_CLIENT_SECRET }} SlackSigningSecret=${{ secrets.SLACK_SIGNING_SECRET }} Stage=${{ vars.STAGE_NAME }} DatabaseHost=${{ secrets.DATABASE_HOST }} DatabasePassword=${{ secrets.ADMIN_DATABASE_PASSWORD }} PasswordEncryptKey=${{ secrets.PASSWORD_ENCRYPT_KEY }} StravaClientID=${{ secrets.STRAVA_CLIENT_ID }} StravaClientSecret=${{ secrets.STRAVA_CLIENT_SECRET }}"
+
+  sam-deploy-prod:
+    runs-on: "ubuntu-latest"
+    environment: "prod"
+    needs: [sam-build, sam-deploy-test]
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: build-artifact
+          path: './.aws-sam/build'
+      
+      - run: sam deploy -t .aws-sam/build/template.yaml --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ vars.AWS_STACK_NAME }} --s3-bucket ${{ vars.AWS_S3_BUCKET }} --capabilities CAPABILITY_IAM --region us-east-2 --no-disable-rollback --force-upload --parameter-overrides "SlackClientSecret=${{ secrets.SLACK_CLIENT_SECRET }} SlackSigningSecret=${{ secrets.SLACK_SIGNING_SECRET }} Stage=${{ vars.STAGE_NAME }} DatabaseHost=${{ secrets.DATABASE_HOST }} DatabasePassword=${{ secrets.ADMIN_DATABASE_PASSWORD }} PasswordEncryptKey=${{ secrets.PASSWORD_ENCRYPT_KEY }} StravaClientID=${{ secrets.STRAVA_CLIENT_ID }} StravaClientSecret=${{ secrets.STRAVA_CLIENT_SECRET }}"
+# # sam deploy
+#       - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ steps.STACK_NAME.outputs.value }} --s3-bucket qsignups-deploy --capabilities CAPABILITY_IAM --region us-east-2 --no-disable-rollback --force-upload --parameter-overrides "SlackClientSecret=${{ steps.ENV_SLACK_CLIENT_SECRET.outputs.value }} SlackSigningSecret=${{ steps.ENV_SLACK_SIGNING_SECRET.outputs.value }} Stage=${{ steps.STAGE.outputs.value }} DatabaseHost=${{ secrets.DATABASE_HOST }} DatabasePassword=${{ secrets.ADMIN_DATABASE_PASSWORD }} PasswordEncryptKey=${{ secrets.PASSWORD_ENCRYPT_KEY }}"

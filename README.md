@@ -1,153 +1,148 @@
 # Slackblast
 
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-[![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
+Slackblast is a simple application you can get up and running in your Slack environment that will pop up a simple Backblast form for someone to fill out in the Slack App (mobile or desktop or web) when they type `/slackblast`, `/backblast`, or `/preblast`. Slackblast interfaces with your PAXminer database directly, and its posts do not need to be scraped by PAXminer (PAXminer will ignore them).
 
-<!-- ALL-CONTRIBUTORS-BADGE:END -->
+Slackblast can serve any number of regions and runs on AWS Lambda - installation is as simple as a [simple link click](#getting-started-), without the need for you to get your own server up and running.
 
-Slackblast is a simple application you can get up and running in your Slack environment that will pop up a simple Backblast form for someone to fill out in the Slack App (mobile or desktop or web) when they type /slackblast. The advantage of slackblast is that it puts the backblast in a format that is compatible with [PAXminer](https://github.com/F3Nation-Community/PAXminer), which makes it easier to compile stats on users each month.
+When the user types `/slackblast`, `/backblast`, or `/preblast` and hits send, a window like the one below will pop up:
 
-When the user types the /slackblast command and hits send, a window like the one below will pop up:
-
-![Screenshot](https://raw.githubusercontent.com/F3Nation-Community/slackblast/main/SlackBlast%20Modal.png)
-
-For a short tutorial on how to use the app, go to https://www.loom.com/share/705b67bfd30f40ae902fae7a6c1a7421
+<img src="assets/backblast_demo.png" width="500">
 
 # Getting started
 
-From a technical perspective, Slackblast is a Python web application that utilizes the modal window inside slack to make posting backblasts easier for PAX.
+Installation to your Slack Space is simple. For best results, please make sure you have a working install of PAXMiner in your region.
+1. Click [this link](https://n1tbdh3ak9.execute-api.us-east-2.amazonaws.com/Prod/slack/install) from a desktop computer
+2. Make sure to select your region in the upper right if you are signed into multiple spaces
 
-Go to https://api.slack.com/start/overview#creating to read up on how to create a slack app. Click their `Create a Slack app` while signed into your F3 region's Slack. The main idea is that you will set up a slashcommand, e.g. `/slackblast` or `/backblast`, that will send the request to your server that is running this web application (we recommend using a free Azure App Service) that will respond with a command to tell Slack to open up a modal with the fields to fill out a backblast post. When the user hits submit on the modal, the information will be sent to your server where it will then format it and post to the designated Slack channel!
-
-Bonus: the post will be in a format friendly for Paxminer to mine and gather stats.
-
-Bonus 2: the post can be emailed to automatically post to Wordpress
-
-Go to https://azure.microsoft.com/en-us/services/app-service/ to create a Free Azure App Service to host this web application. The [VSCode Azure Extensions](https://code.visualstudio.com/docs/azure/extensions) will be helpful to upload your own .env file with your region's specific Slack and opinionated settings. See how to [integrate your Azure App Service with Github](https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/app-service/deploy-continuous-deployment.md) for easy deployments.
-
-When you finish setting up and installing the slackblast app in Slack, you will get a bot token also available under the OAuth & Permissions settings. You'll also get a verification token and signing secret on the Basic Information settings. You will plug that information into your own .env file. When you finish creating the Azure app, you will need to get the URL and add it (with `/slack/events` added to it) into three locations within the slackblast app settings. Lastly, you will need to add several Scopes to the Bot Token Scopes on the OAuth & Permissions settings. Read on for the nitty gritty details.
-
-# All environment variables
-
-slackblast requires the following environment variables:
-
-| Variable                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SLACK_BOT_TOKEN              | A value from the token on the OAuth page in the slack app                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| SLACK_VERIFICATION_TOKEN     | A value from the Basic Information -> Verification Token field in the settings for your slack app.                                                                                                                                                                                                                                                                                                                                                                                          |
-| SLACK_SIGNING_SECRET         | Secret from the App Credentials page for your app in Slack.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| POST_TO_CHANNEL              | A boolean value `True` or `False` that indicates whether or not to take the modal data and post to a channel in slack                                                                                                                                                                                                                                                                                                                                                                       |
-| CHANNEL                      | The channel id (such as C01DB7S04KH -> NOT THE NAME) you want the modal results to post to by default. other values supported. set to `THE_AO` to post to the channel that was selected in the modal by default. Set to `USER` to post a DM from the slackblast to you with the results (testing) by default. If blank or missing, then the default channel will be the channel the user typed the slash command. In the modal, the user can choose the "destination" and where to post to. |
-| EMAIL_SERVER                 | SMTP Server to use to send the email, default is `smtp.gmail.com` so if sending from a gmail account you only need to fill out email_user and email_password email                                                                                                                                                                                                                                                                                                                          |
-| EMAIL_SERVER_PORT            | Email server port. default is `465`                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| EMAIL_USER                   | Email account to send on behalf of                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| EMAIL_PASSWORD               | Email account password                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| EMAIL_TO                     | To send the post to an email address. This will default the choice in the modal but can be changed by user. set `EMAIL_OPTION_HIDDEN_IN_MODAL` to prevent user from changing it.                                                                                                                                                                                                                                                                                                            |
-| EMAIL_OPTION_HIDDEN_IN_MODAL | Hide the option from the PAX on sending an email in the modal                                                                                                                                                                                                                                                                                                                                                                                                                               |
-
-<br><br>
-
+To use, simply type `/slackblast`, `/backblast` or `/preblast` from any channel and a form should come up.
+                                                                         
 # Slack App Configuration
 
-The url for your deployed app needs to be placed in three locations in the slackblast app in Slack:
+Slackblast has a number of region-configurable settings. To access and set these, use the `/config-slackblast` command.
 
-1. Interactivity and Shortcuts
-   - Request URL
-   - Options Load URL
-2. Slash Commands
-   - Request URL
+## Strava Integration
 
-**Format of the URL to be used**
+When enabled, slackblast will put a "Connect to Strava" button on the post, which tagged users can use to connect the slackblast to an existing Strava activity. When clicked, the following process is used:
+- If the user has not used this button before, they will be prompted to allow Slackblast access to their Strava account
+- Otherwise, a list of recent Strava activities will be shown to the user, which they select
+- On the next screen, the user can modify the title / text of the Strava activity, which defaults to the title / moleskine of the Slackblast post
+- After closing / submitting, Slackblast will make a callout in the post thread, recording how far the PAX traveled and how many calories they burned
 
-```
-https://<YOUR-AZURE-APP-NAME>/slack/events
-```
+## Custom Fields
 
-**Scopes**
+Slackblast now allows regions to add fields to backblasts for other things they might want to track. For example, you could track the distance traveled, calories burned, or the category of F3 activity the post is for. This information will be stored in JSON format alongside the backblast, which can later be queried with MySQL's JSON functions (https://dev.mysql.com/doc/refman/8.0/en/json.html). I'll provide some examples / tutorials soon.
 
-```
-app_mentions:read
-channels:read
-chat:write
-chat:write.public
-commands
-im:write
-users:read
-users:read.email
-```
-
-<br>
-
-# Email
-
-All of the email user and password variables will need to be set in order to send an email with the modal contents to the address specified.
+To get started, click the Enable / Edit Custom Fields button in `/config-slackblast`. This will bring up a secondary menu where you can add / delete / edit / enable new fields. Once added and enabled, Custom Fields will be added to the bottom of your Slackblast forms.
 
 ## Create Posts by email
 
-Wordpress allows you to send a post to a special address via email and it will convert it to a post.
+Wordpress allows you to send a post to a special address via email and it will convert it to a post. If you are not using hosted wordpress, then you can create a dedicated gmail or other account and use this address. The `/config-slackblast` menu allows you to set a email server, port, address, and password to the email account you would like the email to come from (gmail is probably best), as well as the email-to-post address you would like it to go to. For those using Postie, you can also enable a format so that users are tagged and the AO is used as a category.
 
-If you are using hosted wordpress set the `EMAIL_TO` address to the random Wordpress email generated by Wordpress, [more information](<https://wordpress.com/support/post-by-email/#:~:text=Go%20to%20My%20Site(s,posts%20by%20sending%20an%20email%E2%80%9D)>).
+## Lock Editing of Backblasts
 
-If you are not using hosted wordpress, then you can create a dedicated gmail or other account and use this address.
+If enabled, this will lock down editing of backblasts to the Q / Co-Qs, the original poster, or Slack admins.
 
-See .env-f3nation-community file for help on local development.
-<br><br>
+## Moleskine Templates
 
-# Deployment
+These templates will serve as the default when your users start a new backblast or preblast.
 
-Go to Azure App Services > Deployment Center and set up an integration with your Github repo where you forked this repo and have the Slackblast code. Azure will create a main\_<your-azure-appname>.yml file under .github/workflows folder, but it should be hidden by default and you should not need to worry about it. Whenever you make any change to your `main` branch, it will deploy the most recent code.
+# Contributing
 
-Here is further reading if you want to know what is going on under the hood.
+Slackblast is in active development, and I welcome any and all help or contributions! Feel free to leave an Issue with bugs or feature requests, or even better leave us a Pull Request.
 
-- Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-- More GitHub Actions for Azure: https://github.com/Azure/actions
-- More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
+## Local Development
 
-# Notes
+If you'd like to contribute to Slackblast, I highly recommend setting up a local development environment for testing. Below are the steps to get it running (I did this in unix, YMMV on OSX or Windows):
 
-Use vscode locally with a `.env` file with the above variables. With vscode Azure extension, you can right-click on 'Application Settings' and it will upload your `.env` variables right into the AppService.
-
-Pushing to the github repo should trigger a new deployment to Azure if you set up the AppService correct.
-<br><br>
-
-# Startup command(s)
-
-To run locally:
-
+1. Clone the repo:
+```sh
+git clone
 ```
-pip install -r requirements.txt
-gunicorn -k uvicorn.workers.UvicornWorker --bind "0.0.0.0:8000" --log-level debug app:app
+2. Install the [AWS Serverless Application Model (SAM) CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
+3. Set up a local database (code & instructions coming)
+4. Create the Slack bot: 
+    1. Navigate to [api.slack.com]()
+    2. Click "Create an app"
+    3. Click "From a manifest", select your workspace
+    4. Paste in the manifest below
+    5. After creating the app, you will need a couple of items: first, copy and save the Signing Secret from Basic Information. Second, copy and save the Bot User OAuth Token from OAuth & Permissions
+
+```yaml
+display_information:
+  name: slackblast-dev # feel free to change this
+  description: An invokable form to produce properly-formatted backblasts and preblasts
+  background_color: "#000000"
+features:
+  bot_user:
+    display_name: slackblast-dev # feel free to change this
+    always_online: true
+  slash_commands:
+    - command: /slackblast
+      url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
+      description: Launch backblast template
+      should_escape: false
+    - command: /preblast
+      url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
+      description: Launch preblast template
+      should_escape: false
+    - command: /config-slackblast
+      url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
+      description: Configures your region's instance of slackblast (email settings, etc)
+      should_escape: false
+    - command: /backblast
+      url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
+      description: Launch backblast template
+      should_escape: false
+oauth_config:
+  redirect_urls:
+    - https://YOUR_URL.ngrok.io/slack/install # You'll be editing this
+  scopes:
+    bot:
+      - channels:read
+      - chat:write
+      - chat:write.customize
+      - chat:write.public
+      - commands
+      - im:write
+      - team:read
+      - users:read
+settings:
+  interactivity:
+    is_enabled: true
+    request_url: https://YOUR_URL.ngrok.io/slack/events
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false
 ```
 
-In another console, use the url output by ngrok to update your slackblast app settings:
 
+5. Back to your project, create a `env.json` file at the root of the directory. The file should take the format (you will need to replace most of the values):
+```json
+{
+  "Parameters": {
+    "SLACK_SIGNING_SECRET": "SIGNING_SECRET_FROM_ABOVE",
+    "SLACK_BOT_TOKEN": "BOT_TOKEN_FROM_ABOVE",
+    "DATABASE_HOST": "localhost",
+    "ADMIN_DATABASE_USER": "local_user",
+    "ADMIN_DATABASE_PASSWORD": "local_password",
+    "ADMIN_DATABASE_SCHEMA": "slackblast",
+    "PASSWORD_ENCRYPT_KEY": "ASK_MONEYBALL_FOR_THIS"
+  }
+}
 ```
-ngrok http 8000
+  - Small note: I had to use my local ip address for `DATABASE_HOST`, not "localhost"
+6. Install ngrok and run the following command from your terminal:
+```sh
+ngrok http 3000
 ```
-
-See .env-f3nation-community file for more details on local development
-<br><br>
-
-# Contributors ✨
-
-Thanks goes to these awesome PAX ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tr>
-    <td align="center"><a href="https://github.com/wolfpackt99"><img src="https://avatars.githubusercontent.com/u/2165251?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Trent</b></sub></a><br /><a href="#ideas-wolfpackt99" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=wolfpackt99" title="Code">💻</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=wolfpackt99" title="Documentation">📖</a> <a href="#mentoring-wolfpackt99" title="Mentoring">🧑‍🏫</a> <a href="https://github.com/F3Nation-Community/slackblast/pulls?q=is%3Apr+reviewed-by%3Awolfpackt99" title="Reviewed Pull Requests">👀</a></td>
-    <td align="center"><a href="https://github.com/yankeestom"><img src="https://avatars.githubusercontent.com/u/34582097?v=4?s=100" width="100px;" alt=""/><br /><sub><b>yankeestom</b></sub></a><br /><a href="#ideas-yankeestom" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=yankeestom" title="Code">💻</a> <a href="https://github.com/F3Nation-Community/slackblast/pulls?q=is%3Apr+reviewed-by%3Ayankeestom" title="Reviewed Pull Requests">👀</a></td>
-    <td align="center"><a href="https://github.com/willhlaw"><img src="https://avatars.githubusercontent.com/u/943510?v=4?s=100" width="100px;" alt=""/><br /><sub><b>willhlaw</b></sub></a><br /><a href="#ideas-willhlaw" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=willhlaw" title="Code">💻</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=willhlaw" title="Documentation">📖</a> <a href="#projectManagement-willhlaw" title="Project Management">📆</a></td>
-    <td align="center"><a href="https://github.com/jim-muzzall"><img src="https://avatars.githubusercontent.com/u/88450074?v=4?s=100" width="100px;" alt=""/><br /><sub><b>jim-muzzall</b></sub></a><br /><a href="#ideas-jim-muzzall" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/F3Nation-Community/slackblast/commits?author=jim-muzzall" title="Documentation">📖</a></td>
-  </tr>
-</table>
-
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
+7. Copy the Forwarding URL (has ngrok.io at the end)
+8. Back in your browser for the Slack app, replace all of the YOUR_URLs with the ngrok Forwarding URL
+9. You are now ready to roll! This would be a good time to make sure you're on your own branch :)
+10. To run the app after you've made some changes, use the following command:
+```sh
+sam build --use-container --container-env-var-file env.json && sam local start-api --env-vars env.json --warm-containers EAGER
+```
+11. The `sam build` command will build a Docker container mimicking the functionality of the deployed Lambda. The `local start-api` command starts a listener on that container. The Slack API will send requests to your ngrok URL, which will route to your local Docker. If you want to make changes to the code, stop the deployment by using [Ctrl-C] in the terminal where you ran the `sam build` command, and re-run the command.
+    - If you want to avoid rebuilding your Docker every time you make a change, you can simply edit the code created by the build command in the `.aws-sam` directory. However, this folder will not be version controlled, so I choose not to use it

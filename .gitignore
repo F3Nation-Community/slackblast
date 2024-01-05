@@ -145,3 +145,10 @@ cython_debug/
 # automatically put the published file, e.g. main_<your-azure-app-name>.yml into
 # your github repo
 main_*.yml
+
+aws-env.sh
+testing_code.py
+env.json
+
+.aws-sam/
+.aws-sam-old/
