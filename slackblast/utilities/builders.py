@@ -399,7 +399,7 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
                                 actions.STRAVA_CHANNEL_ID: channel_id,
                                 actions.STRAVA_BACKBLAST_TS: backblast_ts,
                                 actions.STRAVA_BACKBLAST_TITLE: backblast_meta["title"],
-                                actions.STRAVA_BACKBLAST_MOLESKINE: moleskine_text[:1500],
+                                # actions.STRAVA_BACKBLAST_MOLESKINE: moleskine_text[:1500],
                             }
                         ),
                         # TODO: add confirmation modal
@@ -415,6 +415,7 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
             callback_id=actions.STRAVA_CALLBACK_ID,
             title_text=title_text,
             submit_button_text="None",
+            parent_metadata={actions.STRAVA_BACKBLAST_MOLESKINE: moleskine_text},
         )
     else:
         client.chat_postEphemeral(
@@ -440,11 +441,17 @@ def build_strava_modify_form(body: dict, client: WebClient, logger: Logger, cont
         "backblast_ts": backblast_ts,
     }
 
+    activity_description = backblast_moleskine.replace("*", "")
+    # remove all text after `COT:` or `COT :` if it exists
+    if "COT:" in activity_description:
+        activity_description = activity_description.split("COT:")[0]
+    activity_description += "\n\nLearn more about F3 at https://f3nation.com"
+
     modify_form = copy.deepcopy(forms.STRAVA_ACTIVITY_MODIFY_FORM)
     modify_form.set_initial_values(
         {
             actions.STRAVA_ACTIVITY_TITLE: backblast_title,
-            actions.STRAVA_ACTIVITY_DESCRIPTION: f"{backblast_moleskine.replace('*','')}\n\nLearn more about F3 at https://f3nation.com",
+            actions.STRAVA_ACTIVITY_DESCRIPTION: activity_description,
         }
     )
 
