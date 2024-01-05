@@ -428,11 +428,12 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
 
 def build_strava_modify_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     strava_metadata = json.loads(safe_get(body, "actions", 0, "value") or "{}")
+    private_metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
     strava_activity_id = strava_metadata[actions.STRAVA_ACTIVITY_ID]
     channel_id = strava_metadata[actions.STRAVA_CHANNEL_ID]
     backblast_ts = strava_metadata[actions.STRAVA_BACKBLAST_TS]
     backblast_title = strava_metadata[actions.STRAVA_BACKBLAST_TITLE]
-    backblast_moleskine = strava_metadata[actions.STRAVA_BACKBLAST_MOLESKINE]
+    backblast_moleskine = private_metadata[actions.STRAVA_BACKBLAST_MOLESKINE]
 
     view_id = safe_get(body, "container", "view_id")
     backblast_metadata = {
