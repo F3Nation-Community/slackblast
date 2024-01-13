@@ -46,10 +46,9 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     ao = safe_get(backblast_data, actions.BACKBLAST_AO)
     files = safe_get(backblast_data, actions.BACKBLAST_FILE)
 
+    file_list = []
     for file in files:
         file_url = file["url_private_download"]
-        print(file_url)
-        print(client.token)
         file_id = file["id"]
         file_type = file["filetype"]
         file_mimetype = file["mimetype"]
@@ -74,6 +73,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                 f, "slackblast-images", f"{file_id}.{file_type}", ExtraArgs={"ContentType": file_mimetype}
             )
         os.remove(file_path)
+        file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_id}.{file_type}")
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 

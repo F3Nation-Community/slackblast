@@ -371,6 +371,24 @@ class ContextBlock(BaseBlock):
 
 
 @dataclass
+class ImageBlock(BaseBlock):
+    image_url: str = None
+    alt_text: str = None
+
+    def as_form_field(self):
+        j = {
+            "type": "image",
+            "image_url": self.image_url,
+            "alt_text": self.alt_text,
+        }
+        if self.action:
+            j["block_id"] = self.action
+        if self.label:
+            j["title"] = self.make_label_field()
+        return j
+
+
+@dataclass
 class ContextElement(BaseElement):
     initial_value: str = None
 
