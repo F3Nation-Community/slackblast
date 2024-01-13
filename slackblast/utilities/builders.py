@@ -709,3 +709,21 @@ def handle_preblast_edit_button(body: dict, client: WebClient, logger: Logger, c
             channel=channel_id,
             user=user_id,
         )
+
+def build_welcome_message_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    update_view_id = add_loading_form(body, client)
+    welcome_message_config_form = copy.deepcopy(forms.WELCOME_MESSAGE_CONFIG_FORM)
+
+    existing_template = region_record.welcome_message_template
+    if existing_template:
+        welcome_message_config_form.set_initial_values(
+            { actions.WELCOME_MESSAGE_TEMPLATE: region_record.welcome_message_template }
+        )
+
+    welcome_message_config_form.update_modal(
+        client=client,
+        view_id=update_view_id,
+        callback_id=actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID,
+        title_text=f"Welcome Message",
+        parent_metadata=None,
+    )

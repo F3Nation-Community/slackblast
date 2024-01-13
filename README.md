@@ -87,6 +87,10 @@ features:
       url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
       description: Launch preblast template
       should_escape: false
+    - command: /config-welcome-message
+      url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
+      description: Configures your region's welcome message
+      should_escape: false
     - command: /config-slackblast
       url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
       description: Configures your region's instance of slackblast (email settings, etc)

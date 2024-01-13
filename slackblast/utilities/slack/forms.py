@@ -360,6 +360,27 @@ CONFIG_FORM = orm.BlockView(
     ]
 )
 
+WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
+    blocks=[
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="*This content will be sent to any new user who joins this Slack workspace.*\n\n"
+                "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your Slack.\n" +
+                "Who should they reach out to if they have a question? What channels should they join? What does HC mean and " +
+                "how do they do that? Should their Slack handle be their F3 name?\n\n" +
+                "*If tagging users, make sure to replace spaces with underscores, such as: @Moneyball (STL Gateway) -> @Moneyball_(STL_Gateway)." +
+                "Spaces count, but capitalization does not. URLs work just fine.",
+            ),
+        ),
+        orm.InputBlock(
+            label="Welcome Message",
+            action=actions.WELCOME_MESSAGE_CONFIG,
+            optional=False,
+            element=orm.PlainTextInputElement(placeholder="Enter a welcome message..."),
+        ),
+    ]
+)
+
 STRAVA_ACTIVITY_MODIFY_FORM = orm.BlockView(
     blocks=[
         orm.InputBlock(

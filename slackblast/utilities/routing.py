@@ -6,6 +6,7 @@ COMMAND_MAPPER = {
     "/backblast": builders.build_backblast_form,
     "/slackblast": builders.build_backblast_form,
     "/preblast": builders.build_preblast_form,
+    "/config-welcome-message": builders.build_welcome_message_form,
     "/config-slackblast": builders.build_config_form,
 }
 
@@ -19,6 +20,7 @@ VIEW_MAPPER = {
     actions.BACKBLAST_EDIT_CALLBACK_ID: handlers.handle_backblast_post,
     actions.PREBLAST_CALLBACK_ID: handlers.handle_preblast_post,
     actions.PREBLAST_EDIT_CALLBACK_ID: handlers.handle_preblast_post,
+    actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID: handlers.handle_welcome_message_config_post,
     actions.CONFIG_CALLBACK_ID: handlers.handle_config_post,
     actions.STRAVA_MODIFY_CALLBACK_ID: strava.handle_strava_modify,
     actions.CUSTOM_FIELD_ADD_CALLBACK_ID: handlers.handle_custom_field_add,

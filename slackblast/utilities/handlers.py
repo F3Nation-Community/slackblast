@@ -472,6 +472,21 @@ def handle_config_post(body: dict, client: WebClient, logger: Logger, context: d
     update_local_region_records()
     print(json.dumps({"event_type": "successful_config_update", "team_name": region_record.workspace_name}))
 
+def handle_welcome_message_config_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    welcome_config_data = forms.WELCOME_MESSAGE_CONFIG_FORM.get_selected_values(body)
+
+    fields = {
+        Region.welcome_message_template: safe_get(welcome_config_data, actions.WELCOME_MESSAGE_TEMPLATE) or "",
+    }
+
+    DbManager.update_record(
+        cls=Region,
+        id=context["team_id"],
+        fields=fields,
+    )
+    update_local_region_records()
+    print(json.dumps({"event_type": "successful_config_update", "team_name": region_record.workspace_name}))
+
 
 def handle_custom_field_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     config_data = forms.CUSTOM_FIELD_ADD_EDIT_FORM.get_selected_values(body)
