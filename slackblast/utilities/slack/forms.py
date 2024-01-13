@@ -108,8 +108,8 @@ BACKBLAST_FORM = orm.BlockView(
             ),
         ),
         orm.InputBlock(
-            label="Upload a boyband (optional)",
-            element=orm.FileInputElement(),
+            label="Upload a boyband",
+            element=orm.FileInputElement(max_files=1),
             action=actions.BACKBLAST_FILE,
             optional=True,
         ),
