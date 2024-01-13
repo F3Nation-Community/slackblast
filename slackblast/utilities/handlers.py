@@ -51,7 +51,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         file_id = file["id"]
         file_type = file["filetype"]
         r = requests.get(file_url, headers={"Authorization": f"Bearer {client.token}"})
-        img_bytes = bytearray(r.content)
+        img_bytes = r.content
 
         file_path = f"/tmp/{file_id}.{file_type}"
         with open(file_path, "wb") as f:
@@ -60,7 +60,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         if not constants.LOCAL_DEVELOPMENT:
             # upload to s3
             s3_client = boto3.client("s3")
-            res = s3_client.upload_file(file_path, "slackblast-images", f"{file_id}.{file_type}")
+            res = s3_client.upload_file(file_path, "slackblast-images", f"{file_id}")
             logger.info(f"Uploaded file to s3: {res}")
             os.remove(file_path)
 
