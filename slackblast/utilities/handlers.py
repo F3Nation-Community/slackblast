@@ -48,28 +48,32 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
 
     for file in files:
         file_url = file["url_private_download"]
+        print(file_url)
+        print(client.token)
         file_id = file["id"]
         file_type = file["filetype"]
         file_mimetype = file["mimetype"]
         r = requests.get(file_url, headers={"Authorization": f"Bearer {client.token}"})
+        r.raise_for_status()
         img_bytes = r.content
 
         file_path = f"/tmp/{file_id}.{file_type}"
         with open(file_path, "wb") as f:
             f.write(img_bytes)
 
-        if not constants.LOCAL_DEVELOPMENT:
-            # upload to s3
+        if constants.LOCAL_DEVELOPMENT:
+            s3_client = boto3.client(
+                "s3",
+                aws_access_key_id=os.environ[constants.AWS_ACCESS_KEY_ID],
+                aws_secret_access_key=os.environ[constants.AWS_SECRET_ACCESS_KEY],
+            )
+        else:
             s3_client = boto3.client("s3")
-            with open(file_path, "rb") as f:
-                s3_client.upload_fileobj(
-                    f, "slackblast-images", f"{file_id}.{file_type}", ExtraArgs={"ContentType": file_mimetype}
-                )
-            # img_binary = open(file_path, "rb").read()
-            # s3_client.upload_fileobj(
-            #     file_path, "slackblast-images", f"{file_id}.{file_type}", ExtraArgs={"ContentType": file_mimetype}
-            # )
-            os.remove(file_path)
+        with open(file_path, "rb") as f:
+            s3_client.upload_fileobj(
+                f, "slackblast-images", f"{file_id}.{file_type}", ExtraArgs={"ContentType": file_mimetype}
+            )
+        os.remove(file_path)
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
