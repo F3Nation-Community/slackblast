@@ -27,7 +27,7 @@ Parameters:
   SlackOauthScopes:
     Description: Auth token used to pass to the controller to get the commands
     Type: String
-    Default: "chat:write,chat:write.customize,chat:write.public,im:write,commands,team:read,users:read,channels:read"
+    Default: "chat:write,chat:write.customize,chat:write.public,im:write,commands,team:read,users:read,channels:read,files:read,files:write"
   Stage:
     Description: Parameter for getting the deployment stage
     Type: String
