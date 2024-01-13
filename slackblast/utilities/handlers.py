@@ -52,6 +52,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         file_type = file["filetype"]
         file_mimetype = file["mimetype"]
         r = requests.get(file_url, headers={"Authorization": f"Bearer {client.token}"})
+        r.raise_for_status()
         img_bytes = r.content
 
         file_path = f"/tmp/{file_id}.{file_type}"
