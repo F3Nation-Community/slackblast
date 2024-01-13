@@ -48,6 +48,8 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
 
     for file in files:
         file_url = file["url_private_download"]
+        print(file_url)
+        print(client.token)
         file_id = file["id"]
         file_type = file["filetype"]
         file_mimetype = file["mimetype"]
