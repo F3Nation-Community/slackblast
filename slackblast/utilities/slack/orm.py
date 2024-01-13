@@ -332,6 +332,26 @@ class MultiUsersSelectElement(BaseElement):
 
 
 @dataclass
+class FileInputElement(BaseElement):
+    max_files: int = None
+    filetypes: List[str] = None
+
+    def get_selected_value(self, input_data, action):
+        return safe_get(input_data, action, action, "files")
+
+    def as_form_field(self, action: str):
+        j = {
+            "type": "file_input",
+            "action_id": action,
+        }
+        if self.max_files:
+            j["max_files"] = self.max_files
+        if self.filetypes:
+            j["filetypes"] = self.filetypes
+        return j
+
+
+@dataclass
 class ContextBlock(BaseBlock):
     element: BaseElement = None
     initial_value: str = ""
