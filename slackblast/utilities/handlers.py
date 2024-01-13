@@ -17,6 +17,10 @@ from utilities.database.orm import Attendance, Backblast, PaxminerUser, Region
 from utilities.database import DbManager
 from cryptography.fernet import Fernet
 from slack_sdk.web import WebClient
+import requests
+import boto3
+
+os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
@@ -40,6 +44,24 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     destination = safe_get(backblast_data, actions.BACKBLAST_DESTINATION)
     email_send = safe_get(backblast_data, actions.BACKBLAST_EMAIL_SEND)
     ao = safe_get(backblast_data, actions.BACKBLAST_AO)
+    files = safe_get(backblast_data, actions.BACKBLAST_FILE)
+
+    for file in files:
+        file_url = file["url_private_download"]
+        file_id = file["id"]
+        file_type = file["filetype"]
+        r = requests.get(file_url, headers={"Authorization": f"Bearer {client.token}"})
+        img_bytes = bytearray(r.content)
+
+        if constants.LOCAL_DEVELOPMENT:
+            file_path = f"/mnt/nas/share/{file_id}.{file_type}"
+            with open(file_path, "wb") as f:
+                f.write(bytes)
+        else:
+            # upload to s3
+            s3_client = boto3.client("s3")
+            res = s3_client.upload_fileobj(img_bytes, "slackblast_images", f"{file_id}.{file_type}")
+            logger.info(f"Uploaded file to s3: {res}")
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
@@ -127,6 +149,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     }
 
     backblast_data.pop(actions.BACKBLAST_MOLESKIN, None)
+    backblast_data.pop(actions.BACKBLAST_FILE, None)
 
     backblast_data[actions.BACKBLAST_OP] = user_id
 
