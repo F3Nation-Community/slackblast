@@ -12,7 +12,7 @@ from utilities.helper_functions import (
     get_channel_name,
     update_local_region_records,
 )
-from utilities.slack import actions, forms
+from utilities.slack import actions, forms, orm
 from utilities.database.orm import Attendance, Backblast, PaxminerUser, Region
 from utilities.database import DbManager
 from cryptography.fernet import Fernet
@@ -44,36 +44,47 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     destination = safe_get(backblast_data, actions.BACKBLAST_DESTINATION)
     email_send = safe_get(backblast_data, actions.BACKBLAST_EMAIL_SEND)
     ao = safe_get(backblast_data, actions.BACKBLAST_AO)
-    files = safe_get(backblast_data, actions.BACKBLAST_FILE)
+    files = safe_get(backblast_data, actions.BACKBLAST_FILE) or []
+
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
     file_list = []
     for file in files:
-        file_url = file["url_private_download"]
-        file_id = file["id"]
-        file_type = file["filetype"]
-        file_mimetype = file["mimetype"]
-        r = requests.get(file_url, headers={"Authorization": f"Bearer {client.token}"})
-        r.raise_for_status()
-        img_bytes = r.content
+        try:
+            r = requests.get(file["url_private_download"], headers={"Authorization": f"Bearer {client.token}"})
+            r.raise_for_status()
 
-        file_path = f"/tmp/{file_id}.{file_type}"
-        with open(file_path, "wb") as f:
-            f.write(img_bytes)
+            file_name = f"{file['id']}.{file['filetype']}"
+            file_path = f"/tmp/{file_name}"
+            with open(file_path, "wb") as f:
+                f.write(r.content)
 
-        if constants.LOCAL_DEVELOPMENT:
-            s3_client = boto3.client(
-                "s3",
-                aws_access_key_id=os.environ[constants.AWS_ACCESS_KEY_ID],
-                aws_secret_access_key=os.environ[constants.AWS_SECRET_ACCESS_KEY],
-            )
-        else:
-            s3_client = boto3.client("s3")
-        with open(file_path, "rb") as f:
-            s3_client.upload_fileobj(
-                f, "slackblast-images", f"{file_id}.{file_type}", ExtraArgs={"ContentType": file_mimetype}
-            )
-        os.remove(file_path)
-        file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_id}.{file_type}")
+            # read first line of file to determine if it's an image
+            with open(file_path, "rb") as f:
+                first_line = f.readline()
+            if first_line[:9] == "<!DOCTYPE":
+                logger.debug(f"File {file_name} is not an image, skipping")
+                client.chat_postMessage(
+                    text="To enable boybands, you will need to reinstall Slackblast with some new permissions. To to this, simply use this link: https://n1tbdh3ak9.execute-api.us-east-2.amazonaws.com/Prod/slack/install. You can edit this backblast and upload a boyband once this is complete.",
+                    channel=user_id,
+                )
+            else:
+                if constants.LOCAL_DEVELOPMENT:
+                    s3_client = boto3.client(
+                        "s3",
+                        aws_access_key_id=os.environ[constants.AWS_ACCESS_KEY_ID],
+                        aws_secret_access_key=os.environ[constants.AWS_SECRET_ACCESS_KEY],
+                    )
+                else:
+                    s3_client = boto3.client("s3")
+                with open(file_path, "rb") as f:
+                    s3_client.upload_fileobj(
+                        f, "slackblast-images", file_name, ExtraArgs={"ContentType": file["mimetype"]}
+                    )
+                os.remove(file_path)
+                file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_name}")
+        except Exception as e:
+            logger.error(f"Error uploading file: {e}")
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
@@ -89,6 +100,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         message_metadata = json.loads(body["view"]["private_metadata"])
         message_channel = safe_get(message_metadata, "channel_id")
         message_ts = safe_get(message_metadata, "message_ts")
+        file_list = safe_get(message_metadata, "files")
     else:
         message_channel = chan
         message_ts = None
@@ -148,6 +160,9 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
             post_msg += f"\n*{field[len(actions.CUSTOM_FIELD_PREFIX):]}*: {str(value)}"
             custom_fields[field[len(actions.CUSTOM_FIELD_PREFIX) :]] = value
 
+    if file_list:
+        custom_fields["files"] = file_list
+
     msg_block = {
         "type": "section",
         "text": {"type": "mrkdwn", "text": post_msg},
@@ -161,7 +176,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     }
 
     backblast_data.pop(actions.BACKBLAST_MOLESKIN, None)
-    backblast_data.pop(actions.BACKBLAST_FILE, None)
+    backblast_data[actions.BACKBLAST_FILE] = file_list
 
     backblast_data[actions.BACKBLAST_OP] = user_id
 
@@ -205,6 +220,16 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
             }
         )
 
+    blocks = [msg_block, moleskin_block]
+    for file in file_list:
+        blocks.append(
+            orm.ImageBlock(
+                alt_text=title,
+                image_url=file,
+            ).as_form_field()
+        )
+    blocks.append(edit_block)
+
     if create_or_edit == "create":
         if region_record.paxminer_schema is None:
             res = client.chat_postMessage(
@@ -219,7 +244,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                 text=f"{moleskin_formatted}\n\nUse the 'New Backblast' button to create a new backblast",
                 username=f"{q_name} (via Slackblast)",
                 icon_url=q_url,
-                blocks=[msg_block, moleskin_block, edit_block],
+                blocks=blocks,
             )
         logger.debug("\nMessage posted to Slack! \n{}".format(post_msg))
         print(json.dumps({"event_type": "successful_slack_post", "team_name": region_record.workspace_name}))
@@ -275,7 +300,7 @@ COUNT: {count}
             text=f"{moleskin_formatted}\n\nUse the 'New Backblast' button to create a new backblast",
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
-            blocks=[msg_block, moleskin_block, edit_block],
+            blocks=blocks,
         )
         logger.debug("\nBackblast updated in Slack! \n{}".format(post_msg))
         print(json.dumps({"event_type": "successful_slack_edit", "team_name": region_record.workspace_name}))

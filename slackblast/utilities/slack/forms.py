@@ -10,6 +10,20 @@ BACKBLAST_FORM = orm.BlockView(
             element=orm.PlainTextInputElement(placeholder="Enter a workout title..."),
         ),
         orm.InputBlock(
+            label="Upload a boyband",
+            element=orm.FileInputElement(
+                max_files=1,
+                filetypes=[
+                    "png",
+                    "jpg",
+                    "heic",
+                    "bmp",
+                ],
+            ),
+            action=actions.BACKBLAST_FILE,
+            optional=True,
+        ),
+        orm.InputBlock(
             label="The AO",
             action=actions.BACKBLAST_AO,
             optional=False,
@@ -106,12 +120,6 @@ BACKBLAST_FORM = orm.BlockView(
                 options=orm.as_selector_options(names=["Send Email", "Don't Send Email"], values=["yes", "no"]),
                 initial_value="yes",
             ),
-        ),
-        orm.InputBlock(
-            label="Upload a boyband",
-            element=orm.FileInputElement(max_files=1),
-            action=actions.BACKBLAST_FILE,
-            optional=True,
         ),
         orm.ContextBlock(
             element=orm.ContextElement(
