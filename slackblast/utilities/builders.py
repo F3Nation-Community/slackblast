@@ -147,6 +147,7 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
         backblast_metadata = parent_metadata or {
             "channel_id": safe_get(body, "container", "channel_id"),
             "message_ts": safe_get(body, "container", "message_ts"),
+            "files": safe_get(initial_backblast_data, actions.BACKBLAST_FILE) or [],
         }
 
         backblast_form.delete_block(actions.BACKBLAST_EMAIL_SEND)
