@@ -49,7 +49,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
     file_list = []
-    for file in files:
+    for file in files or []:
         try:
             r = requests.get(file["url_private_download"], headers={"Authorization": f"Bearer {client.token}"})
             r.raise_for_status()
@@ -221,7 +221,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         )
 
     blocks = [msg_block, moleskin_block]
-    for file in file_list:
+    for file in file_list or []:
         blocks.append(
             orm.ImageBlock(
                 alt_text=title,
