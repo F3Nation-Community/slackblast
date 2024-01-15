@@ -392,7 +392,7 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
                 date_fmt = date.strftime("%m-%d %H:%M")
                 button_elements.append(
                     slack_orm.ButtonElement(
-                        label=f"{date_fmt} - {activity['name']}",
+                        label=f"{date_fmt} - {activity['name']}"[:75],
                         action="-".join([actions.STRAVA_ACTIVITY_BUTTON, str(activity["id"])]),
                         value=json.dumps(
                             {
