@@ -7,7 +7,6 @@ from utilities.slack import actions
 from datetime import datetime
 from utilities.constants import LOCAL_DEVELOPMENT
 from typing import Dict, List, Tuple
-from fuzzywuzzy import fuzz
 from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 import re
@@ -168,18 +167,6 @@ def get_pax(pax):
     for x in pax:
         p += "<@" + x + "> "
     return p
-
-
-def run_fuzzy_match(workspace_name: str) -> List[str]:
-    """Run the fuzz match on the workspace name and return a list of possible matches"""
-    paxminer_region_records = DbManager.execute_sql_query("select schema_name from paxminer.regions")
-    regions_list = [r["schema_name"] for r in paxminer_region_records]
-
-    ratio_dict = {}
-    for region in regions_list:
-        ratio_dict[region] = fuzz.ratio(region, workspace_name)
-
-    return [k for k, v in sorted(ratio_dict.items(), key=lambda item: item[1], reverse=True)][:20]
 
 
 def check_for_duplicate(
