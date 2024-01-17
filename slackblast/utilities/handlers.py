@@ -61,11 +61,15 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
 
             # read first line of file to determine if it's an image
             with open(file_path, "rb") as f:
-                first_line = f.readline()
+                try:
+                    first_line = f.readline().decode("utf-8")
+                except Exception as e:
+                    logger.info(f"Error reading photo as text: {e}")
+                    first_line = ""
             if first_line[:9] == "<!DOCTYPE":
                 logger.debug(f"File {file_name} is not an image, skipping")
                 client.chat_postMessage(
-                    text="To enable boybands, you will need to reinstall Slackblast with some new permissions. To to this, simply use this link: https://n1tbdh3ak9.execute-api.us-east-2.amazonaws.com/Prod/slack/install. You can edit this backblast and upload a boyband once this is complete.",
+                    text="To enable boybands, you will need to reinstall Slackblast with some new permissions. To to this, simply use this link: https://n1tbdh3ak9.execute-api.us-east-2.amazonaws.com/Prod/slack/install. You can edit your backblast and upload a boyband once this is complete.",
                     channel=user_id,
                 )
             else:
@@ -100,7 +104,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         message_metadata = json.loads(body["view"]["private_metadata"])
         message_channel = safe_get(message_metadata, "channel_id")
         message_ts = safe_get(message_metadata, "message_ts")
-        file_list = safe_get(message_metadata, "files")
+        file_list = safe_get(message_metadata, "files") if not file_list else file_list
     else:
         message_channel = chan
         message_ts = None
