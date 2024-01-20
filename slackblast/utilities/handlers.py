@@ -282,6 +282,7 @@ COUNT: {count}
                     email_user=region_record.email_user,
                     email_password=email_password_decrypted,
                     email_to=region_record.email_to,
+                    attachments=file_list
                 )
                 logger.debug("\nEmail Sent! \n{}".format(email_msg))
                 print(
