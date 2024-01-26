@@ -49,6 +49,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
     file_list = []
+    file_send_list = []
     for file in files or []:
         try:
             r = requests.get(file["url_private_download"], headers={"Authorization": f"Bearer {client.token}"})
@@ -85,8 +86,17 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                     s3_client.upload_fileobj(
                         f, "slackblast-images", file_name, ExtraArgs={"ContentType": file["mimetype"]}
                     )
-                os.remove(file_path)
                 file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_name}")
+                file_send_list.append(
+                    {
+                        "filepath": file_path,
+                        "meta": {
+                            "filename": file_name,
+                            "maintype": file["mimetype"].split("/")[0],
+                            "subtype": file["mimetype"].split("/")[1],
+                        },
+                    }
+                )
         except Exception as e:
             logger.error(f"Error uploading file: {e}")
 
@@ -282,7 +292,7 @@ COUNT: {count}
                     email_user=region_record.email_user,
                     email_password=email_password_decrypted,
                     email_to=region_record.email_to,
-                    attachments=file_list
+                    attachments=file_send_list,
                 )
                 logger.debug("\nEmail Sent! \n{}".format(email_msg))
                 print(
@@ -385,6 +395,12 @@ COUNT: {count}
                 "button. Thanks!",
             )
             print(json.dumps({"event_type": "failed_db_insert", "team_name": region_record.workspace_name}))
+
+    for file in file_send_list:
+        try:
+            os.remove(file["filepath"])
+        except Exception as e:
+            logger.error(f"Error removing file: {e}")
 
 
 def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
