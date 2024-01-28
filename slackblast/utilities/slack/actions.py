@@ -56,7 +56,6 @@ CONFIG_PREBLAST_MOLESKINE_TEMPLATE = "preblast_moleskine_template"
 CONFIG_ENABLE_STRAVA = "enable_strava"
 CONFIG_CUSTOM_FIELDS = "custom_fields_submenu"
 
-WELCOME_MESSAGE_CONFIG = "welcom-message-config"
 WELCOME_MESSAGE_CONFIG_CALLBACK_ID = "welcome-message-config-id"
 WELCOME_MESSAGE_TEMPLATE = "welcome-message-template"
 
