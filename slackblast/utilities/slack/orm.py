@@ -332,6 +332,26 @@ class MultiUsersSelectElement(BaseElement):
 
 
 @dataclass
+class FileInputElement(BaseElement):
+    max_files: int = None
+    filetypes: List[str] = None
+
+    def get_selected_value(self, input_data, action):
+        return safe_get(input_data, action, action, "files")
+
+    def as_form_field(self, action: str):
+        j = {
+            "type": "file_input",
+            "action_id": action,
+        }
+        if self.max_files:
+            j["max_files"] = self.max_files
+        if self.filetypes:
+            j["filetypes"] = self.filetypes
+        return j
+
+
+@dataclass
 class ContextBlock(BaseBlock):
     element: BaseElement = None
     initial_value: str = ""
@@ -347,6 +367,24 @@ class ContextBlock(BaseBlock):
         j.update({"elements": [self.element.as_form_field()]})
         if self.action:
             j["block_id"] = self.action
+        return j
+
+
+@dataclass
+class ImageBlock(BaseBlock):
+    image_url: str = None
+    alt_text: str = None
+
+    def as_form_field(self):
+        j = {
+            "type": "image",
+            "image_url": self.image_url,
+            "alt_text": self.alt_text,
+        }
+        if self.action:
+            j["block_id"] = self.action
+        if self.label:
+            j["title"] = self.make_label_field()
         return j
 
 

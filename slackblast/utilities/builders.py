@@ -147,6 +147,7 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
         backblast_metadata = parent_metadata or {
             "channel_id": safe_get(body, "container", "channel_id"),
             "message_ts": safe_get(body, "container", "message_ts"),
+            "files": safe_get(initial_backblast_data, actions.BACKBLAST_FILE) or [],
         }
 
         backblast_form.delete_block(actions.BACKBLAST_EMAIL_SEND)
@@ -391,7 +392,7 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
                 date_fmt = date.strftime("%m-%d %H:%M")
                 button_elements.append(
                     slack_orm.ButtonElement(
-                        label=f"{date_fmt} - {activity['name']}",
+                        label=f"{date_fmt} - {activity['name']}"[:75],
                         action="-".join([actions.STRAVA_ACTIVITY_BUTTON, str(activity["id"])]),
                         value=json.dumps(
                             {

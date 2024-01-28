@@ -10,6 +10,20 @@ BACKBLAST_FORM = orm.BlockView(
             element=orm.PlainTextInputElement(placeholder="Enter a workout title..."),
         ),
         orm.InputBlock(
+            label="Upload a boyband",
+            element=orm.FileInputElement(
+                max_files=1,
+                filetypes=[
+                    "png",
+                    "jpg",
+                    "heic",
+                    "bmp",
+                ],
+            ),
+            action=actions.BACKBLAST_FILE,
+            optional=True,
+        ),
+        orm.InputBlock(
             label="The AO",
             action=actions.BACKBLAST_AO,
             optional=False,
@@ -464,3 +478,48 @@ LOADING_FORM = orm.BlockView(
         orm.SectionBlock(label=":hourglass: Loading, do not close...", action=actions.LOADING),
     ]
 )
+
+# WELCOMEBOT_CONFIG_FORM = orm.BlockView(
+#     blocks=[
+#         orm.InputBlock(
+#             label="Enable Welcomebot welcome DMs?",
+#             action=actions.CONFIG_WELCOMEBOT_ENABLE,
+#             optional=False,
+#             element=orm.RadioButtonsElement(
+#                 initial_value="no",
+#                 options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
+#             ),
+#         ),
+#         orm.InputBlock(
+#             label="Enable Welcomebot welcome channel posts?",
+#             action=actions.CONFIG_WELCOMEBOT_CHANNEL_ENABLE,
+#             optional=False,
+#             element=orm.RadioButtonsElement(
+#                 initial_value="no",
+#                 options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
+#             ),
+#         ),
+#         orm.InputBlock(
+#             element=orm.PlainTextInputElement(
+#                 initial_value="",
+#                 multiline=False,
+#                 placeholder="Enter the welcome message",
+#                 max_length=3000,
+#             ),
+#             action=actions.CONFIG_WELCOMEBOT_MESSAGE,
+#             label="Welcome message",
+#             optional=True,
+#         ),
+#         orm.InputBlock(
+#             label="Welcomebot Channel",
+#             action=actions.CONFIG_WELCOMEBOT_CHANNEL,
+#             optional=False,
+#             element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
+#         ),
+#         orm.ContextBlock(
+#             element=orm.ContextElement(
+#                 initial_value="If enabled, this is the channel where welcome messages will be posted.",
+#             ),
+#         ),
+#     ]
+# )
