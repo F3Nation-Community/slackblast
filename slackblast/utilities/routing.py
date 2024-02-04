@@ -44,6 +44,8 @@ ACTION_MAPPER = {
     actions.CUSTOM_FIELD_DELETE: builders.delete_custom_field,
     actions.PREBLAST_NEW_BUTTON: builders.build_preblast_form,
     actions.PREBLAST_EDIT_BUTTON: builders.handle_preblast_edit_button,
+    actions.WELCOME_DM_TEST: builders.test_welcome_message,
+    actions.WELCOME_CHANNEL_TEST: builders.test_welcome_message,
 }
 
 VIEW_CLOSED_MAPPER = {

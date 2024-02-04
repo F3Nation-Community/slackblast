@@ -376,6 +376,21 @@ CONFIG_FORM = orm.BlockView(
 
 WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
     blocks=[
+        orm.InputBlock(
+            label="Enable Welcomebot welcome DMs?",
+            action=actions.WELCOME_DM_ENABLE,
+            optional=False,
+            element=orm.RadioButtonsElement(
+                initial_value="no",
+                options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
+            ),
+        ),
+        orm.InputBlock(
+            label="Welcome Message Template",
+            action=actions.WELCOME_DM_TEMPLATE,
+            optional=True,
+            element=orm.PlainTextInputElement(placeholder="Enter a welcome message...", multiline=True),
+        ),
         orm.ContextBlock(
             element=orm.ContextElement(
                 initial_value="*This content will be sent to any new user who joins this Slack workspace.*\n\n"
@@ -387,11 +402,40 @@ WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
             ),
         ),
         orm.InputBlock(
-            label="Welcome Message",
-            action=actions.WELCOME_MESSAGE_TEMPLATE,
+            label="Enable Welcomebot welcome channel posts?",
+            action=actions.WELCOME_CHANNEL_ENABLE,
             optional=False,
-            element=orm.PlainTextInputElement(placeholder="Enter a welcome message..."),
-            multiline=True,
+            element=orm.RadioButtonsElement(
+                initial_value="disable",
+                options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
+            ),
+        ),
+        orm.InputBlock(
+            label="Welcomebot Channel",
+            action=actions.WELCOME_CHANNEL,
+            optional=False,
+            element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="If enabled, this is the channel where welcome messages will be posted.",
+            ),
+        ),
+        orm.ActionsBlock(
+            elements=[
+                orm.ButtonElement(
+                    label="Test Welcome DM",
+                    action=actions.WELCOME_DM_TEST,
+                ),
+                orm.ButtonElement(
+                    label="Test Welcome Channel Post",
+                    action=actions.WELCOME_CHANNEL_TEST,
+                ),
+            ],
+        ),
+        orm.SectionBlock(
+            label=" ",
+            action=actions.WELCOME_TEST_TEXT,
         ),
     ]
 )

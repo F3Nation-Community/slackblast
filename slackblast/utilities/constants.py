@@ -32,3 +32,12 @@ STATE_METADATA = "STATE_METADATA"
 
 AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID"
 AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY"
+
+WELCOME_MESSAGE_TEMPLATES = [
+    "The man, the myth, the LEGEND, it's {user}! Welcome to {region}! We're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
+    "Who's this?!? It's {user}! Welcome to {region}! We're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
+    "Hey, it's {user}! Welcome to {region}, we're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
+    "Sharkbait, ooh ha ha! It's {user}! Welcome to {region}, we're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
+    "Could it be?!? It's {user}! Welcome to {region}, we're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
+    "{user} is in the house! Welcome to {region}, we're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
+]

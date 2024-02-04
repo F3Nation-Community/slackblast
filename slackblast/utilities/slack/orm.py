@@ -434,6 +434,8 @@ class BlockView:
         for block in self.blocks:
             if block.action in values and isinstance(block, InputBlock):
                 block.element.initial_value = values[block.action]
+            elif block.action in values and isinstance(block, SectionBlock):
+                block.label = values[block.action]
 
     def set_options(self, options: Dict[str, List[SelectorOption]]):
         for block in self.blocks:
