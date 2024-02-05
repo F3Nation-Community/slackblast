@@ -72,6 +72,7 @@ app.action(MATCH_ALL_PATTERN)(*ARGS, **LAZY_KWARGS)
 app.view(MATCH_ALL_PATTERN)(*ARGS, **LAZY_KWARGS)
 app.command(MATCH_ALL_PATTERN)(*ARGS, **LAZY_KWARGS)
 app.view_closed(MATCH_ALL_PATTERN)(*ARGS, **LAZY_KWARGS)
+app.event(MATCH_ALL_PATTERN)(*ARGS, **LAZY_KWARGS)
 
 if __name__ == "__main__":
     app.start(3000)

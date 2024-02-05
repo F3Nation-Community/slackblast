@@ -65,6 +65,8 @@ WELCOME_CHANNEL = "welcome_channel"
 WELCOME_DM_TEST = "welcome_dm_test"
 WELCOME_CHANNEL_TEST = "welcome_channel_test"
 WELCOME_TEST_TEXT = "welcome_test_text"
+WELCOME_TIPS_TRICKS = "welcome_tips_tricks"
+WELCOME_TIPS_TRICKS_CALLBACK_ID = "welcome_tips_tricks_id"
 
 STRAVA_CONNECT_BUTTON = "strava-connect"
 STRAVA_ACTIVITY_BUTTON = "strava-activity"

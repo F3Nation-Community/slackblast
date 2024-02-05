@@ -391,15 +391,13 @@ WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
             optional=True,
             element=orm.PlainTextInputElement(placeholder="Enter a welcome message...", multiline=True),
         ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="*This content will be sent to any new user who joins this Slack workspace.*\n\n"
-                "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your Slack.\n"
-                + "Who should they reach out to if they have a question? What channels should they join? What does HC mean and "
-                + "how do they do that? Should their Slack handle be their F3 name?\n\n"
-                + "*If tagging users, make sure to replace spaces with underscores, such as: @Moneyball (STL Gateway) -> @Moneyball_(STL_Gateway)."
-                + "Spaces count, but capitalization does not. URLs work just fine.",
-            ),
+        orm.ActionsBlock(
+            elements=[
+                orm.ButtonElement(
+                    label="Template Tips & Tricks",
+                    action=actions.WELCOME_TIPS_TRICKS,
+                ),
+            ],
         ),
         orm.InputBlock(
             label="Enable Welcomebot welcome channel posts?",
@@ -523,47 +521,21 @@ LOADING_FORM = orm.BlockView(
     ]
 )
 
-# WELCOMEBOT_CONFIG_FORM = orm.BlockView(
-#     blocks=[
-#         orm.InputBlock(
-#             label="Enable Welcomebot welcome DMs?",
-#             action=actions.CONFIG_WELCOMEBOT_ENABLE,
-#             optional=False,
-#             element=orm.RadioButtonsElement(
-#                 initial_value="no",
-#                 options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
-#             ),
-#         ),
-#         orm.InputBlock(
-#             label="Enable Welcomebot welcome channel posts?",
-#             action=actions.CONFIG_WELCOMEBOT_CHANNEL_ENABLE,
-#             optional=False,
-#             element=orm.RadioButtonsElement(
-#                 initial_value="no",
-#                 options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
-#             ),
-#         ),
-#         orm.InputBlock(
-#             element=orm.PlainTextInputElement(
-#                 initial_value="",
-#                 multiline=False,
-#                 placeholder="Enter the welcome message",
-#                 max_length=3000,
-#             ),
-#             action=actions.CONFIG_WELCOMEBOT_MESSAGE,
-#             label="Welcome message",
-#             optional=True,
-#         ),
-#         orm.InputBlock(
-#             label="Welcomebot Channel",
-#             action=actions.CONFIG_WELCOMEBOT_CHANNEL,
-#             optional=False,
-#             element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
-#         ),
-#         orm.ContextBlock(
-#             element=orm.ContextElement(
-#                 initial_value="If enabled, this is the channel where welcome messages will be posted.",
-#             ),
-#         ),
-#     ]
-# )
+WELCOME_TIPS_TRICKS = orm.BlockView(
+    blocks=[
+        orm.SectionBlock(
+            label="*This content will be sent to any new user who joins this Slack workspace.*\n\n"
+            "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your Slack.\n"
+            + "Who should they reach out to if they have a question? What channels should they join? What does HC mean and "
+            + "how do they do that? Should their Slack handle be their F3 name?\n\n"
+            + "*Formatting Tips:*\n"
+            + " - You can tag specific users by using @, but make sure to replace spaces with underscores, such as: @Soda Stand -> @Soda_Stand. Capitalization does not matter.\n"
+            + " - Your new user can be tagged with `{user}`.\n"
+            + " - URLs work just fine.\n"
+            + " - Dividers can be a good way to break up walls of text, and can be added with `/divider`.\n"
+            + " - If you want to make a list, you can use the `-` character to make bullet points.\n"
+            + " - If you want to make a numbered list, you can use `1.`, `2.`, etc. to start each line.\n"
+            + " - Emojis can be added with `:emoji:`, for example `:fire:` will add a fire emoji like this: :fire:.\n",
+        ),
+    ]
+)

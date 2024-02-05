@@ -67,6 +67,22 @@ class InputBlock(BaseBlock):
 
 
 @dataclass
+class RichTextBlock(BaseBlock):
+    def get_selected_value(self, input_data):
+        return self.label
+
+    def parse_rich_text(self, text):
+        return [{"type": "text", "text": text}]
+
+    def as_form_field(self):
+        block = {
+            "type": "rich_text",
+        }
+        block["elements"]: self.parse_rich_text(self.label)
+        return block
+
+
+@dataclass
 class SectionBlock(BaseBlock):
     element: BaseElement = None
 
@@ -77,7 +93,9 @@ class SectionBlock(BaseBlock):
         return {"type": "mrkdwn", "text": text or self.label or ""}
 
     def as_form_field(self):
-        block = {"type": "section", "block_id": self.action, "text": self.make_label_field()}
+        block = {"type": "section", "text": self.make_label_field()}
+        if self.action:
+            block["block_id"] = self.action
         if self.element:
             block.update({"accessory": self.element.as_form_field(action=self.action)})
         return block

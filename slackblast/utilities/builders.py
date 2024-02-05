@@ -743,7 +743,11 @@ def test_welcome_message(body: dict, client: WebClient, logger: Logger, context:
     initial_config_data = forms.WELCOME_MESSAGE_CONFIG_FORM.get_selected_values(body)
 
     if testing == actions.WELCOME_DM_TEST:
-        test_msg = region_record.welcome_dm_template or "Template not found, please submit your config first"
+        test_msg = (
+            initial_config_data[actions.WELCOME_DM_TEMPLATE]
+            or region_record.welcome_dm_template
+            or "Template not found, please submit your config first"
+        )
     elif testing == actions.WELCOME_CHANNEL_TEST:
         test_msg = random.choice(constants.WELCOME_MESSAGE_TEMPLATES).format(
             user=f"<@{user_id}>", region=region_record.workspace_name
@@ -769,4 +773,18 @@ def test_welcome_message(body: dict, client: WebClient, logger: Logger, context:
         callback_id=actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID,
         title_text="FNG Welcome Config",
         parent_metadata=None,
+    )
+
+
+def build_welcome_tips_tricks(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    trigger_id = safe_get(body, "trigger_id")
+    welcome_tips_tricks_form = copy.deepcopy(forms.WELCOME_TIPS_TRICKS)
+
+    welcome_tips_tricks_form.post_modal(
+        client=client,
+        trigger_id=trigger_id,
+        callback_id=actions.WELCOME_TIPS_TRICKS_CALLBACK_ID,
+        title_text="Template Tips",
+        new_or_add="add",
+        submit_button_text="None",
     )

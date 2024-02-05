@@ -3,7 +3,7 @@ import pickle
 from utilities import constants
 from utilities.database.orm import PaxminerAO, PaxminerUser, Region, Backblast, Attendance
 from utilities.database import DbManager
-from utilities.slack import actions
+from utilities.slack import actions, orm
 from datetime import datetime
 from utilities.constants import LOCAL_DEVELOPMENT
 from typing import Dict, List, Tuple
@@ -341,3 +341,21 @@ def update_local_region_records() -> None:
     region_records: List[Region] = DbManager.find_records(Region, filters=[True])
     global REGION_RECORDS
     REGION_RECORDS = {region.team_id: region for region in region_records}
+
+
+def parse_welcome_template(template: str, user_id: str) -> List[orm.BaseBlock]:
+    blocks = []
+
+    # 1. Insert user name into template
+    msg = template.replace("{user}", f"<@{user_id}>")
+
+    # 2. Insert divider blocks
+    msg_split = msg.split("/divider")
+    blocks.append(orm.SectionBlock(label=msg_split[0]))
+
+    if len(msg_split) > 1:
+        for m in msg_split[1:]:
+            blocks.append(orm.DividerBlock())
+            blocks.append(orm.SectionBlock(label=m))
+
+    return blocks

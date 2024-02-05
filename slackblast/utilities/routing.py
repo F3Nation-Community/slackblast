@@ -46,6 +46,7 @@ ACTION_MAPPER = {
     actions.PREBLAST_EDIT_BUTTON: builders.handle_preblast_edit_button,
     actions.WELCOME_DM_TEST: builders.test_welcome_message,
     actions.WELCOME_CHANNEL_TEST: builders.test_welcome_message,
+    actions.WELCOME_TIPS_TRICKS: builders.build_welcome_tips_tricks,
 }
 
 VIEW_CLOSED_MAPPER = {
@@ -53,8 +54,8 @@ VIEW_CLOSED_MAPPER = {
     actions.STRAVA_MODIFY_CALLBACK_ID: strava.handle_strava_modify,
 }
 
-TEAM_JOIN_MAPPER = {
-    # "team_join": handlers.handle_team_join,
+EVENT_MAPPER = {
+    "team_join": handlers.handle_team_join,
 }
 
 MAIN_MAPPER = {
@@ -62,5 +63,5 @@ MAIN_MAPPER = {
     "block_actions": ACTION_MAPPER,
     "view_submission": VIEW_MAPPER,
     "view_closed": VIEW_CLOSED_MAPPER,
-    "team_join": TEAM_JOIN_MAPPER,
+    "event_callback": EVENT_MAPPER,
 }

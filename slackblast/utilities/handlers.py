@@ -2,6 +2,7 @@ import copy
 import json
 from logging import Logger
 import os
+import random
 from utilities import constants, sendmail, builders
 from utilities.helper_functions import (
     get_channel_id,
@@ -621,3 +622,20 @@ def handle_custom_field_menu(body: dict, client: WebClient, logger: Logger, cont
 
     DbManager.update_record(cls=Region, id=region_record.team_id, fields={Region.custom_fields: custom_fields})
     update_local_region_records()
+
+
+def handle_team_join(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    welcome_channel = region_record.welcome_channel
+    workspace_name = region_record.workspace_name
+    user_id = safe_get(body, "event", "user", "id")
+
+    if region_record.welcome_dm_enable:
+        client.chat_postMessage(
+            channel=user_id,
+            text=region_record.welcome_dm_template or f"Welcome to {workspace_name}!",
+        )
+    if region_record.welcome_channel_enable:
+        client.chat_postMessage(
+            channel=welcome_channel,
+            text=random.choice(constants.WELCOME_MESSAGE_TEMPLATES).format(user=f"<@{user_id}>", region=workspace_name),
+        )
