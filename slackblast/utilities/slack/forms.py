@@ -16,7 +16,7 @@ BACKBLAST_FORM = orm.BlockView(
                 filetypes=[
                     "png",
                     "jpg",
-                    # "heic",
+                    "heic",
                     "bmp",
                 ],
             ),
