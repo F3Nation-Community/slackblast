@@ -416,7 +416,7 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
             callback_id=actions.STRAVA_CALLBACK_ID,
             title_text=title_text,
             submit_button_text="None",
-            parent_metadata={actions.STRAVA_BACKBLAST_MOLESKINE: moleskine_text},
+            parent_metadata={actions.STRAVA_BACKBLAST_MOLESKINE: moleskine_text[:2500]},
         )
     else:
         client.chat_postEphemeral(
