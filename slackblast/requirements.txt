@@ -12,3 +12,5 @@ fuzzywuzzy
 python-Levenshtein
 requests==2.29.0
 requests-oauthlib
+pillow==10.2.0 
+pillow-heif==0.15.0

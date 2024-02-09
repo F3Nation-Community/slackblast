@@ -20,6 +20,10 @@ from cryptography.fernet import Fernet
 from slack_sdk.web import WebClient
 import requests
 import boto3
+from PIL import Image
+from pillow_heif import register_heif_opener
+
+register_heif_opener()
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -58,8 +62,22 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
 
             file_name = f"{file['id']}.{file['filetype']}"
             file_path = f"/tmp/{file_name}"
+            file_mimetype = file["mimetype"]
+
             with open(file_path, "wb") as f:
                 f.write(r.content)
+
+            if file["filetype"] == "heic":
+                heic_img = Image.open(file_path)
+                x, y = heic_img.size
+                coeff = min(constants.MAX_HEIC_SIZE / max(x, y), 1)
+                heic_img = heic_img.resize((int(x * coeff), int(y * coeff)))
+                heic_img.save(file_path.replace(".heic", ".png"), quality=95, optimize=True, format="PNG")
+                os.remove(file_path)
+
+                file_path = file_path.replace(".heic", ".png")
+                file_name = file_name.replace(".heic", ".png")
+                file_mimetype = "image/png"
 
             # read first line of file to determine if it's an image
             with open(file_path, "rb") as f:
@@ -85,7 +103,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                     s3_client = boto3.client("s3")
                 with open(file_path, "rb") as f:
                     s3_client.upload_fileobj(
-                        f, "slackblast-images", file_name, ExtraArgs={"ContentType": file["mimetype"]}
+                        f, "slackblast-images", file_name, ExtraArgs={"ContentType": file_mimetype}
                     )
                 file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_name}")
                 file_send_list.append(
@@ -93,8 +111,8 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                         "filepath": file_path,
                         "meta": {
                             "filename": file_name,
-                            "maintype": file["mimetype"].split("/")[0],
-                            "subtype": file["mimetype"].split("/")[1],
+                            "maintype": file_mimetype.split("/")[0],
+                            "subtype": file_mimetype.split("/")[1],
                         },
                     }
                 )

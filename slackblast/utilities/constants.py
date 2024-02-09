@@ -41,3 +41,5 @@ WELCOME_MESSAGE_TEMPLATES = [
     "Could it be?!? It's {user}! Welcome to {region}, we're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
     "{user} is in the house! Welcome to {region}, we're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
 ]
+
+MAX_HEIC_SIZE = 1000
