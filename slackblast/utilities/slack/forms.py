@@ -374,6 +374,81 @@ CONFIG_FORM = orm.BlockView(
     ]
 )
 
+WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
+    blocks=[
+        orm.InputBlock(
+            label="Enable Welcomebot welcome DMs?",
+            action=actions.WELCOME_DM_ENABLE,
+            optional=False,
+            element=orm.RadioButtonsElement(
+                initial_value="no",
+                options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
+            ),
+        ),
+        orm.InputBlock(
+            label="Welcome Message Template",
+            action=actions.WELCOME_DM_TEMPLATE,
+            optional=True,
+            element=orm.RichTextInputElement(),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="*This content will be sent to any new user who joins this Slack workspace.*\n\n"
+                + "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your region and how you use Slack.\n"
+                + "Who should they reach out to if they have a question? What channels should they join? What does HC mean and "
+                + "how do they do that? Should their Slack handle be their F3 name?",
+            ),
+        ),
+        # orm.ActionsBlock(
+        #     elements=[
+        #         orm.ButtonElement(
+        #             label="Template Tips & Tricks",
+        #             action=actions.WELCOME_TIPS_TRICKS,
+        #         ),
+        #     ],
+        # ),
+        orm.InputBlock(
+            label="Enable Welcomebot welcome channel posts?",
+            action=actions.WELCOME_CHANNEL_ENABLE,
+            optional=False,
+            element=orm.RadioButtonsElement(
+                initial_value="disable",
+                options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
+            ),
+        ),
+        orm.InputBlock(
+            label="Welcomebot Channel",
+            action=actions.WELCOME_CHANNEL,
+            optional=False,
+            element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="If enabled, this is the channel where welcome messages will be posted.",
+            ),
+        ),
+        # orm.ActionsBlock(
+        #     elements=[
+        #         orm.ButtonElement(
+        #             label="Test Welcome DM",
+        #             action=actions.WELCOME_DM_TEST,
+        #         ),
+        #         orm.ButtonElement(
+        #             label="Test Welcome Channel Post",
+        #             action=actions.WELCOME_CHANNEL_TEST,
+        #         ),
+        #     ],
+        # ),
+        # orm.RichTextBlock(
+        #     label={
+        #         "type": "rich_text",
+        #         "elements": [{"type": "rich_text_section", "elements": [{"type": "text", "text": " "}]}],
+        #     },
+        #     action=actions.WELCOME_TEST_TEXT,
+        # ),
+    ]
+)
+
 STRAVA_ACTIVITY_MODIFY_FORM = orm.BlockView(
     blocks=[
         orm.InputBlock(
@@ -457,47 +532,20 @@ LOADING_FORM = orm.BlockView(
     ]
 )
 
-# WELCOMEBOT_CONFIG_FORM = orm.BlockView(
-#     blocks=[
-#         orm.InputBlock(
-#             label="Enable Welcomebot welcome DMs?",
-#             action=actions.CONFIG_WELCOMEBOT_ENABLE,
-#             optional=False,
-#             element=orm.RadioButtonsElement(
-#                 initial_value="no",
-#                 options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
-#             ),
-#         ),
-#         orm.InputBlock(
-#             label="Enable Welcomebot welcome channel posts?",
-#             action=actions.CONFIG_WELCOMEBOT_CHANNEL_ENABLE,
-#             optional=False,
-#             element=orm.RadioButtonsElement(
-#                 initial_value="no",
-#                 options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
-#             ),
-#         ),
-#         orm.InputBlock(
-#             element=orm.PlainTextInputElement(
-#                 initial_value="",
-#                 multiline=False,
-#                 placeholder="Enter the welcome message",
-#                 max_length=3000,
-#             ),
-#             action=actions.CONFIG_WELCOMEBOT_MESSAGE,
-#             label="Welcome message",
-#             optional=True,
-#         ),
-#         orm.InputBlock(
-#             label="Welcomebot Channel",
-#             action=actions.CONFIG_WELCOMEBOT_CHANNEL,
-#             optional=False,
-#             element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
-#         ),
-#         orm.ContextBlock(
-#             element=orm.ContextElement(
-#                 initial_value="If enabled, this is the channel where welcome messages will be posted.",
-#             ),
-#         ),
-#     ]
-# )
+WELCOME_TIPS_TRICKS = orm.BlockView(
+    blocks=[
+        orm.RichTextBlock(
+            label="*This content will be sent to any new user who joins this Slack workspace.*\n\n"
+            "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your Slack.\n"
+            + "Who should they reach out to if they have a question? What channels should they join? What does HC mean and "
+            + "how do they do that? Should their Slack handle be their F3 name?\n\n"
+            + "*Formatting Tips:*\n"
+            + " - You can tag specific users by using @, but make sure to replace spaces with underscores, such as: @Soda Stand -> @Soda_Stand. Capitalization does not matter.\n"
+            + " - Your new user can be tagged with `{user}`.\n"
+            + " - URLs work just fine.\n"
+            + " - Dividers can be a good way to break up walls of text, and can be added with `/divider`.\n"
+            + " - If you want to make a list, you can start lines with ` - ` to make bullet points (like this list).\n"
+            + " - Emojis can be added with `:emoji:`, for example `:fire:` will add a fire emoji like this: :fire:.\n",
+        ),
+    ]
+)

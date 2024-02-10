@@ -1,5 +1,6 @@
 import json
 import os
+import random
 from typing import List
 import pytz
 
@@ -710,3 +711,80 @@ def handle_preblast_edit_button(body: dict, client: WebClient, logger: Logger, c
             channel=channel_id,
             user=user_id,
         )
+
+
+def build_welcome_message_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    update_view_id = add_loading_form(body, client)
+    welcome_message_config_form = copy.deepcopy(forms.WELCOME_MESSAGE_CONFIG_FORM)
+
+    welcome_message_config_form.set_initial_values(
+        {
+            actions.WELCOME_DM_TEMPLATE: region_record.welcome_dm_template,
+            actions.WELCOME_DM_ENABLE: "enable" if region_record.welcome_dm_enable else "disable",
+            actions.WELCOME_CHANNEL: region_record.welcome_channel or "",
+            actions.WELCOME_CHANNEL_ENABLE: "enable" if region_record.welcome_channel_enable else "disable",
+        }
+    )
+
+    welcome_message_config_form.update_modal(
+        client=client,
+        view_id=update_view_id,
+        callback_id=actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID,
+        title_text="FNG Welcome Config",
+        parent_metadata=None,
+    )
+
+
+def test_welcome_message(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    update_view_id = safe_get(body, "container", "view_id")
+    testing = safe_get(body, "actions", 0, "action_id")
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    config_form = copy.deepcopy(forms.WELCOME_MESSAGE_CONFIG_FORM)
+    initial_config_data = forms.WELCOME_MESSAGE_CONFIG_FORM.get_selected_values(body)
+
+    if testing == actions.WELCOME_DM_TEST:
+        test_msg = (
+            initial_config_data[actions.WELCOME_DM_TEMPLATE]
+            or region_record.welcome_dm_template
+            or "Template not found, please submit your config first"
+        )
+    elif testing == actions.WELCOME_CHANNEL_TEST:
+        test_msg = random.choice(constants.WELCOME_MESSAGE_TEMPLATES).format(
+            user=f"<@{user_id}>", region=region_record.workspace_name
+        )
+    else:
+        test_msg = "Something went wrong"
+
+    print(test_msg)
+
+    config_form.set_initial_values(
+        {
+            actions.WELCOME_DM_ENABLE: initial_config_data[actions.WELCOME_DM_ENABLE],
+            actions.WELCOME_DM_TEMPLATE: initial_config_data[actions.WELCOME_DM_TEMPLATE],
+            actions.WELCOME_CHANNEL_ENABLE: initial_config_data[actions.WELCOME_CHANNEL_ENABLE],
+            actions.WELCOME_CHANNEL: initial_config_data[actions.WELCOME_CHANNEL],
+            actions.WELCOME_TEST_TEXT: test_msg,
+        }
+    )
+
+    config_form.update_modal(
+        client=client,
+        view_id=update_view_id,
+        callback_id=actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID,
+        title_text="FNG Welcome Config",
+        parent_metadata=None,
+    )
+
+
+def build_welcome_tips_tricks(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    trigger_id = safe_get(body, "trigger_id")
+    welcome_tips_tricks_form = copy.deepcopy(forms.WELCOME_TIPS_TRICKS)
+
+    welcome_tips_tricks_form.post_modal(
+        client=client,
+        trigger_id=trigger_id,
+        callback_id=actions.WELCOME_TIPS_TRICKS_CALLBACK_ID,
+        title_text="Template Tips",
+        new_or_add="add",
+        submit_button_text="None",
+    )

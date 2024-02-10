@@ -48,6 +48,15 @@ If enabled, this will lock down editing of backblasts to the Q / Co-Qs, the orig
 
 These templates will serve as the default when your users start a new backblast or preblast.
 
+# FNG Welcome Message
+
+Slackblast now has functionality to welcome new users (FNGs) into your region's Slack Space! This will trigger automatically as soon as new users join. To configure, use the `/config-welcome-message`. There are two things to enable:
+
+1. **Welcome DMs:** These will be sent to the user via a direct message. You can set your region's template in the editor. This is a good place to help your FNG navigate your Slack space, where to go for help, terminology, etc.
+2. **Channel Welcome Posts:** These are shout-outs in a channel of your choosing. When enabled, this will welcome your user in a fun message, letting the rest of your guys welcome them as well.
+
+<img src="assets/Slackblast-Welcome-Demo.png" width="500">
+
 # Contributing
 
 Slackblast is in active development, and I welcome any and all help or contributions! Feel free to leave an Issue with bugs or feature requests, or even better leave us a Pull Request.
@@ -86,6 +95,10 @@ features:
     - command: /preblast
       url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
       description: Launch preblast template
+      should_escape: false
+    - command: /config-welcome-message
+      url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
+      description: Configures your region's welcome message
       should_escape: false
     - command: /config-slackblast
       url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this

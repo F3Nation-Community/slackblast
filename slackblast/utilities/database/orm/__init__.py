@@ -45,6 +45,10 @@ class Region(BaseClass, GetDBClass):
     preblast_moleskin_template = Column("preblast_moleskin_template", LONGTEXT)
     strava_enabled = Column("strava_enabled", Integer)
     custom_fields = Column("custom_fields", JSON)
+    welcome_dm_enable = Column("welcome_dm_enable", Integer)
+    welcome_dm_template = Column("welcome_dm_template", JSON)
+    welcome_channel_enable = Column("welcome_channel_enable", Integer)
+    welcome_channel = Column("welcome_channel", String(100))
     created = Column("created", DateTime, default=datetime.utcnow)
     updated = Column("updated", DateTime, default=datetime.utcnow)
 
