@@ -389,16 +389,24 @@ WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
             label="Welcome Message Template",
             action=actions.WELCOME_DM_TEMPLATE,
             optional=True,
-            element=orm.PlainTextInputElement(placeholder="Enter a welcome message...", multiline=True),
+            element=orm.RichTextInputElement(),
         ),
-        orm.ActionsBlock(
-            elements=[
-                orm.ButtonElement(
-                    label="Template Tips & Tricks",
-                    action=actions.WELCOME_TIPS_TRICKS,
-                ),
-            ],
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="*This content will be sent to any new user who joins this Slack workspace.*\n\n"
+                + "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your region and how you use Slack.\n"
+                + "Who should they reach out to if they have a question? What channels should they join? What does HC mean and "
+                + "how do they do that? Should their Slack handle be their F3 name?",
+            ),
         ),
+        # orm.ActionsBlock(
+        #     elements=[
+        #         orm.ButtonElement(
+        #             label="Template Tips & Tricks",
+        #             action=actions.WELCOME_TIPS_TRICKS,
+        #         ),
+        #     ],
+        # ),
         orm.InputBlock(
             label="Enable Welcomebot welcome channel posts?",
             action=actions.WELCOME_CHANNEL_ENABLE,
@@ -419,22 +427,25 @@ WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
                 initial_value="If enabled, this is the channel where welcome messages will be posted.",
             ),
         ),
-        orm.ActionsBlock(
-            elements=[
-                orm.ButtonElement(
-                    label="Test Welcome DM",
-                    action=actions.WELCOME_DM_TEST,
-                ),
-                orm.ButtonElement(
-                    label="Test Welcome Channel Post",
-                    action=actions.WELCOME_CHANNEL_TEST,
-                ),
-            ],
-        ),
-        orm.SectionBlock(
-            label=" ",
-            action=actions.WELCOME_TEST_TEXT,
-        ),
+        # orm.ActionsBlock(
+        #     elements=[
+        #         orm.ButtonElement(
+        #             label="Test Welcome DM",
+        #             action=actions.WELCOME_DM_TEST,
+        #         ),
+        #         orm.ButtonElement(
+        #             label="Test Welcome Channel Post",
+        #             action=actions.WELCOME_CHANNEL_TEST,
+        #         ),
+        #     ],
+        # ),
+        # orm.RichTextBlock(
+        #     label={
+        #         "type": "rich_text",
+        #         "elements": [{"type": "rich_text_section", "elements": [{"type": "text", "text": " "}]}],
+        #     },
+        #     action=actions.WELCOME_TEST_TEXT,
+        # ),
     ]
 )
 
@@ -523,7 +534,7 @@ LOADING_FORM = orm.BlockView(
 
 WELCOME_TIPS_TRICKS = orm.BlockView(
     blocks=[
-        orm.SectionBlock(
+        orm.RichTextBlock(
             label="*This content will be sent to any new user who joins this Slack workspace.*\n\n"
             "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your Slack.\n"
             + "Who should they reach out to if they have a question? What channels should they join? What does HC mean and "
@@ -533,8 +544,7 @@ WELCOME_TIPS_TRICKS = orm.BlockView(
             + " - Your new user can be tagged with `{user}`.\n"
             + " - URLs work just fine.\n"
             + " - Dividers can be a good way to break up walls of text, and can be added with `/divider`.\n"
-            + " - If you want to make a list, you can use the `-` character to make bullet points.\n"
-            + " - If you want to make a numbered list, you can use `1.`, `2.`, etc. to start each line.\n"
+            + " - If you want to make a list, you can start lines with ` - ` to make bullet points (like this list).\n"
             + " - Emojis can be added with `:emoji:`, for example `:fire:` will add a fire emoji like this: :fire:.\n",
         ),
     ]

@@ -648,10 +648,7 @@ def handle_team_join(body: dict, client: WebClient, logger: Logger, context: dic
     user_id = safe_get(body, "event", "user", "id")
 
     if region_record.welcome_dm_enable:
-        client.chat_postMessage(
-            channel=user_id,
-            text=region_record.welcome_dm_template or f"Welcome to {workspace_name}!",
-        )
+        client.chat_postMessage(channel=user_id, blocks=[region_record.welcome_dm_template], text="Welcome!")
     if region_record.welcome_channel_enable:
         client.chat_postMessage(
             channel=welcome_channel,

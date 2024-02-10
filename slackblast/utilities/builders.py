@@ -719,7 +719,7 @@ def build_welcome_message_form(body: dict, client: WebClient, logger: Logger, co
 
     welcome_message_config_form.set_initial_values(
         {
-            actions.WELCOME_DM_TEMPLATE: region_record.welcome_dm_template or "",
+            actions.WELCOME_DM_TEMPLATE: region_record.welcome_dm_template,
             actions.WELCOME_DM_ENABLE: "enable" if region_record.welcome_dm_enable else "disable",
             actions.WELCOME_CHANNEL: region_record.welcome_channel or "",
             actions.WELCOME_CHANNEL_ENABLE: "enable" if region_record.welcome_channel_enable else "disable",
