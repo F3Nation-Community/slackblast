@@ -26,7 +26,90 @@ SLACK_SCOPES = "ENV_SLACK_SCOPES"
 CONFIG_DESTINATION_AO = {"name": "The AO Channel", "value": "ao_channel"}
 CONFIG_DESTINATION_CURRENT = {"name": "Current Channel", "value": "current_channel"}
 
-DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE = "\n*WARMUP:* \n*THE THANG:* \n*MARY:* \n*ANNOUNCEMENTS:* \n*COT:* "
+DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE = {
+    "type": "rich_text",
+    "elements": [
+        {
+            "type": "rich_text_section",
+            "elements": [
+                {
+                    "type": "text",
+                    "text": "\nWARMUP:",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " \n",
+                },
+                {
+                    "type": "text",
+                    "text": "THE THANG:",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " \n",
+                },
+                {
+                    "type": "text",
+                    "text": "MARY:",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " \n",
+                },
+                {
+                    "type": "text",
+                    "text": "ANNOUNCEMENTS:",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " \n",
+                },
+                {
+                    "type": "text",
+                    "text": "COT:",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " ",
+                },
+            ],
+        }
+    ],
+}
+
+DEFAULT_PREBLAST_MOLESKINE_TEMPLATE = {
+    "type": "rich_text",
+    "elements": [
+        {
+            "type": "rich_text_section",
+            "elements": [
+                {
+                    "type": "text",
+                    "text": "\nWHAT:",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " \n",
+                },
+                {
+                    "type": "text",
+                    "text": "WHY: ",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " ",
+                },
+            ],
+        }
+    ],
+}
 
 STATE_METADATA = "STATE_METADATA"
 

@@ -6,12 +6,13 @@ from utilities.database import DbManager
 from utilities.slack import actions
 from datetime import datetime
 from utilities.constants import LOCAL_DEVELOPMENT
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 from fuzzywuzzy import fuzz
 from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 import re
 from slack_sdk.web import WebClient
+from logging import Logger
 
 REGION_RECORDS: Dict[str, Region] = {}
 
@@ -64,6 +65,37 @@ def get_channel_name(id, logger, client, region_record: Region = None):
         return channel_name
     else:
         return ao_record.ao
+
+
+def get_channel_names(
+    array_of_channel_ids,
+    logger: Logger,
+    client: WebClient,
+    channel_records: List[PaxminerAO] = None,
+):
+    names = []
+
+    if channel_records:
+        for channel_id in array_of_channel_ids:
+            channel = [u for u in channel_records if u.channel_id == channel_id]
+            if channel:
+                channel_name = channel[0].ao
+            else:
+                channel_info_dict = client.conversations_info(channel=channel_id)
+                channel_name = safe_get(channel_info_dict, "channel", "name") or None
+            if channel_name:
+                names.append(channel_name)
+
+    else:
+        for channel_id in array_of_channel_ids:
+            channel_info_dict = client.channels_info(channel=channel_id)
+            channel_name = safe_get(channel_info_dict, "channel", "name") or None
+            if channel_name:
+                names.append(channel_name)
+            logger.debug("user_name is {}".format(channel_name))
+        logger.debug("names are {}".format(names))
+
+    return names
 
 
 def get_channel_id(name, logger, client):
@@ -341,3 +373,189 @@ def update_local_region_records() -> None:
     region_records: List[Region] = DbManager.find_records(Region, filters=[True])
     global REGION_RECORDS
     REGION_RECORDS = {region.team_id: region for region in region_records}
+
+
+def parse_rich_block(
+    # client: WebClient,
+    # logger: Logger,
+    block: Dict[str, Any],
+    # parse_users: bool = True,
+    # parse_channels: bool = True,
+    # region_record: Region = None,
+) -> str:
+    """Extracts the plain text representation from a rich text block.
+
+    Args:
+        client (WebClient): Slack client
+        logger (Logger): Logger
+        block (Dict[str, Any]): Block to parse
+        parse_users (bool, optional): If True, user mentions will be parsed to their name. Defaults to True.
+        parse_channels (bool, optional): If True, channel mentions will be parsed to its name. Defaults to True.
+
+    Returns:
+        str: Extracted plain text
+    """
+
+    def process_text_element(text, element):
+        msg = ""
+        if element["type"] == "rich_text_quote":
+            msg += '"'
+        if text["type"] == "text":
+            msg += text["text"]
+        if text["type"] == "emoji":
+            msg += f':{text["name"]}:'
+        if text["type"] == "link":
+            msg += text["url"]
+        if text["type"] == "user":
+            msg += f'<@{text["user_id"]}>'
+        if text["type"] == "channel":
+            msg += f'<#{text["channel_id"]}>'
+        if element["type"] == "rich_text_quote":
+            msg += '"'
+        return msg
+
+    # user_list = []
+    # channel_list = []
+    # user_index = 0
+    # channel_index = 0
+
+    msg = ""
+
+    for element in block["elements"]:
+        if element["type"] in ["rich_text_section", "rich_text_preformatted", "rich_text_quote"]:
+            for text in element["elements"]:
+                msg += process_text_element(text, element)
+                # if text["type"] == "user":
+                #     if parse_users:
+                #         msg += "{user" + f"{user_index}" + "}"
+                #         user_list.append(text["user_id"])
+                #         user_index += 1
+                #     else:
+                #         msg += f'<@{text["user_id"]}>'
+                # if text["type"] == "channel":
+                #     if parse_channels:
+                #         msg += "{channel" + f"{channel_index}" + "}"
+                #         channel_list.append(text["channel_id"])
+                #         channel_index += 1
+                #     else:
+                #         msg += f'<#{text["channel_id"]}>'
+        elif element["type"] == "rich_text_list":
+            for list_num, item in enumerate(element["elements"]):
+                line_msg = ""
+                for text in item["elements"]:
+                    line_msg += process_text_element(text, item)
+                line_start = f"{list_num+1}. " if element["style"] == "ordered" else "- "  # TODO: handle nested lists
+                msg += f"{line_start}{line_msg}\n"
+
+    # if len(user_list) + len(channel_list) > 0:
+    #     format_dict = {}
+    #     if len(user_list) > 0:
+    #         user_records = None
+    #         if region_record.paxminer_schema:
+    #             user_records = DbManager.find_records(
+    #                 PaxminerUser, filters=[True], schema=region_record.paxminer_schema
+    #             )
+    #         user_names: List[str] = get_user_names(user_list, logger, client, user_records=user_records)
+    #         format_dict.update({f"user{index}": f"@{name}" for index, name in enumerate(user_names)})
+    #     if len(channel_list) > 0:
+    #         channel_records = None
+    #         if region_record.paxminer_schema:
+    #             channel_records = DbManager.find_records(
+    #                 PaxminerAO, filters=[True], schema=region_record.paxminer_schema
+    #             )
+    #         channel_names: List[str] = get_channel_names(channel_list, logger, client, channel_records=channel_records)
+    #         format_dict.update({f"channel{index}": f"#{channel}" for index, channel in enumerate(channel_names)})
+    #     msg.format(**format_dict)
+    return msg
+
+
+def replace_user_channel_ids(
+    text: str,
+    region_record: Region,
+    client: WebClient,
+    logger: Logger,
+) -> str:
+    """Replace user and channel ids with their names
+
+    Args:
+        text (str): text with slack ids
+        region_record (Region): region record
+        client (WebClient): slack client
+        logger (Logger): logger
+
+    Returns:
+        str: text with slack ids replaced
+    """
+    user_records = None
+    channel_records = None
+    USER_PATTERN = r"<@([A-Z0-9]+)>"
+    CHANNEL_PATTERN = r"<#([A-Z0-9]+)(?:\|[A-Za-z\d]+)?>"
+    if region_record.paxminer_schema:
+        user_records = DbManager.find_records(PaxminerUser, filters=[True], schema=region_record.paxminer_schema)
+        channel_records = DbManager.find_records(PaxminerAO, filters=[True], schema=region_record.paxminer_schema)
+
+    text = text.replace("{}", "")
+
+    slack_user_ids = re.findall(USER_PATTERN, text or "")
+    slack_user_names = get_user_names(slack_user_ids, logger, client, return_urls=False, user_records=user_records)
+    text = re.sub(USER_PATTERN, "{}", text)
+    text = text.format(*slack_user_names)
+
+    slack_channel_ids = re.findall(CHANNEL_PATTERN, text or "")
+    slack_channel_names = get_channel_names(slack_channel_ids, logger, client, channel_records=channel_records)
+
+    text = re.sub(CHANNEL_PATTERN, "{}", text)
+    text = text.format(*slack_channel_names)
+
+    return text
+
+
+def plain_text_to_rich_block(text: str) -> Dict[str, Any]:
+    """Converts plain text to a rich text block
+
+    Args:
+        text (str): plain text
+
+    Returns:
+        Dict[str, Any]: rich text block
+    """
+
+    # split out bolded text using *
+    split_text = re.split(r"(\*.*?\*)", text)
+    text_elements = [
+        (
+            {"type": "text", "text": s.replace("*", ""), "style": {"bold": True}}
+            if s.startswith("*")
+            else {"type": "text", "text": s}
+        )
+        for s in split_text
+    ]
+
+    # now convert emojis
+    final_text_elements = []
+    for element in text_elements:
+        if element["type"] == "text" and not element.get("style"):
+            split_emoji_text = re.split(r"(:\S*?:)", element["text"])
+            emoji_elements = [
+                (
+                    {"type": "emoji", "name": s.replace(":", "")}
+                    if s.startswith(":") and s.endswith(":")
+                    else {"type": "text", "text": s}
+                )
+                for s in split_emoji_text
+            ]
+            final_text_elements.extend(emoji_elements)
+        else:
+            final_text_elements.append(element)
+
+    final_text_elements = [e for e in final_text_elements if e.get("text") != ""]
+
+    return {
+        "type": "rich_text",
+        "elements": [
+            {
+                "type": "rich_text_section",
+                "elements": final_text_elements,
+            }
+        ],
+    }
