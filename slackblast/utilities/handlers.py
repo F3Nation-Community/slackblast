@@ -9,9 +9,10 @@ from utilities.helper_functions import (
     safe_get,
     get_user_names,
     get_pax,
-    parse_moleskin_users,
     get_channel_name,
     update_local_region_records,
+    parse_rich_block,
+    replace_user_channel_ids,
 )
 from utilities.slack import actions, forms, orm
 from utilities.database.orm import Attendance, Backblast, PaxminerUser, Region
@@ -170,7 +171,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         the_coqs_formatted = ", " + ", ".join(the_coqs_full_list)
         the_coqs_names = ", " + ", ".join(the_coqs_names_list)
 
-    moleskin_formatted = parse_moleskin_users(moleskin, client, user_records)
+    # moleskin_formatted = parse_moleskin_users(moleskin, client, user_records)
 
     ao_name = get_channel_name(the_ao, logger, client, region_record)
     q_name, q_url = get_user_names([the_q], logger, client, return_urls=True, user_records=user_records)
@@ -202,11 +203,11 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         "block_id": "msg_text",
     }
 
-    moleskin_block = {
-        "type": "section",
-        "text": {"type": "mrkdwn", "text": moleskin_formatted},
-        "block_id": "moleskin_text",
-    }
+    # moleskin_block = {
+    #     "type": "section",
+    #     "text": {"type": "mrkdwn", "text": moleskin_formatted},
+    #     "block_id": "moleskin_text",
+    # }
 
     backblast_data.pop(actions.BACKBLAST_MOLESKIN, None)
     backblast_data[actions.BACKBLAST_FILE] = file_list
@@ -253,7 +254,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
             }
         )
 
-    blocks = [msg_block, moleskin_block]
+    blocks = [msg_block, moleskin]
     for file in file_list or []:
         blocks.append(
             orm.ImageBlock(
@@ -263,18 +264,21 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         )
     blocks.append(edit_block)
 
+    moleskin_text = parse_rich_block(moleskin)
+    moleskin_text_w_names = replace_user_channel_ids(moleskin_text, region_record, client, logger)
+
     if create_or_edit == "create":
         if region_record.paxminer_schema is None:
             res = client.chat_postMessage(
                 channel=chan,
-                text=post_msg + "\n" + moleskin_formatted,
+                text=post_msg + "\n" + moleskin_text,
                 username=f"{q_name} (via Slackblast)",
                 icon_url=q_url,
             )
         else:
             res = client.chat_postMessage(
                 channel=chan,
-                text=f"{moleskin_formatted}\n\nUse the 'New Backblast' button to create a new backblast",
+                text=f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast",
                 username=f"{q_name} (via Slackblast)",
                 icon_url=q_url,
                 blocks=blocks,
@@ -282,7 +286,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         logger.debug("\nMessage posted to Slack! \n{}".format(post_msg))
         print(json.dumps({"event_type": "successful_slack_post", "team_name": region_record.workspace_name}))
         if (email_send and email_send == "yes") or (email_send is None and region_record.email_enabled == 1):
-            moleskin_msg = moleskin.replace("*", "")
+            moleskin_msg = moleskin_text_w_names
 
             if region_record.postie_format:
                 subject = f"[{ao_name}] {title}"
@@ -331,7 +335,7 @@ COUNT: {count}
         res = client.chat_update(
             channel=message_channel,
             ts=message_ts,
-            text=f"{moleskin_formatted}\n\nUse the 'New Backblast' button to create a new backblast",
+            text=f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast",
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
             blocks=blocks,
@@ -367,7 +371,9 @@ COUNT: {count}
                     q_user_id=the_q,
                     coq_user_id=the_coq[0] if the_coq else None,
                     pax_count=count,
-                    backblast=f"{post_msg}\n{moleskin_formatted}".replace("*", ""),
+                    backblast=f"{post_msg}\n{moleskin_text}".replace(
+                        "*", ""
+                    ),  # here's where to replace with name versions
                     fngs=fngs_formatted if fngs else "None listed",
                     fng_count=fng_count,
                     json=custom_fields,
@@ -472,8 +478,6 @@ def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context:
         body_list.append(f"*Coupons*: {coupons}")
     if fngs:
         body_list.append(f"*FNGs*: {fngs}")
-    if moleskin:
-        body_list.append(moleskin)
 
     msg = "\n".join(body_list)
 
@@ -508,13 +512,19 @@ def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context:
         ],
         "block_id": actions.PREBLAST_EDIT_BUTTON,
     }
+
+    blocks = [msg_block]
+    if moleskin:
+        blocks.append(moleskin)
+    blocks.append(action_block)
+
     if create_or_edit == "create":
         client.chat_postMessage(
             channel=chan,
             text=msg,
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
-            blocks=[msg_block, action_block],
+            blocks=blocks,
         )
         logger.debug("\nPreblast posted to Slack! \n{}".format(msg))
         print(json.dumps({"event_type": "successful_preblast_create", "team_name": region_record.workspace_name}))
@@ -525,7 +535,7 @@ def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context:
             text=msg,
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
-            blocks=[msg_block, action_block],
+            blocks=blocks,
         )
         logger.debug("\nPreblast updated in Slack! \n{}".format(msg))
         print(json.dumps({"event_type": "successful_preblast_edit", "team_name": region_record.workspace_name}))
@@ -539,8 +549,8 @@ def handle_config_post(body: dict, client: WebClient, logger: Logger, context: d
         Region.email_enabled: 1 if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable" else 0,
         Region.editing_locked: 1 if safe_get(config_data, actions.CONFIG_EDITING_LOCKED) == "yes" else 0,
         Region.default_destination: safe_get(config_data, actions.CONFIG_DEFAULT_DESTINATION),
-        Region.backblast_moleskin_template: safe_get(config_data, actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE) or "",
-        Region.preblast_moleskin_template: safe_get(config_data, actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE) or "",
+        Region.backblast_moleskin_template: safe_get(config_data, actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE),
+        Region.preblast_moleskin_template: safe_get(config_data, actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE),
         Region.strava_enabled: 1 if safe_get(config_data, actions.CONFIG_ENABLE_STRAVA) == "enable" else 0,
     }
     if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable":
@@ -581,9 +591,9 @@ def handle_welcome_message_config_post(
     fields = {
         Region.welcome_dm_enable: 1 if safe_get(welcome_config_data, actions.WELCOME_DM_ENABLE) == "enable" else 0,
         Region.welcome_dm_template: safe_get(welcome_config_data, actions.WELCOME_DM_TEMPLATE) or "",
-        Region.welcome_channel_enable: 1
-        if safe_get(welcome_config_data, actions.WELCOME_CHANNEL_ENABLE) == "enable"
-        else 0,
+        Region.welcome_channel_enable: (
+            1 if safe_get(welcome_config_data, actions.WELCOME_CHANNEL_ENABLE) == "enable" else 0
+        ),
         Region.welcome_channel: safe_get(welcome_config_data, actions.WELCOME_CHANNEL) or "",
     }
 

@@ -88,23 +88,29 @@ BACKBLAST_FORM = orm.BlockView(
                 initial_value="If left blank, this will be calculated automatically from the fields above.",
             ),
         ),
+        # orm.InputBlock(
+        #     label="The Moleskin",
+        #     action=actions.BACKBLAST_MOLESKIN,
+        #     optional=False,
+        #     element=orm.PlainTextInputElement(
+        #         placeholder="Tell us what happened\n\n",
+        #         # initial_value="\n*WARMUP:* \n*THE THANG:* \n*MARY:* \n*ANNOUNCEMENTS:* \n*COT:* ",
+        #         multiline=True,
+        #         max_length=3000,
+        #     ),
+        # ),
         orm.InputBlock(
-            label="The Moleskin",
+            label="The Moleskine",
             action=actions.BACKBLAST_MOLESKIN,
             optional=False,
-            element=orm.PlainTextInputElement(
-                placeholder="Tell us what happened\n\n",
-                # initial_value="\n*WARMUP:* \n*THE THANG:* \n*MARY:* \n*ANNOUNCEMENTS:* \n*COT:* ",
-                multiline=True,
-                max_length=3000,
-            ),
+            element=orm.RichTextInputElement(),
         ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="If trying to tag PAX in here, substitute _ for spaces and do not include titles in "
-                "parenthesis (ie, @Moneyball not @Moneyball_(F3_STC)). Spelling is important, capitalization is not!",
-            ),
-        ),
+        # orm.ContextBlock(
+        #     element=orm.ContextElement(
+        #         initial_value="If trying to tag PAX in here, substitute _ for spaces and do not include titles in "
+        #         "parenthesis (ie, @Moneyball not @Moneyball_(F3_STC)). Spelling is important, capitalization is not!",
+        #     ),
+        # ),
         orm.DividerBlock(),
         orm.InputBlock(
             label="Choose where to post this",
@@ -190,14 +196,15 @@ PREBLAST_FORM = orm.BlockView(
         #   )
         # ),
         orm.InputBlock(
-            label="Moleskin",
+            label="Moleskine",
             action=actions.PREBLAST_MOLESKIN,
             optional=True,
-            element=orm.PlainTextInputElement(
-                placeholder="A hint of what you're planning...",
-                multiline=True,
-                max_length=3000,
-            ),
+            element=orm.RichTextInputElement(),
+            # element=orm.PlainTextInputElement(
+            #     placeholder="A hint of what you're planning...",
+            #     multiline=True,
+            #     max_length=3000,
+            # ),
         ),
         orm.DividerBlock(),
         orm.InputBlock(
@@ -217,18 +224,6 @@ PREBLAST_FORM = orm.BlockView(
 
 CONFIG_FORM = orm.BlockView(
     [
-        # orm.InputBlock(
-        #     label="Paxminer Region Database",
-        #     action=actions.CONFIG_PAXMINER_DB,
-        #     optional=False,
-        #     element=orm.StaticSelectElement(placeholder="Select your database..."),
-        # ),
-        # orm.InputBlock(
-        #     label="Other (if not listed above)",
-        #     action=actions.CONFIG_PAXMINER_DB_OTHER,
-        #     optional=False,
-        #     element=orm.PlainTextInputElement(initial_value="OtherDBName"),
-        # ),
         orm.ActionsBlock(
             elements=[
                 orm.ButtonElement(
@@ -355,21 +350,23 @@ CONFIG_FORM = orm.BlockView(
             label="Backblast Moleskine Template / Starter",
             action=actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE,
             optional=True,
-            element=orm.PlainTextInputElement(
-                initial_value=constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE,
-                max_length=3000,
-                multiline=True,
-            ),
+            element=orm.RichTextInputElement(),
+            # element=orm.PlainTextInputElement(
+            #     initial_value=constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE,
+            #     max_length=3000,
+            #     multiline=True,
+            # ),
         ),
         orm.InputBlock(
             label="Preblast Moleskine Template / Starter",
             action=actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE,
             optional=True,
-            element=orm.PlainTextInputElement(
-                initial_value="",
-                max_length=3000,
-                multiline=True,
-            ),
+            element=orm.RichTextInputElement(),
+            # element=orm.PlainTextInputElement(
+            #     initial_value="",
+            #     max_length=3000,
+            #     multiline=True,
+            # ),
         ),
     ]
 )
@@ -399,14 +396,6 @@ WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
                 + "how do they do that? Should their Slack handle be their F3 name?",
             ),
         ),
-        # orm.ActionsBlock(
-        #     elements=[
-        #         orm.ButtonElement(
-        #             label="Template Tips & Tricks",
-        #             action=actions.WELCOME_TIPS_TRICKS,
-        #         ),
-        #     ],
-        # ),
         orm.InputBlock(
             label="Enable Welcomebot welcome channel posts?",
             action=actions.WELCOME_CHANNEL_ENABLE,
@@ -427,25 +416,6 @@ WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
                 initial_value="If enabled, this is the channel where welcome messages will be posted.",
             ),
         ),
-        # orm.ActionsBlock(
-        #     elements=[
-        #         orm.ButtonElement(
-        #             label="Test Welcome DM",
-        #             action=actions.WELCOME_DM_TEST,
-        #         ),
-        #         orm.ButtonElement(
-        #             label="Test Welcome Channel Post",
-        #             action=actions.WELCOME_CHANNEL_TEST,
-        #         ),
-        #     ],
-        # ),
-        # orm.RichTextBlock(
-        #     label={
-        #         "type": "rich_text",
-        #         "elements": [{"type": "rich_text_section", "elements": [{"type": "text", "text": " "}]}],
-        #     },
-        #     action=actions.WELCOME_TEST_TEXT,
-        # ),
     ]
 )
 
@@ -472,12 +442,6 @@ STRAVA_ACTIVITY_MODIFY_FORM = orm.BlockView(
                 multiline=True,
             ),
         ),
-        # orm.ContextBlock(
-        #     action=actions.STRAVA_ACTIVITY_METADATA,
-        #     element=orm.ContextElement(
-        #         initial_value="",
-        #     ),
-        # ),
     ]
 )
 

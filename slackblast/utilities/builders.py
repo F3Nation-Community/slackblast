@@ -11,10 +11,12 @@ from utilities.slack import forms, orm as slack_orm, actions
 from utilities import constants, strava
 from utilities.helper_functions import (
     get_channel_name,
-    replace_slack_user_ids,
+    # replace_slack_user_ids,
     safe_get,
     check_for_duplicate,
     update_local_region_records,
+    parse_rich_block,
+    replace_user_channel_ids,
 )
 import copy
 from logging import Logger
@@ -102,10 +104,10 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
     ):
         initial_backblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
         if not safe_get(initial_backblast_data, actions.BACKBLAST_MOLESKIN):
-            initial_backblast_data[actions.BACKBLAST_MOLESKIN] = safe_get(body, "message", "blocks", 1, "text", "text")
-            initial_backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
-                initial_backblast_data[actions.BACKBLAST_MOLESKIN], client, logger, region_record
-            )
+            initial_backblast_data[actions.BACKBLAST_MOLESKIN] = safe_get(body, "message", "blocks", 1)
+            # initial_backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
+            #     initial_backblast_data[actions.BACKBLAST_MOLESKIN], client, logger, region_record
+            # )
     else:
         initial_backblast_data = None
 
@@ -241,12 +243,10 @@ def build_config_form(body: dict, client: WebClient, logger: Logger, context: di
                 actions.CONFIG_EDITING_LOCKED: "yes" if region_record.editing_locked == 1 else "no",
                 actions.CONFIG_DEFAULT_DESTINATION: region_record.default_destination
                 or constants.CONFIG_DESTINATION_AO["value"],
-                actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE: constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE
-                if region_record.backblast_moleskin_template is None
-                else region_record.backblast_moleskin_template,
-                actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE: ""
-                if region_record.preblast_moleskin_template is None
-                else region_record.preblast_moleskin_template,
+                actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE: region_record.backblast_moleskin_template
+                or constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE,
+                actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE: region_record.preblast_moleskin_template
+                or constants.DEFAULT_PREBLAST_MOLESKINE_TEMPLATE,
                 actions.CONFIG_ENABLE_STRAVA: "enable" if region_record.strava_enabled == 1 else "disable",
             }
         )
@@ -340,7 +340,12 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
 
     backblast_ts = body["message"]["ts"]
     backblast_meta = json.loads(body["message"]["blocks"][-1]["elements"][0]["value"])
-    moleskine_text = body["message"]["blocks"][1]["text"]["text"]
+    moleskine = body["message"]["blocks"][1]
+    moleskine_text = replace_user_channel_ids(parse_rich_block(moleskine), region_record, client, logger)
+    if "COT:" in moleskine_text:
+        moleskine_text = moleskine_text.split("COT:")[0]
+    elif "Announcements" in moleskine_text:
+        moleskine_text = moleskine_text.split("Announcements")[0]
 
     allow_strava: bool = (
         (user_id == backblast_meta[actions.BACKBLAST_Q])
@@ -596,9 +601,9 @@ def build_custom_field_add_edit(
             {
                 actions.CUSTOM_FIELD_ADD_NAME: custom_field["name"],
                 actions.CUSTOM_FIELD_ADD_TYPE: custom_field["type"],
-                actions.CUSTOM_FIELD_ADD_OPTIONS: ",".join(custom_field["options"])
-                if custom_field["type"] == "Dropdown"
-                else " ",
+                actions.CUSTOM_FIELD_ADD_OPTIONS: (
+                    ",".join(custom_field["options"]) if custom_field["type"] == "Dropdown" else " "
+                ),
             }
         )
         action_text = "Edit"
