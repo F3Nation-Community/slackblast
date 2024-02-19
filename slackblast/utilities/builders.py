@@ -17,6 +17,7 @@ from utilities.helper_functions import (
     update_local_region_records,
     parse_rich_block,
     replace_user_channel_ids,
+    plain_text_to_rich_block,
 )
 import copy
 from logging import Logger
@@ -104,7 +105,13 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
     ):
         initial_backblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
         if not safe_get(initial_backblast_data, actions.BACKBLAST_MOLESKIN):
-            initial_backblast_data[actions.BACKBLAST_MOLESKIN] = safe_get(body, "message", "blocks", 1)
+            moleskin_block = safe_get(body, "message", "blocks", 1)
+            if moleskin_block.get("type") == "section":
+                initial_backblast_data[actions.BACKBLAST_MOLESKIN] = plain_text_to_rich_block(
+                    moleskin_block["text"]["text"]
+                )
+            else:
+                initial_backblast_data[actions.BACKBLAST_MOLESKIN] = moleskin_block
             # initial_backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
             #     initial_backblast_data[actions.BACKBLAST_MOLESKIN], client, logger, region_record
             # )
