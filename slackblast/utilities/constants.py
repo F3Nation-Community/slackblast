@@ -126,3 +126,5 @@ WELCOME_MESSAGE_TEMPLATES = [
 ]
 
 MAX_HEIC_SIZE = 1000
+
+ERROR_FORM_MESSAGE_TEMPLATE = ":warning: Sorry, the following error occurred:\n\n```{error}```"

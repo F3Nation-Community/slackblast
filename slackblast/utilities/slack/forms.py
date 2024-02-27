@@ -88,29 +88,12 @@ BACKBLAST_FORM = orm.BlockView(
                 initial_value="If left blank, this will be calculated automatically from the fields above.",
             ),
         ),
-        # orm.InputBlock(
-        #     label="The Moleskin",
-        #     action=actions.BACKBLAST_MOLESKIN,
-        #     optional=False,
-        #     element=orm.PlainTextInputElement(
-        #         placeholder="Tell us what happened\n\n",
-        #         # initial_value="\n*WARMUP:* \n*THE THANG:* \n*MARY:* \n*ANNOUNCEMENTS:* \n*COT:* ",
-        #         multiline=True,
-        #         max_length=3000,
-        #     ),
-        # ),
         orm.InputBlock(
             label="The Moleskine",
             action=actions.BACKBLAST_MOLESKIN,
             optional=False,
             element=orm.RichTextInputElement(),
         ),
-        # orm.ContextBlock(
-        #     element=orm.ContextElement(
-        #         initial_value="If trying to tag PAX in here, substitute _ for spaces and do not include titles in "
-        #         "parenthesis (ie, @Moneyball not @Moneyball_(F3_STC)). Spelling is important, capitalization is not!",
-        #     ),
-        # ),
         orm.DividerBlock(),
         orm.InputBlock(
             label="Choose where to post this",
@@ -171,14 +154,6 @@ PREBLAST_FORM = orm.BlockView(
             optional=False,
             element=orm.UsersSelectElement(placeholder="Select the Q..."),
         ),
-        # orm.InputBlock(
-        #   label="The Why",
-        #   action=actions.PREBLAST_WHY,
-        #   optional=True,
-        #   element=orm.PlainTextInputElement(
-        #     placeholder="[Optional] Explain the Why...",
-        #   )
-        # ),
         orm.InputBlock(
             label="Coupons?",
             action=actions.PREBLAST_COUPONS,
@@ -187,24 +162,11 @@ PREBLAST_FORM = orm.BlockView(
                 placeholder="Coupons or not?",
             ),
         ),
-        # orm.InputBlock(
-        #   label="FNGs",
-        #   action=actions.PREBLAST_FNGS,
-        #   optional=True,
-        #   element=orm.PlainTextInputElement(
-        #     placeholder="Any message for FNGs?",
-        #   )
-        # ),
         orm.InputBlock(
             label="Moleskine",
             action=actions.PREBLAST_MOLESKIN,
             optional=True,
             element=orm.RichTextInputElement(),
-            # element=orm.PlainTextInputElement(
-            #     placeholder="A hint of what you're planning...",
-            #     multiline=True,
-            #     max_length=3000,
-            # ),
         ),
         orm.DividerBlock(),
         orm.InputBlock(
@@ -351,22 +313,12 @@ CONFIG_FORM = orm.BlockView(
             action=actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE,
             optional=True,
             element=orm.RichTextInputElement(),
-            # element=orm.PlainTextInputElement(
-            #     initial_value=constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE,
-            #     max_length=3000,
-            #     multiline=True,
-            # ),
         ),
         orm.InputBlock(
             label="Preblast Moleskine Template / Starter",
             action=actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE,
             optional=True,
             element=orm.RichTextInputElement(),
-            # element=orm.PlainTextInputElement(
-            #     initial_value="",
-            #     max_length=3000,
-            #     multiline=True,
-            # ),
         ),
     ]
 )
@@ -493,23 +445,17 @@ CUSTOM_FIELD_ADD_EDIT_FORM = orm.BlockView(
 LOADING_FORM = orm.BlockView(
     blocks=[
         orm.SectionBlock(label=":hourglass: Loading, do not close...", action=actions.LOADING),
+        orm.ContextBlock(
+            action="loading_context",
+            element=orm.ContextElement(
+                initial_value="If this form does not update after a few seconds, an error may have occured. Please try again.",
+            ),
+        ),
     ]
 )
 
-WELCOME_TIPS_TRICKS = orm.BlockView(
+ERROR_FORM = orm.BlockView(
     blocks=[
-        orm.RichTextBlock(
-            label="*This content will be sent to any new user who joins this Slack workspace.*\n\n"
-            "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your Slack.\n"
-            + "Who should they reach out to if they have a question? What channels should they join? What does HC mean and "
-            + "how do they do that? Should their Slack handle be their F3 name?\n\n"
-            + "*Formatting Tips:*\n"
-            + " - You can tag specific users by using @, but make sure to replace spaces with underscores, such as: @Soda Stand -> @Soda_Stand. Capitalization does not matter.\n"
-            + " - Your new user can be tagged with `{user}`.\n"
-            + " - URLs work just fine.\n"
-            + " - Dividers can be a good way to break up walls of text, and can be added with `/divider`.\n"
-            + " - If you want to make a list, you can start lines with ` - ` to make bullet points (like this list).\n"
-            + " - Emojis can be added with `:emoji:`, for example `:fire:` will add a fire emoji like this: :fire:.\n",
-        ),
+        orm.SectionBlock(label=":warning: the following error occurred:", action=actions.ERROR_FORM_MESSAGE),
     ]
 )

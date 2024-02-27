@@ -1,6 +1,5 @@
 import json
 import os
-import random
 from typing import List
 import pytz
 
@@ -80,13 +79,13 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
         or (safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID)
     ):
         backblast_method = "create"
-        update_view_id = add_loading_form(body, client)
+        update_view_id = safe_get(body, actions.LOADING_ID)
         duplicate_check = False
         parent_metadata = {}
     else:
         backblast_method = "edit"
         update_view_id = (
-            safe_get(body, "view", "id") or safe_get(body, "container", "view_id") or add_loading_form(body, client)
+            safe_get(body, "view", "id") or safe_get(body, "container", "view_id") or safe_get(body, actions.LOADING_ID)
         )
         duplicate_check = safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID
         parent_metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
@@ -222,7 +221,7 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
 def build_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     if safe_get(body, "command") == "/config-slackblast":
         initial_config_data = None
-        update_view_id = add_loading_form(body, client)
+        update_view_id = safe_get(body, actions.LOADING_ID)
     else:
         initial_config_data = forms.CONFIG_FORM.get_selected_values(body)
         update_view_id = safe_get(body, "view", "id") or safe_get(body, "container", "view_id")
@@ -291,7 +290,7 @@ def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
 
-    update_view_id = add_loading_form(body, client)
+    update_view_id = safe_get(body, actions.LOADING_ID)
     preblast_form = copy.deepcopy(forms.PREBLAST_FORM)
 
     if (safe_get(body, "command") in ["/preblast"]) or (
@@ -362,7 +361,7 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
     )
 
     if allow_strava:
-        update_view_id = add_loading_form(body, client)
+        update_view_id = safe_get(body, actions.LOADING_ID)
         user_records: List[User] = DbManager.find_records(
             User, filters=[User.user_id == user_id, User.team_id == team_id]
         )
@@ -726,7 +725,7 @@ def handle_preblast_edit_button(body: dict, client: WebClient, logger: Logger, c
 
 
 def build_welcome_message_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    update_view_id = add_loading_form(body, client)
+    update_view_id = safe_get(body, actions.LOADING_ID)
     welcome_message_config_form = copy.deepcopy(forms.WELCOME_MESSAGE_CONFIG_FORM)
 
     welcome_message_config_form.set_initial_values(
@@ -747,56 +746,15 @@ def build_welcome_message_form(body: dict, client: WebClient, logger: Logger, co
     )
 
 
-def test_welcome_message(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    update_view_id = safe_get(body, "container", "view_id")
-    testing = safe_get(body, "actions", 0, "action_id")
-    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
-    config_form = copy.deepcopy(forms.WELCOME_MESSAGE_CONFIG_FORM)
-    initial_config_data = forms.WELCOME_MESSAGE_CONFIG_FORM.get_selected_values(body)
-
-    if testing == actions.WELCOME_DM_TEST:
-        test_msg = (
-            initial_config_data[actions.WELCOME_DM_TEMPLATE]
-            or region_record.welcome_dm_template
-            or "Template not found, please submit your config first"
-        )
-    elif testing == actions.WELCOME_CHANNEL_TEST:
-        test_msg = random.choice(constants.WELCOME_MESSAGE_TEMPLATES).format(
-            user=f"<@{user_id}>", region=region_record.workspace_name
-        )
-    else:
-        test_msg = "Something went wrong"
-
-    print(test_msg)
-
-    config_form.set_initial_values(
-        {
-            actions.WELCOME_DM_ENABLE: initial_config_data[actions.WELCOME_DM_ENABLE],
-            actions.WELCOME_DM_TEMPLATE: initial_config_data[actions.WELCOME_DM_TEMPLATE],
-            actions.WELCOME_CHANNEL_ENABLE: initial_config_data[actions.WELCOME_CHANNEL_ENABLE],
-            actions.WELCOME_CHANNEL: initial_config_data[actions.WELCOME_CHANNEL],
-            actions.WELCOME_TEST_TEXT: test_msg,
-        }
-    )
-
-    config_form.update_modal(
+def send_error_response(body: dict, client: WebClient, error: str) -> None:
+    update_view_id = safe_get(body, actions.LOADING_ID)
+    error_form = copy.deepcopy(forms.ERROR_FORM)
+    error_msg = constants.ERROR_FORM_MESSAGE_TEMPLATE.format(error=error)
+    error_form.set_initial_values({actions.ERROR_FORM_MESSAGE: error_msg})
+    error_form.update_modal(
         client=client,
         view_id=update_view_id,
-        callback_id=actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID,
-        title_text="FNG Welcome Config",
-        parent_metadata=None,
-    )
-
-
-def build_welcome_tips_tricks(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    trigger_id = safe_get(body, "trigger_id")
-    welcome_tips_tricks_form = copy.deepcopy(forms.WELCOME_TIPS_TRICKS)
-
-    welcome_tips_tricks_form.post_modal(
-        client=client,
-        trigger_id=trigger_id,
-        callback_id=actions.WELCOME_TIPS_TRICKS_CALLBACK_ID,
-        title_text="Template Tips",
-        new_or_add="add",
+        title_text="Slackblast Error",
         submit_button_text="None",
+        callback_id="error-id",
     )
