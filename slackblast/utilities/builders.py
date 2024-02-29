@@ -63,6 +63,19 @@ def add_loading_form(body: dict, client: WebClient) -> str:
 
 
 def build_backblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    """This function builds the backblast form and posts it to Slack. There are several entry points for this function:
+        1. Building a new backblast, either through the /backblast command or the "New Backblast" button
+        2. Editing an existing backblast, invoked by the "Edit Backblast" button
+        3. Duplicate checking, invoked by the "Q", "Date", or "AO" fields being changed
+
+    Args:
+        body (dict): Slack request body
+        client (WebClient): Slack WebClient object
+        logger (Logger): Logger object
+        context (dict): Slack request context
+        region_record (Region): Region record for the requesting region
+    """
+
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
     channel_name = safe_get(body, "channel_name") or safe_get(body, "channel", "name")
