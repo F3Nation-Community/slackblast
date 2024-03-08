@@ -146,3 +146,43 @@ class PaxminerAO(BaseClass, GetDBClass):
 
     def get_id():
         return PaxminerAO.channel_id
+
+
+class AchievementsList(BaseClass, GetDBClass):
+    __tablename__ = "achievements_list"
+    id = Column("id", Integer, primary_key=True)
+    name = Column("name", String(255))
+    description = Column("description", String(255))
+    verb = Column("verb", String(255))
+    code = Column("code", String(255))
+
+    def get_id():
+        return AchievementsList.id
+
+
+class AchievementsAwarded(BaseClass, GetDBClass):
+    __tablename__ = "achievements_awarded"
+    id = Column("id", Integer, primary_key=True)
+    achievement_id = Column("achievement_id", Integer)
+    pax_id = Column("pax_id", String(255))
+    date_awarded = Column("date_awarded", Date)
+    created = Column("created", DateTime, default=datetime.utcnow)
+    updated = Column("updated", DateTime, default=datetime.utcnow)
+
+    def get_id():
+        return AchievementsAwarded.id
+
+
+# eventually this will be on the Regions table in Slackblast
+class WeaselbotRegions(BaseClass, GetDBClass):
+    __tablename__ = "regions_copy"
+    id = Column("id", Integer, primary_key=True)
+    paxminer_schema = Column("paxminer_schema", String(100))
+    slack_token = Column("slack_token", String(100))
+    send_achievements = Column("send_achievements", Integer)
+    send_aoq_reports = Column("send_aoq_reports", Integer)
+    achievement_channel = Column("achievement_channel", String(100))
+    default_siteq_channel = Column("default_siteq", String(45))
+
+    def get_id():
+        return WeaselbotRegions.id

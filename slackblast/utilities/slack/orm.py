@@ -169,13 +169,16 @@ class ButtonElement(BaseAction):
 class SelectorOption:
     name: str
     value: str
+    description: str = None
 
 
-def as_selector_options(names: List[str], values: List[str] = []) -> List[SelectorOption]:
-    if values == []:
+def as_selector_options(names: List[str], values: List[str] = [], descriptions: List[str] = []) -> List[SelectorOption]:
+    if values == [] and descriptions == []:
         selectors = [SelectorOption(name=x, value=x) for x in names]
+    elif values == []:
+        selectors = [SelectorOption(name=x, value=x, description=y) for x, y in zip(names, descriptions)]
     else:
-        selectors = [SelectorOption(name=x, value=y) for x, y in zip(names, values)]
+        selectors = [SelectorOption(name=x, value=y, description=z) for x, y, z in zip(names, values, descriptions)]
     return selectors
 
 
@@ -207,10 +210,13 @@ class StaticSelectElement(BaseElement):
         return safe_get(input_data, action, action, "selected_option", "value")
 
     def __make_option(self, option: SelectorOption):
-        return {
+        j = {
             "text": {"type": "plain_text", "text": option.name, "emoji": True},
             "value": option.value,
         }
+        if option.description:
+            j["description"] = {"type": "plain_text", "text": option.description, "emoji": True}
+        return j
 
 
 @dataclass
@@ -588,13 +594,14 @@ class BlockView:
             "type": "modal",
             "callback_id": callback_id,
             "title": {"type": "plain_text", "text": title_text},
-            "submit": {"type": "plain_text", "text": submit_button_text},
             "close": {"type": "plain_text", "text": close_button_text},
             "notify_on_close": notify_on_close,
             "blocks": blocks,
         }
         if parent_metadata:
             view["private_metadata"] = json.dumps(parent_metadata)
+        if submit_button_text != "None":
+            view["submit"] = {"type": "plain_text", "text": submit_button_text}
 
         client.views_update(view_id=view_id, view=view)
 

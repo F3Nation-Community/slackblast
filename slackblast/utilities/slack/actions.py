@@ -91,3 +91,8 @@ CUSTOM_FIELD_ADD_FORM = "custom_field_add_id"
 
 ERROR_FORM_MESSAGE = "error_form_message"
 LOADING_ID = "loading_id"
+
+ACHIEVEMENT_CALLBACK_ID = "achievement-id"
+ACHIEVEMENT_SELECT = "achievement-select"
+ACHIEVEMENT_PAX = "achievement-pax"
+ACHIEVEMENT_DATE = "achievement-date"

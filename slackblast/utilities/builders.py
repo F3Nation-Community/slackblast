@@ -4,7 +4,7 @@ from typing import List
 import pytz
 
 from slack_sdk.web import WebClient
-from utilities.database.orm import Region, User
+from utilities.database.orm import Region, User, AchievementsList
 from utilities.database import DbManager
 from utilities.slack import forms, orm as slack_orm, actions
 from utilities import constants, strava
@@ -23,6 +23,9 @@ from logging import Logger
 from datetime import datetime
 from cryptography.fernet import Fernet
 from requests_oauthlib import OAuth2Session
+
+# from pymysql.err import ProgrammingError
+from sqlalchemy.exc import ProgrammingError
 
 
 def add_custom_field_blocks(form: slack_orm.BlockView, region_record: Region) -> slack_orm.BlockView:
@@ -770,4 +773,62 @@ def send_error_response(body: dict, client: WebClient, error: str) -> None:
         title_text="Slackblast Error",
         submit_button_text="None",
         callback_id="error-id",
+    )
+
+
+def build_achievement_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+
+    paxminer_schema = region_record.paxminer_schema
+    update_view_id = safe_get(body, actions.LOADING_ID)
+    achievement_form = copy.deepcopy(forms.ACHIEVEMENT_FORM)
+    callback_id = actions.ACHIEVEMENT_CALLBACK_ID
+
+    # build achievement list
+    achievement_list = []
+    # gather achievements from paxminer
+    if paxminer_schema:
+        try:
+            achievement_list = DbManager.find_records(schema=paxminer_schema, cls=AchievementsList, filters=[True])
+        except ProgrammingError:
+            error_form = copy.deepcopy(forms.ERROR_FORM)
+            error_msg = constants.ERROR_FORM_MESSAGE_TEMPLATE.format(
+                error="It looks like Weaselbot has not been set up for this region. Please contact your local Slack admin or go to https://github.com/F3Nation-Community/weaselbot to get started!"
+            )
+            error_form.set_initial_values({actions.ERROR_FORM_MESSAGE: error_msg})
+            error_form.update_modal(
+                client=client,
+                view_id=update_view_id,
+                title_text="Slackblast Error",
+                submit_button_text="None",
+                callback_id="error-id",
+            )
+            return
+    if achievement_list:
+        achievement_list = slack_orm.as_selector_options(
+            names=[achievement.name for achievement in achievement_list],
+            values=[str(achievement.id) for achievement in achievement_list],
+            descriptions=[achievement.description for achievement in achievement_list],
+        )
+    else:
+        achievement_list = slack_orm.as_selector_options(
+            names=["No achievements available"],
+            values=["None"],
+        )
+
+    achievement_form.set_initial_values(
+        {
+            actions.ACHIEVEMENT_DATE: datetime.now(pytz.timezone("US/Central")).strftime("%Y-%m-%d"),
+        }
+    )
+    achievement_form.set_options(
+        {
+            actions.ACHIEVEMENT_SELECT: achievement_list,
+        }
+    )
+
+    achievement_form.update_modal(
+        client=client,
+        view_id=update_view_id,
+        callback_id=callback_id,
+        title_text="Tag achievements",
     )

@@ -459,3 +459,31 @@ ERROR_FORM = orm.BlockView(
         orm.SectionBlock(label=":warning: the following error occurred:", action=actions.ERROR_FORM_MESSAGE),
     ]
 )
+
+ACHIEVEMENT_FORM = orm.BlockView(
+    blocks=[
+        orm.InputBlock(
+            label="Achievement",
+            action=actions.ACHIEVEMENT_SELECT,
+            optional=False,
+            element=orm.StaticSelectElement(placeholder="Select the achievement..."),
+        ),
+        orm.InputBlock(
+            label="Select the PAX",
+            action=actions.ACHIEVEMENT_PAX,
+            optional=False,
+            element=orm.MultiUsersSelectElement(placeholder="Select the PAX..."),
+        ),
+        orm.InputBlock(
+            label="Achievement Date",
+            action=actions.ACHIEVEMENT_DATE,
+            optional=False,
+            element=orm.DatepickerElement(placeholder="Select the date..."),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="Please use a date in the period the achievement was earned, as some achievements can be earned for several periods.",
+            ),
+        ),
+    ]
+)
