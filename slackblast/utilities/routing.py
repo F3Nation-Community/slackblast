@@ -16,6 +16,7 @@ COMMAND_MAPPER = {
     "/preblast": (builders.build_preblast_form, True),
     "/config-welcome-message": (builders.build_welcome_message_form, True),
     "/config-slackblast": (builders.build_config_form, True),
+    "/tag-achievement": (builders.build_achievement_form, True),
 }
 
 VIEW_MAPPER = {
@@ -28,6 +29,7 @@ VIEW_MAPPER = {
     actions.STRAVA_MODIFY_CALLBACK_ID: (strava.handle_strava_modify, False),
     actions.CUSTOM_FIELD_ADD_CALLBACK_ID: (handlers.handle_custom_field_add, False),
     actions.CUSTOM_FIELD_MENU_CALLBACK_ID: (handlers.handle_custom_field_menu, False),
+    actions.ACHIEVEMENT_CALLBACK_ID: (handlers.handle_achievements_tag, False),
 }
 
 ACTION_MAPPER = {

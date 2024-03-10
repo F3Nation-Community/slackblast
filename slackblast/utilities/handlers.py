@@ -15,7 +15,15 @@ from utilities.helper_functions import (
     replace_user_channel_ids,
 )
 from utilities.slack import actions, forms, orm
-from utilities.database.orm import Attendance, Backblast, PaxminerUser, Region
+from utilities.database.orm import (
+    Attendance,
+    Backblast,
+    PaxminerUser,
+    Region,
+    WeaselbotRegions,
+    AchievementsAwarded,
+    AchievementsList,
+)
 from utilities.database import DbManager
 from cryptography.fernet import Fernet
 from slack_sdk.web import WebClient
@@ -23,6 +31,7 @@ import requests
 import boto3
 from PIL import Image
 from pillow_heif import register_heif_opener
+from datetime import datetime
 
 register_heif_opener()
 
@@ -663,4 +672,67 @@ def handle_team_join(body: dict, client: WebClient, logger: Logger, context: dic
         client.chat_postMessage(
             channel=welcome_channel,
             text=random.choice(constants.WELCOME_MESSAGE_TEMPLATES).format(user=f"<@{user_id}>", region=workspace_name),
+        )
+
+
+def handle_achievements_tag(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    achievement_data = forms.ACHIEVEMENT_FORM.get_selected_values(body)
+    achievement_pax_list = safe_get(achievement_data, actions.ACHIEVEMENT_PAX)
+    achievement_id = int(safe_get(achievement_data, actions.ACHIEVEMENT_SELECT))
+    achievement_date = datetime.strptime(safe_get(achievement_data, actions.ACHIEVEMENT_DATE), "%Y-%m-%d")
+
+    achievement_info = DbManager.get_record(AchievementsList, achievement_id, schema=region_record.paxminer_schema)
+    achievement_name = achievement_info.name
+    achievement_verb = achievement_info.verb
+
+    paxminer_schema = region_record.paxminer_schema
+    if paxminer_schema:
+        weaselbot_region_info = safe_get(
+            DbManager.find_records(
+                cls=WeaselbotRegions,
+                filters=[WeaselbotRegions.paxminer_schema == paxminer_schema],
+                schema="weaselbot",
+            ),
+            0,
+        )
+        if weaselbot_region_info:
+            achievement_channel = weaselbot_region_info.achievement_channel
+        else:
+            achievement_channel = None
+
+    # Get all achievements for the year
+    pax_awards = DbManager.find_records(
+        schema=paxminer_schema,
+        cls=AchievementsAwarded,
+        filters=[
+            AchievementsAwarded.pax_id.in_(achievement_pax_list),
+            AchievementsAwarded.date_awarded >= datetime(achievement_date.year, 1, 1),
+            AchievementsAwarded.date_awarded <= datetime(achievement_date.year, 12, 31),
+        ],
+    )
+    pax_awards_total = {}
+    pax_awards_this_achievement = {}
+    for pax in achievement_pax_list:
+        pax_awards_total[pax] = 0
+        pax_awards_this_achievement[pax] = 0
+    for award in pax_awards:
+        pax_awards_total[award.pax_id] += 1
+        if award.achievement_id == achievement_id:
+            pax_awards_this_achievement[award.pax_id] += 1
+
+    for pax in achievement_pax_list:
+        msg = f"Congrats to our man <@{pax}>! He has achieved *{achievement_name}* for {achievement_verb}!"
+        msg += f" This is achievement #{pax_awards_total[pax]+1} for him this year"
+        if pax_awards_this_achievement[pax] > 0:
+            msg += f" and #{pax_awards_this_achievement[pax]+1} time this year for this achievement."
+        else:
+            msg += "."
+        client.chat_postMessage(channel=achievement_channel, text=msg)
+        DbManager.create_record(
+            schema=paxminer_schema,
+            record=AchievementsAwarded(
+                pax_id=pax,
+                date_awarded=achievement_date,
+                achievement_id=achievement_id,
+            ),
         )
