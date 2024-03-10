@@ -468,6 +468,11 @@ ACHIEVEMENT_FORM = orm.BlockView(
             optional=False,
             element=orm.StaticSelectElement(placeholder="Select the achievement..."),
         ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="Don't see the achievement you're looking for? Talk to your Weasel Shaker / Tech Q about getting it added!",
+            ),
+        ),
         orm.InputBlock(
             label="Select the PAX",
             action=actions.ACHIEVEMENT_PAX,
