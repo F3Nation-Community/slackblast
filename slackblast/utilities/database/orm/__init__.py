@@ -186,3 +186,24 @@ class WeaselbotRegions(BaseClass, GetDBClass):
 
     def get_id():
         return WeaselbotRegions.id
+
+
+class PaxminerRegion(BaseClass, GetDBClass):
+    __tablename__ = "regions_view"
+    region = Column("region", String(45), primary_key=True)
+    slack_token = Column("slack_token", String(90))
+    schema_name = Column("schema_name", String(45))
+    active = Column("active", Integer)
+    firstf_channel = Column("firstf_channel", String(45))
+    contact = Column("contact", String(45))
+    send_pax_charts = Column("send_pax_charts", Integer)
+    send_ao_leaderboard = Column("send_ao_leaderboard", Integer)
+    send_q_charts = Column("send_q_charts", Integer)
+    send_region_leaderboard = Column("send_region_leaderboard", Integer)
+    send_region_uniquepax_chart = Column("send_region_uniquepax_chart", Integer)
+    send_region_stats = Column("send_region_stats", Integer)
+    send_mid_month_charts = Column("send_mid_month_charts", Integer)
+    comments = Column("comments", LONGTEXT)
+
+    def get_id():
+        return PaxminerRegion.id
