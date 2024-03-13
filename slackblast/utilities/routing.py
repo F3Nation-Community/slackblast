@@ -1,5 +1,6 @@
 from utilities import handlers, strava, builders
 from utilities.slack import actions
+import announcements
 
 # Required arguments for handler functions:
 #     body: dict
@@ -17,6 +18,7 @@ COMMAND_MAPPER = {
     "/config-welcome-message": (builders.build_welcome_message_form, True),
     "/config-slackblast": (builders.build_config_form, True),
     "/tag-achievement": (builders.build_achievement_form, True),
+    "/send-announcement": (announcements.send, False),
 }
 
 VIEW_MAPPER = {
