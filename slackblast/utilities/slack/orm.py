@@ -177,6 +177,8 @@ def as_selector_options(names: List[str], values: List[str] = [], descriptions: 
         selectors = [SelectorOption(name=x, value=x) for x in names]
     elif values == []:
         selectors = [SelectorOption(name=x, value=x, description=y) for x, y in zip(names, descriptions)]
+    elif descriptions == []:
+        selectors = [SelectorOption(name=x, value=y) for x, y in zip(names, values)]
     else:
         selectors = [SelectorOption(name=x, value=y, description=z) for x, y, z in zip(names, values, descriptions)]
     return selectors
