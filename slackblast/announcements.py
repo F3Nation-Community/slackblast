@@ -4,6 +4,7 @@ from utilities.database import DbManager
 from typing import List
 from slack_sdk import WebClient
 from logging import Logger
+import time
 
 msg = "Hello, {region}! This is Moneyball, lead developer of the Slackblast app. I wanted to make you aware of updates to Slackblast over the last few months:\n\n"
 msg += ":left_speech_bubble: *Welcome Messages!* - We've added a new feature that allows you to send a welcome message to new members as they join your Slack space. This is a great way to introduce new members to your region and let them know how to navigate your space. Use `/config-welcome-message` to set it up.\n\n"
@@ -31,4 +32,14 @@ def send(client: WebClient, body: dict, logger: Logger, context: dict, region_re
                         client.chat_postMessage(channel=send_channel, text=msg.format(region=region.workspace_name))
                         print("Message sent!")
                     except Exception as e:
+                        if e.response.get("error") == "ratelimited":
+                            print("Rate limited, waiting 10 seconds")
+                            time.sleep(10)
+                            try:
+                                client.chat_postMessage(
+                                    channel=send_channel, text=msg.format(region=region.workspace_name)
+                                )
+                                print("Message sent!")
+                            except Exception as e:
+                                print(f"Error sending message to {region.workspace_name}: {e}")
                         print(f"Error sending message to {region.workspace_name}: {e}")

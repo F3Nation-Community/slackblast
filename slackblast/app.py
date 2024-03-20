@@ -18,6 +18,7 @@ from utilities import strava
 from utilities.builders import send_error_response, add_loading_form
 import re
 from typing import Callable, Tuple
+import traceback
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -56,9 +57,11 @@ def main_response(body, logger, client, ack, context):
                 context=context,
                 region_record=region_record,
             )
-        except Exception as e:
-            send_error_response(body=body, client=client, error=e)
-            logger.error(e)
+        except Exception as exc:
+            logger.info("sending error response")
+            tb_str = "".join(traceback.format_exception(None, exc, exc.__traceback__))
+            send_error_response(body=body, client=client, error=tb_str)
+            logger.error(tb_str)
     else:
         logger.error(
             f"no handler for path: {safe_get(safe_get(MAIN_MAPPER, request_type), request_id) or request_type+', '+request_id}"
