@@ -343,6 +343,9 @@ def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: 
         callback_id = actions.PREBLAST_EDIT_CALLBACK_ID
         preblast_form.delete_block(actions.PREBLAST_DESTINATION)
         initial_preblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
+        blocks = safe_get(body, "message", "blocks")
+        if len(blocks) == 3:
+            initial_preblast_data[actions.PREBLAST_MOLESKIN] = blocks[1]
         preblast_form.set_initial_values(initial_preblast_data)
 
     preblast_form.update_modal(

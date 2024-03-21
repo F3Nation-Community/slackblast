@@ -495,6 +495,8 @@ def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context:
         "text": {"type": "mrkdwn", "text": msg},
         "block_id": "msg_text",
     }
+
+    preblast_data.pop(actions.PREBLAST_MOLESKIN)
     action_block = {
         "type": "actions",
         "elements": [
