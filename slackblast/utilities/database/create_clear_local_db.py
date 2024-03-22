@@ -1,37 +1,69 @@
-import pymysql
-from pymysql.constants import CLIENT
-import os, sys
-import json
+from utilities.database import get_engine, orm
+from utilities.database.orm import Base, PaxminerAO, PaxminerUser
+from sqlalchemy.engine import Engine
+from sqlalchemy.schema import CreateSchema
+import os
+from slack_sdk import WebClient
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
-from utilities import constants
 
-def create_database():
-    env_dict = json.load(open("env.json", "r"))
-    conn_info = {
-        "host": env_dict['Parameters']['DATABASE_HOST'],
-        "port": 3306,
-        "user": env_dict['Parameters']['ADMIN_DATABASE_USER'],
-        "password": env_dict['Parameters']['ADMIN_DATABASE_PASSWORD'],
-        "database": env_dict['Parameters']['ADMIN_DATABASE_SCHEMA'],
-        "client_flag": CLIENT.MULTI_STATEMENTS,
+def create_tables():
+
+    schema_table_map = {
+        "slackblast": [orm.Region, orm.User],
+        "f3devregion": [
+            orm.Backblast,
+            orm.Attendance,
+            orm.PaxminerUser,
+            orm.PaxminerAO,
+            orm.AchievementsList,
+            orm.AchievementsAwarded,
+        ],
+        "paxminer": [orm.PaxminerRegion],
     }
-    
-    print(conn_info)
+
+    for schema, tables in schema_table_map.items():
+        engine: Engine = get_engine(schema=schema)
+        if not engine.has_schema(engine, schema):
+            engine.execute(CreateSchema(schema))
+        Base.metadata.create_all(engine)
+        engine.dispose()
 
 
-    with pymysql.connect(**conn_info) as cnxn:
-        crsr = cnxn.cursor()
+def initialize_tables():
 
-        with open("slackblast/utilities/database/create_clear_local_db.sql", "r") as f:
-            sql = f.read()
-            
-        print(sql)
+    slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
+    client = WebClient(token=slack_bot_token)
+    channels = client.conversations_list().get("channels")
+    users = client.users_list().get("members")
 
-        crsr.execute(sql)
-        cnxn.commit()
-    
-    print("Database created successfully")
+    ao_list = [
+        PaxminerAO(
+            channel_id=c["id"],
+            ao=c["name"],
+            channel_created=c["created"],
+            archived=1 if c["is_archived"] else 0,
+            backblast=0,
+        )
+        for c in channels
+    ]
+
+    user_list = [
+        PaxminerUser(
+            user_id=u["id"],
+            user_name=u["profile"]["display_name"],
+            real_name=u["profile"]["real_name"],
+            phone=u["profile"].get("phone"),
+            email=u["profile"].get("email"),
+        )
+        for u in users
+    ]
+
+    session = orm.get_session(schema="f3devregion")
+    session.add_all(ao_list)
+    session.add_all(user_list)
+    session.commit()
+    session.close()
+
 
 if __name__ == "__main__":
-    create_database()
+    create_tables()

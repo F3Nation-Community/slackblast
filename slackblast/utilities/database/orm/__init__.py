@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from typing import Optional, Any
 from typing_extensions import Annotated
-from sqlalchemy import String, DateTime
+from sqlalchemy import String, DateTime, ForeignKey, Integer
 from sqlalchemy.dialects.mysql import LONGTEXT, TINYINT, DATE, JSON, TEXT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -17,7 +17,8 @@ tinyint1 = Annotated[int, mapped_column(TINYINT, default=1)]
 longtext = Annotated[str, LONGTEXT]
 text = Annotated[str, TEXT]
 json = Annotated[dict, JSON]
-dtnow = Annotated[datetime, mapped_column(DateTime, default=datetime.utcnow)]
+dt_create = Annotated[datetime, mapped_column(DateTime, default=datetime.utcnow)]
+dt_update = Annotated[datetime, mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)]
 str45pk = Annotated[str, mapped_column(String(45), primary_key=True)]
 datepk = Annotated[date, mapped_column(DATE, primary_key=True)]
 
@@ -74,8 +75,8 @@ class Region(BaseClass, GetDBClass):
     welcome_dm_template: Mapped[Optional[dict[str, Any]]]
     welcome_channel_enable: Mapped[Optional[tinyint]]
     welcome_channel: Mapped[Optional[str100]]
-    created: Mapped[dtnow]
-    updated: Mapped[dtnow]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return Region.team_id
@@ -122,8 +123,8 @@ class User(BaseClass, GetDBClass):
     strava_refresh_token: Mapped[Optional[str100]]
     strava_expires_at: Mapped[Optional[datetime]]
     strava_athlete_id: Mapped[Optional[int]]
-    created: Mapped[dtnow]
-    updated: Mapped[dtnow]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return User.id
@@ -172,11 +173,11 @@ class AchievementsList(BaseClass, GetDBClass):
 class AchievementsAwarded(BaseClass, GetDBClass):
     __tablename__ = "achievements_awarded"
     id: Mapped[intpk]
-    achievement_id: Mapped[int]
+    achievement_id: Mapped[int] = mapped_column(Integer, ForeignKey("achievements_list.id"))
     pax_id: Mapped[str255]
     date_awarded: Mapped[date]
-    created: Mapped[dtnow]
-    updated: Mapped[dtnow]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return AchievementsAwarded.id
