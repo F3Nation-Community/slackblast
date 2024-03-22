@@ -80,7 +80,7 @@ Resources:
     Properties:
       CodeUri: slackblast/
       Handler: app.handler
-      Runtime: python3.11
+      Runtime: python3.12
       Architectures:
         - x86_64
       Policies:
