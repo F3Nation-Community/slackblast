@@ -30,7 +30,7 @@ def get_session(echo=False, schema=None):
         database = schema or os.environ[constants.ADMIN_DATABASE_SCHEMA]
 
         db_url = f"mysql+pymysql://{user}:{passwd}@{host}:3306/{database}?charset=utf8mb4"
-        GLOBAL_ENGINE = create_engine(db_url, echo=echo, poolclass=pool.NullPool, convert_unicode=True)
+        GLOBAL_ENGINE = create_engine(db_url, echo=echo, poolclass=pool.NullPool)
         GLOBAL_SCHEMA = database
     return sessionmaker()(bind=GLOBAL_ENGINE)
 

@@ -1,13 +1,36 @@
-from datetime import datetime
-from typing import Optional
-from sqlalchemy import Integer, String, DateTime, Date
-from sqlalchemy.types import JSON
-from sqlalchemy.dialects.mysql import LONGTEXT, TINYINT
+from datetime import datetime, date
+from typing import Optional, Any
+from typing_extensions import Annotated
+from sqlalchemy import String, DateTime
+from sqlalchemy.dialects.mysql import LONGTEXT, TINYINT, DATE, JSON, TEXT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+str30 = Annotated[str, String(30)]
+str45 = Annotated[str, String(45)]
+str90 = Annotated[str, String(90)]
+str100 = Annotated[str, String(100)]
+str255 = Annotated[str, String(255)]
+intpk = Annotated[int, mapped_column(primary_key=True)]
+tinyint = Annotated[int, TINYINT]
+tinyint0 = Annotated[int, mapped_column(TINYINT, default=0)]
+tinyint1 = Annotated[int, mapped_column(TINYINT, default=1)]
+longtext = Annotated[str, LONGTEXT]
+text = Annotated[str, TEXT]
+json = Annotated[dict, JSON]
+dtnow = Annotated[datetime, mapped_column(DateTime, default=datetime.utcnow)]
+str45pk = Annotated[str, mapped_column(String(45), primary_key=True)]
+datepk = Annotated[date, mapped_column(DATE, primary_key=True)]
 
 
 class BaseClass(DeclarativeBase):
-    pass
+    type_annotation_map = {
+        str30: String(30),
+        str45: String(45),
+        str90: String(90),
+        str100: String(100),
+        str255: String(255),
+        dict[str, Any]: JSON,
+    }
 
 
 class GetDBClass:
@@ -28,34 +51,31 @@ class GetDBClass:
 
 class Region(BaseClass, GetDBClass):
     __tablename__ = "regions"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    team_id: Mapped[str] = mapped_column(String(100))
-    workspace_name: Mapped[Optional[str]]
-    bot_token: Mapped[Optional[str]]
-    paxminer_schema: Mapped[Optional[str]]
-    email_enabled: Mapped[TINYINT] = mapped_column(TINYINT, default=0)
-    email_server: Mapped[Optional[str]]
+    id: Mapped[intpk]
+    team_id: Mapped[str100]
+    workspace_name: Mapped[Optional[str100]]
+    bot_token: Mapped[Optional[str100]]
+    paxminer_schema: Mapped[Optional[str100]]
+    email_enabled: Mapped[tinyint0]
+    email_server: Mapped[Optional[str100]]
     email_server_port: Mapped[Optional[int]]
-    email_user: Mapped[Optional[str]]
-    email_password: Mapped[Optional[LONGTEXT]]
-    email_to: Mapped[Optional[str]]
-    email_option_show: Mapped[TINYINT] = mapped_column(TINYINT, default=0)
-    postie_format: Mapped[Optional[TINYINT]] = mapped_column(TINYINT, default=1)
-    editing_locked: Mapped[TINYINT] = mapped_column(TINYINT, default=0)
+    email_user: Mapped[Optional[str100]]
+    email_password: Mapped[Optional[longtext]]
+    email_to: Mapped[Optional[str100]]
+    email_option_show: Mapped[Optional[tinyint0]]
+    postie_format: Mapped[Optional[tinyint1]]
+    editing_locked: Mapped[tinyint0]
     default_destination: Mapped[Optional[str]] = mapped_column(String(30), default="ao_channel")
-    backblast_moleskin_template: Mapped[Optional[JSON]]
-    preblast_moleskin_template: Mapped[Optional[JSON]]
-    strava_enabled: Mapped[TINYINT] = mapped_column(TINYINT, default=0)
-    custom_fields: Mapped[Optional[JSON]]
-    welcome_dm_enable = Mapped[Optional[TINYINT]]
-    welcome_dm_template = Mapped[Optional[JSON]]
-    welcome_channel_enable = Mapped[Optional[TINYINT]]
-    welcome_channel = Mapped[Optional[str]]
-    created: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-
-    # def get_id(self):
-    #     return self.team_id
+    backblast_moleskin_template: Mapped[Optional[dict[str, Any]]]
+    preblast_moleskin_template: Mapped[Optional[dict[str, Any]]]
+    strava_enabled: Mapped[Optional[tinyint1]]
+    custom_fields: Mapped[Optional[dict[str, Any]]]
+    welcome_dm_enable: Mapped[Optional[tinyint]]
+    welcome_dm_template: Mapped[Optional[dict[str, Any]]]
+    welcome_channel_enable: Mapped[Optional[tinyint]]
+    welcome_channel: Mapped[Optional[str100]]
+    created: Mapped[dtnow]
+    updated: Mapped[dtnow]
 
     def get_id():
         return Region.team_id
@@ -63,20 +83,17 @@ class Region(BaseClass, GetDBClass):
 
 class Backblast(BaseClass, GetDBClass):
     __tablename__ = "beatdowns"
-    timestamp = mapped_column("timestamp", String(45), primary_key=True)
-    ts_edited = mapped_column("ts_edited", String(45))
-    ao_id = mapped_column("ao_id", String(45))
-    bd_date = mapped_column("bd_date", Date)
-    q_user_id = mapped_column("q_user_id", String(45))
-    coq_user_id = mapped_column("coq_user_id", String(45))
-    pax_count = mapped_column("pax_count", Integer)
-    backblast = mapped_column("backblast", LONGTEXT)
-    fngs = mapped_column("fngs", String(45))
-    fng_count = mapped_column("fng_count", Integer)
-    json = mapped_column("json", JSON)
-
-    # def get_id(self):
-    #     return self.timestamp
+    timestamp: Mapped[Optional[str45]]
+    ts_edited: Mapped[Optional[str45]]
+    ao_id: Mapped[str45pk]
+    bd_date: Mapped[date]
+    q_user_id: Mapped[str45pk]
+    coq_user_id: Mapped[Optional[str45]]
+    pax_count: Mapped[Optional[int]]
+    backblast: Mapped[Optional[longtext]]
+    fngs: Mapped[Optional[str45]]
+    fng_count: Mapped[Optional[int]]
+    json: Mapped[Optional[dict[str, Any]]]
 
     def get_id():
         return Backblast.timestamp
@@ -84,16 +101,13 @@ class Backblast(BaseClass, GetDBClass):
 
 class Attendance(BaseClass, GetDBClass):
     __tablename__ = "bd_attendance"
-    timestamp = mapped_column("timestamp", String(45), primary_key=True)
-    ts_edited = mapped_column("ts_edited", String(45))
-    user_id = mapped_column("user_id", String(45), primary_key=True)
-    ao_id = mapped_column("ao_id", String(45))
-    date = mapped_column("date", String(45))
-    q_user_id = mapped_column("q_user_id", String(45))
-    json = mapped_column("json", JSON)
-
-    # def get_id(self):
-    #     return self.timestamp
+    timestamp: Mapped[Optional[str45]]
+    ts_edited: Mapped[Optional[str]]
+    user_id: Mapped[str45pk]
+    ao_id: Mapped[str45pk]
+    date: Mapped[datepk]
+    q_user_id: Mapped[str45pk]
+    json: Mapped[Optional[dict[str, Any]]]
 
     def get_id():
         return Attendance.timestamp
@@ -101,18 +115,15 @@ class Attendance(BaseClass, GetDBClass):
 
 class User(BaseClass, GetDBClass):
     __tablename__ = "slackblast_users"
-    id = mapped_column("id", Integer, primary_key=True)
-    team_id = mapped_column("team_id", String(100))
-    user_id = mapped_column("user_id", String(100))
-    strava_access_token = mapped_column("strava_access_token", String(100))
-    strava_refresh_token = mapped_column("strava_refresh_token", String(100))
-    strava_expires_at = mapped_column("strava_expires_at", DateTime)
-    strava_athlete_id = mapped_column("strava_athlete_id", Integer)
-    created = mapped_column("created", DateTime, default=datetime.utcnow)
-    updated = mapped_column("updated", DateTime, default=datetime.utcnow)
-
-    # def get_id(self):
-    #     return self.id
+    id: Mapped[intpk]
+    team_id: Mapped[Optional[str100]]
+    user_id: Mapped[Optional[str100]]
+    strava_access_token: Mapped[Optional[str100]]
+    strava_refresh_token: Mapped[Optional[str100]]
+    strava_expires_at: Mapped[Optional[datetime]]
+    strava_athlete_id: Mapped[Optional[int]]
+    created: Mapped[dtnow]
+    updated: Mapped[dtnow]
 
     def get_id():
         return User.id
@@ -120,16 +131,14 @@ class User(BaseClass, GetDBClass):
 
 class PaxminerUser(BaseClass, GetDBClass):
     __tablename__ = "users"
-    user_id = mapped_column("user_id", String(45), primary_key=True)
-    user_name = mapped_column("user_name", String(45))
-    real_name = mapped_column("real_name", String(45))
-    phone = mapped_column("phone", String(45))
-    email = mapped_column("email", String(45))
-    start_date = mapped_column("start_date", String(45))
-    app = mapped_column("app", Integer)
-
-    # def get_id(self):
-    #     return self.user_id
+    user_id: Mapped[str45pk]
+    user_name: Mapped[str45]
+    real_name: Mapped[str45]
+    phone: Mapped[Optional[str45]]
+    email: Mapped[Optional[str45]]
+    start_date: Mapped[Optional[date]]
+    app: Mapped[tinyint0]
+    json: Mapped[Optional[dict[str, Any]]]
 
     def get_id():
         return PaxminerUser.user_id
@@ -137,14 +146,12 @@ class PaxminerUser(BaseClass, GetDBClass):
 
 class PaxminerAO(BaseClass, GetDBClass):
     __tablename__ = "aos"
-    channel_id = mapped_column("channel_id", String(45), primary_key=True)
-    ao = mapped_column("ao", String(45))
-    channel_created = mapped_column("channel_created", Integer)
-    archived = mapped_column("archived", Integer)
-    backblast = mapped_column("backblast", Integer)
-
-    # def get_id(self):
-    #     return self.channel_id
+    channel_id: Mapped[str45pk]
+    ao: Mapped[str45]
+    channel_created: Mapped[int]
+    archived: Mapped[tinyint]
+    backblast: Mapped[tinyint]
+    # site_q_user_id = Mapped[Optional[str]]
 
     def get_id():
         return PaxminerAO.channel_id
@@ -152,11 +159,11 @@ class PaxminerAO(BaseClass, GetDBClass):
 
 class AchievementsList(BaseClass, GetDBClass):
     __tablename__ = "achievements_list"
-    id = Column("id", Integer, primary_key=True)
-    name = Column("name", String(255))
-    description = Column("description", String(255))
-    verb = Column("verb", String(255))
-    code = Column("code", String(255))
+    id: Mapped[intpk]
+    name: Mapped[str255]
+    description: Mapped[str255]
+    verb: Mapped[str255]
+    code: Mapped[str255]
 
     def get_id():
         return AchievementsList.id
@@ -164,12 +171,12 @@ class AchievementsList(BaseClass, GetDBClass):
 
 class AchievementsAwarded(BaseClass, GetDBClass):
     __tablename__ = "achievements_awarded"
-    id = Column("id", Integer, primary_key=True)
-    achievement_id = Column("achievement_id", Integer)
-    pax_id = Column("pax_id", String(255))
-    date_awarded = Column("date_awarded", Date)
-    created = Column("created", DateTime, default=datetime.utcnow)
-    updated = Column("updated", DateTime, default=datetime.utcnow)
+    id: Mapped[intpk]
+    achievement_id: Mapped[int]
+    pax_id: Mapped[str255]
+    date_awarded: Mapped[date]
+    created: Mapped[dtnow]
+    updated: Mapped[dtnow]
 
     def get_id():
         return AchievementsAwarded.id
@@ -178,13 +185,13 @@ class AchievementsAwarded(BaseClass, GetDBClass):
 # eventually this will be on the Regions table in Slackblast
 class WeaselbotRegions(BaseClass, GetDBClass):
     __tablename__ = "regions_copy"
-    id = Column("id", Integer, primary_key=True)
-    paxminer_schema = Column("paxminer_schema", String(100))
-    slack_token = Column("slack_token", String(100))
-    send_achievements = Column("send_achievements", Integer)
-    send_aoq_reports = Column("send_aoq_reports", Integer)
-    achievement_channel = Column("achievement_channel", String(100))
-    default_siteq_channel = Column("default_siteq", String(45))
+    id: Mapped[intpk]
+    paxminer_schema: Mapped[str100]
+    slack_token: Mapped[str100]
+    send_achievements: Mapped[tinyint1]
+    send_aoq_reports: Mapped[tinyint1]
+    achievement_channel: Mapped[str100]
+    default_siteq: Mapped[Optional[str45]]
 
     def get_id():
         return WeaselbotRegions.id
@@ -192,20 +199,20 @@ class WeaselbotRegions(BaseClass, GetDBClass):
 
 class PaxminerRegion(BaseClass, GetDBClass):
     __tablename__ = "regions_view"
-    region = Column("region", String(45), primary_key=True)
-    slack_token = Column("slack_token", String(90))
-    schema_name = Column("schema_name", String(45))
-    active = Column("active", Integer)
-    firstf_channel = Column("firstf_channel", String(45))
-    contact = Column("contact", String(45))
-    send_pax_charts = Column("send_pax_charts", Integer)
-    send_ao_leaderboard = Column("send_ao_leaderboard", Integer)
-    send_q_charts = Column("send_q_charts", Integer)
-    send_region_leaderboard = Column("send_region_leaderboard", Integer)
-    send_region_uniquepax_chart = Column("send_region_uniquepax_chart", Integer)
-    send_region_stats = Column("send_region_stats", Integer)
-    send_mid_month_charts = Column("send_mid_month_charts", Integer)
-    comments = Column("comments", LONGTEXT)
+    region: Mapped[str45pk]
+    slack_token: Mapped[str90]
+    schema_name: Mapped[Optional[str45]]
+    active: Mapped[Optional[tinyint]]
+    firstf_channel: Mapped[Optional[str45]]
+    contact: Mapped[Optional[str45]]
+    send_pax_charts: Mapped[Optional[tinyint]]
+    send_ao_leaderboard: Mapped[Optional[tinyint]]
+    send_q_charts: Mapped[Optional[tinyint]]
+    send_region_leaderboard: Mapped[Optional[tinyint]]
+    send_region_uniquepax_chart: Mapped[Optional[tinyint]]
+    send_region_stats: Mapped[Optional[str45]] = mapped_column(String(45), default="0")
+    send_mid_month_charts: Mapped[Optional[str45]] = mapped_column(String(45), default="0")
+    comments: Mapped[Optional[text]]
 
     def get_id():
         return PaxminerRegion.id
