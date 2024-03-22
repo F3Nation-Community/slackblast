@@ -4,22 +4,28 @@ from typing import List
 import pytz
 
 from slack_sdk.web import WebClient
-from utilities.database.orm import Region, User
+from utilities.database.orm import Region, User, AchievementsList
 from utilities.database import DbManager
 from utilities.slack import forms, orm as slack_orm, actions
 from utilities import constants, strava
 from utilities.helper_functions import (
     get_channel_name,
-    replace_slack_user_ids,
+    # replace_slack_user_ids,
     safe_get,
     check_for_duplicate,
     update_local_region_records,
+    parse_rich_block,
+    replace_user_channel_ids,
+    plain_text_to_rich_block,
 )
 import copy
 from logging import Logger
 from datetime import datetime
 from cryptography.fernet import Fernet
 from requests_oauthlib import OAuth2Session
+
+# from pymysql.err import ProgrammingError
+from sqlalchemy.exc import ProgrammingError
 
 
 def add_custom_field_blocks(form: slack_orm.BlockView, region_record: Region) -> slack_orm.BlockView:
@@ -60,6 +66,19 @@ def add_loading_form(body: dict, client: WebClient) -> str:
 
 
 def build_backblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    """This function builds the backblast form and posts it to Slack. There are several entry points for this function:
+        1. Building a new backblast, either through the /backblast command or the "New Backblast" button
+        2. Editing an existing backblast, invoked by the "Edit Backblast" button
+        3. Duplicate checking, invoked by the "Q", "Date", or "AO" fields being changed
+
+    Args:
+        body (dict): Slack request body
+        client (WebClient): Slack WebClient object
+        logger (Logger): Logger object
+        context (dict): Slack request context
+        region_record (Region): Region record for the requesting region
+    """
+
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
     channel_name = safe_get(body, "channel_name") or safe_get(body, "channel", "name")
@@ -76,13 +95,13 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
         or (safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID)
     ):
         backblast_method = "create"
-        update_view_id = add_loading_form(body, client)
+        update_view_id = safe_get(body, actions.LOADING_ID)
         duplicate_check = False
         parent_metadata = {}
     else:
         backblast_method = "edit"
         update_view_id = (
-            safe_get(body, "view", "id") or safe_get(body, "container", "view_id") or add_loading_form(body, client)
+            safe_get(body, "view", "id") or safe_get(body, "container", "view_id") or safe_get(body, actions.LOADING_ID)
         )
         duplicate_check = safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID
         parent_metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
@@ -101,10 +120,16 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
     ):
         initial_backblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
         if not safe_get(initial_backblast_data, actions.BACKBLAST_MOLESKIN):
-            initial_backblast_data[actions.BACKBLAST_MOLESKIN] = safe_get(body, "message", "blocks", 1, "text", "text")
-            initial_backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
-                initial_backblast_data[actions.BACKBLAST_MOLESKIN], client, logger, region_record
-            )
+            moleskin_block = safe_get(body, "message", "blocks", 1)
+            if moleskin_block.get("type") == "section":
+                initial_backblast_data[actions.BACKBLAST_MOLESKIN] = plain_text_to_rich_block(
+                    moleskin_block["text"]["text"]
+                )
+            else:
+                initial_backblast_data[actions.BACKBLAST_MOLESKIN] = moleskin_block
+            # initial_backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
+            #     initial_backblast_data[actions.BACKBLAST_MOLESKIN], client, logger, region_record
+            # )
     else:
         initial_backblast_data = None
 
@@ -212,7 +237,7 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
 def build_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     if safe_get(body, "command") == "/config-slackblast":
         initial_config_data = None
-        update_view_id = add_loading_form(body, client)
+        update_view_id = safe_get(body, actions.LOADING_ID)
     else:
         initial_config_data = forms.CONFIG_FORM.get_selected_values(body)
         update_view_id = safe_get(body, "view", "id") or safe_get(body, "container", "view_id")
@@ -240,12 +265,10 @@ def build_config_form(body: dict, client: WebClient, logger: Logger, context: di
                 actions.CONFIG_EDITING_LOCKED: "yes" if region_record.editing_locked == 1 else "no",
                 actions.CONFIG_DEFAULT_DESTINATION: region_record.default_destination
                 or constants.CONFIG_DESTINATION_AO["value"],
-                actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE: constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE
-                if region_record.backblast_moleskin_template is None
-                else region_record.backblast_moleskin_template,
-                actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE: ""
-                if region_record.preblast_moleskin_template is None
-                else region_record.preblast_moleskin_template,
+                actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE: region_record.backblast_moleskin_template
+                or constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE,
+                actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE: region_record.preblast_moleskin_template
+                or constants.DEFAULT_PREBLAST_MOLESKINE_TEMPLATE,
                 actions.CONFIG_ENABLE_STRAVA: "enable" if region_record.strava_enabled == 1 else "disable",
             }
         )
@@ -283,7 +306,7 @@ def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
 
-    update_view_id = add_loading_form(body, client)
+    update_view_id = safe_get(body, actions.LOADING_ID)
     preblast_form = copy.deepcopy(forms.PREBLAST_FORM)
 
     if (safe_get(body, "command") in ["/preblast"]) or (
@@ -320,6 +343,9 @@ def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: 
         callback_id = actions.PREBLAST_EDIT_CALLBACK_ID
         preblast_form.delete_block(actions.PREBLAST_DESTINATION)
         initial_preblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
+        blocks = safe_get(body, "message", "blocks")
+        if len(blocks) == 3:
+            initial_preblast_data[actions.PREBLAST_MOLESKIN] = blocks[1]
         preblast_form.set_initial_values(initial_preblast_data)
 
     preblast_form.update_modal(
@@ -339,7 +365,12 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
 
     backblast_ts = body["message"]["ts"]
     backblast_meta = json.loads(body["message"]["blocks"][-1]["elements"][0]["value"])
-    moleskine_text = body["message"]["blocks"][1]["text"]["text"]
+    moleskine = body["message"]["blocks"][1]
+    moleskine_text = replace_user_channel_ids(parse_rich_block(moleskine), region_record, client, logger)
+    if "COT:" in moleskine_text:
+        moleskine_text = moleskine_text.split("COT:")[0]
+    elif "Announcements" in moleskine_text:
+        moleskine_text = moleskine_text.split("Announcements")[0]
 
     allow_strava: bool = (
         (user_id == backblast_meta[actions.BACKBLAST_Q])
@@ -349,7 +380,7 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
     )
 
     if allow_strava:
-        update_view_id = add_loading_form(body, client)
+        update_view_id = safe_get(body, actions.LOADING_ID)
         user_records: List[User] = DbManager.find_records(
             User, filters=[User.user_id == user_id, User.team_id == team_id]
         )
@@ -416,7 +447,7 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
             callback_id=actions.STRAVA_CALLBACK_ID,
             title_text=title_text,
             submit_button_text="None",
-            parent_metadata={actions.STRAVA_BACKBLAST_MOLESKINE: moleskine_text},
+            parent_metadata={actions.STRAVA_BACKBLAST_MOLESKINE: moleskine_text[:2500]},
         )
     else:
         client.chat_postEphemeral(
@@ -595,9 +626,9 @@ def build_custom_field_add_edit(
             {
                 actions.CUSTOM_FIELD_ADD_NAME: custom_field["name"],
                 actions.CUSTOM_FIELD_ADD_TYPE: custom_field["type"],
-                actions.CUSTOM_FIELD_ADD_OPTIONS: ",".join(custom_field["options"])
-                if custom_field["type"] == "Dropdown"
-                else " ",
+                actions.CUSTOM_FIELD_ADD_OPTIONS: (
+                    ",".join(custom_field["options"]) if custom_field["type"] == "Dropdown" else " "
+                ),
             }
         )
         action_text = "Edit"
@@ -710,3 +741,102 @@ def handle_preblast_edit_button(body: dict, client: WebClient, logger: Logger, c
             channel=channel_id,
             user=user_id,
         )
+
+
+def build_welcome_message_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    update_view_id = safe_get(body, actions.LOADING_ID)
+    welcome_message_config_form = copy.deepcopy(forms.WELCOME_MESSAGE_CONFIG_FORM)
+
+    welcome_message_config_form.set_initial_values(
+        {
+            actions.WELCOME_DM_TEMPLATE: region_record.welcome_dm_template,
+            actions.WELCOME_DM_ENABLE: "enable" if region_record.welcome_dm_enable else "disable",
+            actions.WELCOME_CHANNEL: region_record.welcome_channel or "",
+            actions.WELCOME_CHANNEL_ENABLE: "enable" if region_record.welcome_channel_enable else "disable",
+        }
+    )
+
+    welcome_message_config_form.update_modal(
+        client=client,
+        view_id=update_view_id,
+        callback_id=actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID,
+        title_text="FNG Welcome Config",
+        parent_metadata=None,
+    )
+
+
+def send_error_response(body: dict, client: WebClient, error: str) -> None:
+    error_form = copy.deepcopy(forms.ERROR_FORM)
+    error_msg = constants.ERROR_FORM_MESSAGE_TEMPLATE.format(error=error)
+    error_form.set_initial_values({actions.ERROR_FORM_MESSAGE: error_msg})
+
+    if safe_get(body, actions.LOADING_ID):
+        update_view_id = safe_get(body, actions.LOADING_ID)
+        error_form.update_modal(
+            client=client,
+            view_id=update_view_id,
+            title_text="Slackblast Error",
+            submit_button_text="None",
+            callback_id="error-id",
+        )
+    else:
+        blocks = [block.as_form_field() for block in error_form.blocks]
+        client.chat_postMessage(channel=safe_get(body, "user", "id"), text=error, blocks=blocks)
+
+
+def build_achievement_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+
+    paxminer_schema = region_record.paxminer_schema
+    update_view_id = safe_get(body, actions.LOADING_ID)
+    achievement_form = copy.deepcopy(forms.ACHIEVEMENT_FORM)
+    callback_id = actions.ACHIEVEMENT_CALLBACK_ID
+
+    # build achievement list
+    achievement_list = []
+    # gather achievements from paxminer
+    if paxminer_schema:
+        try:
+            achievement_list = DbManager.find_records(schema=paxminer_schema, cls=AchievementsList, filters=[True])
+        except ProgrammingError:
+            error_form = copy.deepcopy(forms.ERROR_FORM)
+            error_msg = constants.ERROR_FORM_MESSAGE_TEMPLATE.format(
+                error="It looks like Weaselbot has not been set up for this region. Please contact your local Slack admin or go to https://github.com/F3Nation-Community/weaselbot to get started!"
+            )
+            error_form.set_initial_values({actions.ERROR_FORM_MESSAGE: error_msg})
+            error_form.update_modal(
+                client=client,
+                view_id=update_view_id,
+                title_text="Slackblast Error",
+                submit_button_text="None",
+                callback_id="error-id",
+            )
+            return
+    if achievement_list:
+        achievement_list = slack_orm.as_selector_options(
+            names=[achievement.name for achievement in achievement_list],
+            values=[str(achievement.id) for achievement in achievement_list],
+            descriptions=[achievement.description for achievement in achievement_list],
+        )
+    else:
+        achievement_list = slack_orm.as_selector_options(
+            names=["No achievements available"],
+            values=["None"],
+        )
+
+    achievement_form.set_initial_values(
+        {
+            actions.ACHIEVEMENT_DATE: datetime.now(pytz.timezone("US/Central")).strftime("%Y-%m-%d"),
+        }
+    )
+    achievement_form.set_options(
+        {
+            actions.ACHIEVEMENT_SELECT: achievement_list,
+        }
+    )
+
+    achievement_form.update_modal(
+        client=client,
+        view_id=update_view_id,
+        callback_id=callback_id,
+        title_text="Tag achievements",
+    )

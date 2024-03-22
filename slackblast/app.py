@@ -11,11 +11,14 @@ from utilities.helper_functions import (
 )
 from utilities.constants import LOCAL_DEVELOPMENT
 from utilities.routing import MAIN_MAPPER
+from utilities.slack.actions import LOADING_ID
 import logging
 from utilities.database.orm import Region
 from utilities import strava
+from utilities.builders import send_error_response, add_loading_form
 import re
-from typing import Callable
+from typing import Callable, Tuple
+import traceback
 
 SlackRequestHandler.clear_all_log_handlers()
 logger = logging.getLogger()
@@ -44,15 +47,24 @@ def main_response(body, logger, client, ack, context):
     region_record: Region = get_region_record(team_id, body, context, client, logger)
 
     request_type, request_id = get_request_type(body)
-    run_function: Callable = safe_get(safe_get(MAIN_MAPPER, request_type), request_id)
-    if run_function:
-        run_function(
-            body=body,
-            client=client,
-            logger=logger,
-            context=context,
-            region_record=region_record,
-        )
+    lookup: Tuple[Callable, bool] = safe_get(safe_get(MAIN_MAPPER, request_type), request_id)
+    if lookup:
+        run_function, add_loading = lookup
+        if add_loading:
+            body[LOADING_ID] = add_loading_form(body=body, client=client)
+        try:
+            run_function(
+                body=body,
+                client=client,
+                logger=logger,
+                context=context,
+                region_record=region_record,
+            )
+        except Exception as exc:
+            logger.info("sending error response")
+            tb_str = "".join(traceback.format_exception(None, exc, exc.__traceback__))
+            send_error_response(body=body, client=client, error=tb_str)
+            logger.error(tb_str)
     else:
         logger.error(
             f"no handler for path: {safe_get(safe_get(MAIN_MAPPER, request_type), request_id) or request_type+', '+request_id}"
@@ -75,6 +87,7 @@ app.action(MATCH_ALL_PATTERN)(*ARGS, **LAZY_KWARGS)
 app.view(MATCH_ALL_PATTERN)(*ARGS, **LAZY_KWARGS)
 app.command(MATCH_ALL_PATTERN)(*ARGS, **LAZY_KWARGS)
 app.view_closed(MATCH_ALL_PATTERN)(*ARGS, **LAZY_KWARGS)
+app.event(MATCH_ALL_PATTERN)(*ARGS, **LAZY_KWARGS)
 
 if __name__ == "__main__":
     app.start(3000)

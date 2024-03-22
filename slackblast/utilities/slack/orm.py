@@ -2,6 +2,7 @@ import json
 from typing import Any, List, Dict
 from dataclasses import dataclass, field
 from utilities.helper_functions import safe_get
+import re
 
 
 @dataclass
@@ -67,6 +68,62 @@ class InputBlock(BaseBlock):
 
 
 @dataclass
+class RichTextBlock(BaseBlock):
+    label: Dict[str, Any] = None
+
+    def get_selected_value(self, input_data):
+        # TODO: it would be nice to get the markdown text from the input data
+        return self.label
+
+    def parse_rich_text(self, text: str) -> List[Dict[str, str]]:
+        """Generates rich text block elements from a string, and parsing lists in markdown format to bullet blocks.
+
+        Args:
+            text (str): Message to parse
+
+        Returns:
+            List[Dict[str, str]]: A list of rich text block elements
+        """
+        if text == "":
+            return [{"type": "rich_text_section", "elements": [{"type": "text", "text": " "}]}]
+        msg = ""
+        blocks = []
+        line_list = []
+        text_block = {"type": "text", "text": ""}
+        list_block = {"type": "rich_text_list", "style": "bullet", "elements": []}
+        lines = text.split("\n")
+        matches = [line for line in lines if re.match(r"^\s*-\s", line)]
+
+        for line in lines:
+            if line not in matches:
+                if len(line_list) > 0:
+                    list_block_temp = list_block
+                    list_block_temp["elements"] = [
+                        {"type": "rich_text_section", "elements": [{"type": "text", "text": text}]}
+                        for text in line_list
+                    ]
+                    blocks.append(list_block_temp)
+                    line_list = []
+                msg += line
+                msg += "\n"
+            else:
+                if msg != "":
+                    text_block_temp = text_block
+                    text_block_temp["text"] = msg
+                    blocks.append({"type": "rich_text_section", "elements": [text_block_temp]})
+                    msg = ""
+
+                line_list.append(line[3:])
+        return blocks
+
+    def as_form_field(self):
+        block = self.label
+        if self.action:
+            block["block_id"] = self.action
+        return self.label
+
+
+@dataclass
 class SectionBlock(BaseBlock):
     element: BaseElement = None
 
@@ -77,7 +134,9 @@ class SectionBlock(BaseBlock):
         return {"type": "mrkdwn", "text": text or self.label or ""}
 
     def as_form_field(self):
-        block = {"type": "section", "block_id": self.action, "text": self.make_label_field()}
+        block = {"type": "section", "text": self.make_label_field()}
+        if self.action:
+            block["block_id"] = self.action
         if self.element:
             block.update({"accessory": self.element.as_form_field(action=self.action)})
         return block
@@ -110,13 +169,18 @@ class ButtonElement(BaseAction):
 class SelectorOption:
     name: str
     value: str
+    description: str = None
 
 
-def as_selector_options(names: List[str], values: List[str] = []) -> List[SelectorOption]:
-    if values == []:
+def as_selector_options(names: List[str], values: List[str] = [], descriptions: List[str] = []) -> List[SelectorOption]:
+    if values == [] and descriptions == []:
         selectors = [SelectorOption(name=x, value=x) for x in names]
-    else:
+    elif values == []:
+        selectors = [SelectorOption(name=x, value=x, description=y) for x, y in zip(names, descriptions)]
+    elif descriptions == []:
         selectors = [SelectorOption(name=x, value=y) for x, y in zip(names, values)]
+    else:
+        selectors = [SelectorOption(name=x, value=y, description=z) for x, y, z in zip(names, values, descriptions)]
     return selectors
 
 
@@ -148,10 +212,13 @@ class StaticSelectElement(BaseElement):
         return safe_get(input_data, action, action, "selected_option", "value")
 
     def __make_option(self, option: SelectorOption):
-        return {
+        j = {
             "text": {"type": "plain_text", "text": option.name, "emoji": True},
             "value": option.value,
         }
+        if option.description:
+            j["description"] = {"type": "plain_text", "text": option.description, "emoji": True}
+        return j
 
 
 @dataclass
@@ -208,6 +275,25 @@ class PlainTextInputElement(BaseElement):
             j["multiline"] = True
         if self.max_length:
             j["max_length"] = self.max_length
+        return j
+
+
+@dataclass
+class RichTextInputElement(BaseElement):
+    initial_value: Dict[str, Any] = None
+
+    def get_selected_value(self, input_data, action):
+        return safe_get(input_data, action, action, "rich_text_value")
+
+    def as_form_field(self, action: str):
+        j = {
+            "type": "rich_text_input",
+            "action_id": action,
+        }
+        if self.initial_value:
+            j["initial_value"] = self.initial_value
+        if self.placeholder:
+            j.update(self.make_placeholder_field())
         return j
 
 
@@ -434,6 +520,8 @@ class BlockView:
         for block in self.blocks:
             if block.action in values and isinstance(block, InputBlock):
                 block.element.initial_value = values[block.action]
+            elif block.action in values and isinstance(block, SectionBlock):
+                block.label = values[block.action]
 
     def set_options(self, options: Dict[str, List[SelectorOption]]):
         for block in self.blocks:
@@ -508,12 +596,31 @@ class BlockView:
             "type": "modal",
             "callback_id": callback_id,
             "title": {"type": "plain_text", "text": title_text},
-            "submit": {"type": "plain_text", "text": submit_button_text},
             "close": {"type": "plain_text", "text": close_button_text},
             "notify_on_close": notify_on_close,
             "blocks": blocks,
         }
         if parent_metadata:
             view["private_metadata"] = json.dumps(parent_metadata)
+        if submit_button_text != "None":
+            view["submit"] = {"type": "plain_text", "text": submit_button_text}
 
         client.views_update(view_id=view_id, view=view)
+
+
+def parse_welcome_template(template: str, user_id: str) -> List[BaseBlock]:
+    blocks = []
+
+    # 1. Insert user name into template
+    msg = template.replace("{user}", f"<@{user_id}>")
+
+    # 2. Insert divider blocks
+    msg_split = msg.split("/divider")
+    blocks.append(SectionBlock(label=msg_split[0]))
+
+    if len(msg_split) > 1:
+        for m in msg_split[1:]:
+            blocks.append(DividerBlock())
+            blocks.append(SectionBlock(label=m))
+
+    return blocks

@@ -89,21 +89,10 @@ BACKBLAST_FORM = orm.BlockView(
             ),
         ),
         orm.InputBlock(
-            label="The Moleskin",
+            label="The Moleskine",
             action=actions.BACKBLAST_MOLESKIN,
             optional=False,
-            element=orm.PlainTextInputElement(
-                placeholder="Tell us what happened\n\n",
-                # initial_value="\n*WARMUP:* \n*THE THANG:* \n*MARY:* \n*ANNOUNCEMENTS:* \n*COT:* ",
-                multiline=True,
-                max_length=3000,
-            ),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="If trying to tag PAX in here, substitute _ for spaces and do not include titles in "
-                "parenthesis (ie, @Moneyball not @Moneyball_(F3_STC)). Spelling is important, capitalization is not!",
-            ),
+            element=orm.RichTextInputElement(),
         ),
         orm.DividerBlock(),
         orm.InputBlock(
@@ -165,14 +154,6 @@ PREBLAST_FORM = orm.BlockView(
             optional=False,
             element=orm.UsersSelectElement(placeholder="Select the Q..."),
         ),
-        # orm.InputBlock(
-        #   label="The Why",
-        #   action=actions.PREBLAST_WHY,
-        #   optional=True,
-        #   element=orm.PlainTextInputElement(
-        #     placeholder="[Optional] Explain the Why...",
-        #   )
-        # ),
         orm.InputBlock(
             label="Coupons?",
             action=actions.PREBLAST_COUPONS,
@@ -181,23 +162,11 @@ PREBLAST_FORM = orm.BlockView(
                 placeholder="Coupons or not?",
             ),
         ),
-        # orm.InputBlock(
-        #   label="FNGs",
-        #   action=actions.PREBLAST_FNGS,
-        #   optional=True,
-        #   element=orm.PlainTextInputElement(
-        #     placeholder="Any message for FNGs?",
-        #   )
-        # ),
         orm.InputBlock(
-            label="Moleskin",
+            label="Moleskine",
             action=actions.PREBLAST_MOLESKIN,
             optional=True,
-            element=orm.PlainTextInputElement(
-                placeholder="A hint of what you're planning...",
-                multiline=True,
-                max_length=3000,
-            ),
+            element=orm.RichTextInputElement(),
         ),
         orm.DividerBlock(),
         orm.InputBlock(
@@ -217,18 +186,6 @@ PREBLAST_FORM = orm.BlockView(
 
 CONFIG_FORM = orm.BlockView(
     [
-        # orm.InputBlock(
-        #     label="Paxminer Region Database",
-        #     action=actions.CONFIG_PAXMINER_DB,
-        #     optional=False,
-        #     element=orm.StaticSelectElement(placeholder="Select your database..."),
-        # ),
-        # orm.InputBlock(
-        #     label="Other (if not listed above)",
-        #     action=actions.CONFIG_PAXMINER_DB_OTHER,
-        #     optional=False,
-        #     element=orm.PlainTextInputElement(initial_value="OtherDBName"),
-        # ),
         orm.ActionsBlock(
             elements=[
                 orm.ButtonElement(
@@ -355,20 +312,60 @@ CONFIG_FORM = orm.BlockView(
             label="Backblast Moleskine Template / Starter",
             action=actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE,
             optional=True,
-            element=orm.PlainTextInputElement(
-                initial_value=constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE,
-                max_length=3000,
-                multiline=True,
-            ),
+            element=orm.RichTextInputElement(),
         ),
         orm.InputBlock(
             label="Preblast Moleskine Template / Starter",
             action=actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE,
             optional=True,
-            element=orm.PlainTextInputElement(
-                initial_value="",
-                max_length=3000,
-                multiline=True,
+            element=orm.RichTextInputElement(),
+        ),
+    ]
+)
+
+WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
+    blocks=[
+        orm.InputBlock(
+            label="Enable Welcomebot welcome DMs?",
+            action=actions.WELCOME_DM_ENABLE,
+            optional=False,
+            element=orm.RadioButtonsElement(
+                initial_value="no",
+                options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
+            ),
+        ),
+        orm.InputBlock(
+            label="Welcome Message Template",
+            action=actions.WELCOME_DM_TEMPLATE,
+            optional=True,
+            element=orm.RichTextInputElement(),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="*This content will be sent to any new user who joins this Slack workspace.*\n\n"
+                + "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your region and how you use Slack.\n"
+                + "Who should they reach out to if they have a question? What channels should they join? What does HC mean and "
+                + "how do they do that? Should their Slack handle be their F3 name?",
+            ),
+        ),
+        orm.InputBlock(
+            label="Enable Welcomebot welcome channel posts?",
+            action=actions.WELCOME_CHANNEL_ENABLE,
+            optional=False,
+            element=orm.RadioButtonsElement(
+                initial_value="disable",
+                options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
+            ),
+        ),
+        orm.InputBlock(
+            label="Welcomebot Channel",
+            action=actions.WELCOME_CHANNEL,
+            optional=False,
+            element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="If enabled, this is the channel where welcome messages will be posted.",
             ),
         ),
     ]
@@ -397,12 +394,6 @@ STRAVA_ACTIVITY_MODIFY_FORM = orm.BlockView(
                 multiline=True,
             ),
         ),
-        # orm.ContextBlock(
-        #     action=actions.STRAVA_ACTIVITY_METADATA,
-        #     element=orm.ContextElement(
-        #         initial_value="",
-        #     ),
-        # ),
     ]
 )
 
@@ -454,50 +445,50 @@ CUSTOM_FIELD_ADD_EDIT_FORM = orm.BlockView(
 LOADING_FORM = orm.BlockView(
     blocks=[
         orm.SectionBlock(label=":hourglass: Loading, do not close...", action=actions.LOADING),
+        orm.ContextBlock(
+            action="loading_context",
+            element=orm.ContextElement(
+                initial_value="If this form does not update after a few seconds, an error may have occured. Please try again.",
+            ),
+        ),
     ]
 )
 
-# WELCOMEBOT_CONFIG_FORM = orm.BlockView(
-#     blocks=[
-#         orm.InputBlock(
-#             label="Enable Welcomebot welcome DMs?",
-#             action=actions.CONFIG_WELCOMEBOT_ENABLE,
-#             optional=False,
-#             element=orm.RadioButtonsElement(
-#                 initial_value="no",
-#                 options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
-#             ),
-#         ),
-#         orm.InputBlock(
-#             label="Enable Welcomebot welcome channel posts?",
-#             action=actions.CONFIG_WELCOMEBOT_CHANNEL_ENABLE,
-#             optional=False,
-#             element=orm.RadioButtonsElement(
-#                 initial_value="no",
-#                 options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
-#             ),
-#         ),
-#         orm.InputBlock(
-#             element=orm.PlainTextInputElement(
-#                 initial_value="",
-#                 multiline=False,
-#                 placeholder="Enter the welcome message",
-#                 max_length=3000,
-#             ),
-#             action=actions.CONFIG_WELCOMEBOT_MESSAGE,
-#             label="Welcome message",
-#             optional=True,
-#         ),
-#         orm.InputBlock(
-#             label="Welcomebot Channel",
-#             action=actions.CONFIG_WELCOMEBOT_CHANNEL,
-#             optional=False,
-#             element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
-#         ),
-#         orm.ContextBlock(
-#             element=orm.ContextElement(
-#                 initial_value="If enabled, this is the channel where welcome messages will be posted.",
-#             ),
-#         ),
-#     ]
-# )
+ERROR_FORM = orm.BlockView(
+    blocks=[
+        orm.SectionBlock(label=":warning: the following error occurred:", action=actions.ERROR_FORM_MESSAGE),
+    ]
+)
+
+ACHIEVEMENT_FORM = orm.BlockView(
+    blocks=[
+        orm.InputBlock(
+            label="Achievement",
+            action=actions.ACHIEVEMENT_SELECT,
+            optional=False,
+            element=orm.StaticSelectElement(placeholder="Select the achievement..."),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="Don't see the achievement you're looking for? Talk to your Weasel Shaker / Tech Q about getting it added!",
+            ),
+        ),
+        orm.InputBlock(
+            label="Select the PAX",
+            action=actions.ACHIEVEMENT_PAX,
+            optional=False,
+            element=orm.MultiUsersSelectElement(placeholder="Select the PAX..."),
+        ),
+        orm.InputBlock(
+            label="Achievement Date",
+            action=actions.ACHIEVEMENT_DATE,
+            optional=False,
+            element=orm.DatepickerElement(placeholder="Select the date..."),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="Please use a date in the period the achievement was earned, as some achievements can be earned for several periods.",
+            ),
+        ),
+    ]
+)

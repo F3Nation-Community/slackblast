@@ -26,9 +26,105 @@ SLACK_SCOPES = "ENV_SLACK_SCOPES"
 CONFIG_DESTINATION_AO = {"name": "The AO Channel", "value": "ao_channel"}
 CONFIG_DESTINATION_CURRENT = {"name": "Current Channel", "value": "current_channel"}
 
-DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE = "\n*WARMUP:* \n*THE THANG:* \n*MARY:* \n*ANNOUNCEMENTS:* \n*COT:* "
+DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE = {
+    "type": "rich_text",
+    "elements": [
+        {
+            "type": "rich_text_section",
+            "elements": [
+                {
+                    "type": "text",
+                    "text": "\nWARMUP:",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " \n",
+                },
+                {
+                    "type": "text",
+                    "text": "THE THANG:",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " \n",
+                },
+                {
+                    "type": "text",
+                    "text": "MARY:",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " \n",
+                },
+                {
+                    "type": "text",
+                    "text": "ANNOUNCEMENTS:",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " \n",
+                },
+                {
+                    "type": "text",
+                    "text": "COT:",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " ",
+                },
+            ],
+        }
+    ],
+}
+
+DEFAULT_PREBLAST_MOLESKINE_TEMPLATE = {
+    "type": "rich_text",
+    "elements": [
+        {
+            "type": "rich_text_section",
+            "elements": [
+                {
+                    "type": "text",
+                    "text": "\nWHAT:",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " \n",
+                },
+                {
+                    "type": "text",
+                    "text": "WHY: ",
+                    "style": {"bold": True},
+                },
+                {
+                    "type": "text",
+                    "text": " ",
+                },
+            ],
+        }
+    ],
+}
 
 STATE_METADATA = "STATE_METADATA"
 
 AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID"
 AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY"
+
+WELCOME_MESSAGE_TEMPLATES = [
+    "The man, the myth, the LEGEND, it's {user}! Welcome to {region}! We're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
+    "Who's this?!? It's {user}! Welcome to {region}! We're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
+    "Hey, it's {user}! Welcome to {region}, we're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
+    "Sharkbait, ooh ha ha! It's {user}! Welcome to {region}, we're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
+    "Could it be?!? It's {user}! Welcome to {region}, we're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
+    "{user} is in the house! Welcome to {region}, we're glad you're here. Please take a moment to introduce yourself and let us know how we can help you get started. We're looking forward to seeing you in the gloom!",
+]
+
+MAX_HEIC_SIZE = 1000
+
+ERROR_FORM_MESSAGE_TEMPLATE = ":warning: Sorry, the following error occurred:\n\n```{error}```"

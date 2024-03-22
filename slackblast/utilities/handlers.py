@@ -2,23 +2,38 @@ import copy
 import json
 from logging import Logger
 import os
+import random
 from utilities import constants, sendmail, builders
 from utilities.helper_functions import (
     get_channel_id,
     safe_get,
     get_user_names,
     get_pax,
-    parse_moleskin_users,
     get_channel_name,
     update_local_region_records,
+    parse_rich_block,
+    replace_user_channel_ids,
 )
 from utilities.slack import actions, forms, orm
-from utilities.database.orm import Attendance, Backblast, PaxminerUser, Region
+from utilities.database.orm import (
+    Attendance,
+    Backblast,
+    PaxminerUser,
+    Region,
+    WeaselbotRegions,
+    AchievementsAwarded,
+    AchievementsList,
+)
 from utilities.database import DbManager
 from cryptography.fernet import Fernet
 from slack_sdk.web import WebClient
 import requests
 import boto3
+from PIL import Image
+from pillow_heif import register_heif_opener
+from datetime import datetime
+
+register_heif_opener()
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -49,6 +64,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
     file_list = []
+    file_send_list = []
     for file in files or []:
         try:
             r = requests.get(file["url_private_download"], headers={"Authorization": f"Bearer {client.token}"})
@@ -56,16 +72,34 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
 
             file_name = f"{file['id']}.{file['filetype']}"
             file_path = f"/tmp/{file_name}"
+            file_mimetype = file["mimetype"]
+
             with open(file_path, "wb") as f:
                 f.write(r.content)
 
+            if file["filetype"] == "heic":
+                heic_img = Image.open(file_path)
+                x, y = heic_img.size
+                coeff = min(constants.MAX_HEIC_SIZE / max(x, y), 1)
+                heic_img = heic_img.resize((int(x * coeff), int(y * coeff)))
+                heic_img.save(file_path.replace(".heic", ".png"), quality=95, optimize=True, format="PNG")
+                os.remove(file_path)
+
+                file_path = file_path.replace(".heic", ".png")
+                file_name = file_name.replace(".heic", ".png")
+                file_mimetype = "image/png"
+
             # read first line of file to determine if it's an image
             with open(file_path, "rb") as f:
-                first_line = f.readline()
+                try:
+                    first_line = f.readline().decode("utf-8")
+                except Exception as e:
+                    logger.info(f"Error reading photo as text: {e}")
+                    first_line = ""
             if first_line[:9] == "<!DOCTYPE":
                 logger.debug(f"File {file_name} is not an image, skipping")
                 client.chat_postMessage(
-                    text="To enable boybands, you will need to reinstall Slackblast with some new permissions. To to this, simply use this link: https://n1tbdh3ak9.execute-api.us-east-2.amazonaws.com/Prod/slack/install. You can edit this backblast and upload a boyband once this is complete.",
+                    text="To enable boybands, you will need to reinstall Slackblast with some new permissions. To to this, simply use this link: https://n1tbdh3ak9.execute-api.us-east-2.amazonaws.com/Prod/slack/install. You can edit your backblast and upload a boyband once this is complete.",
                     channel=user_id,
                 )
             else:
@@ -79,10 +113,19 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                     s3_client = boto3.client("s3")
                 with open(file_path, "rb") as f:
                     s3_client.upload_fileobj(
-                        f, "slackblast-images", file_name, ExtraArgs={"ContentType": file["mimetype"]}
+                        f, "slackblast-images", file_name, ExtraArgs={"ContentType": file_mimetype}
                     )
-                os.remove(file_path)
                 file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_name}")
+                file_send_list.append(
+                    {
+                        "filepath": file_path,
+                        "meta": {
+                            "filename": file_name,
+                            "maintype": file_mimetype.split("/")[0],
+                            "subtype": file_mimetype.split("/")[1],
+                        },
+                    }
+                )
         except Exception as e:
             logger.error(f"Error uploading file: {e}")
 
@@ -100,7 +143,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         message_metadata = json.loads(body["view"]["private_metadata"])
         message_channel = safe_get(message_metadata, "channel_id")
         message_ts = safe_get(message_metadata, "message_ts")
-        file_list = safe_get(message_metadata, "files")
+        file_list = safe_get(message_metadata, "files") if not file_list else file_list
     else:
         message_channel = chan
         message_ts = None
@@ -137,7 +180,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         the_coqs_formatted = ", " + ", ".join(the_coqs_full_list)
         the_coqs_names = ", " + ", ".join(the_coqs_names_list)
 
-    moleskin_formatted = parse_moleskin_users(moleskin, client, user_records)
+    # moleskin_formatted = parse_moleskin_users(moleskin, client, user_records)
 
     ao_name = get_channel_name(the_ao, logger, client, region_record)
     q_name, q_url = get_user_names([the_q], logger, client, return_urls=True, user_records=user_records)
@@ -169,11 +212,11 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         "block_id": "msg_text",
     }
 
-    moleskin_block = {
-        "type": "section",
-        "text": {"type": "mrkdwn", "text": moleskin_formatted},
-        "block_id": "moleskin_text",
-    }
+    # moleskin_block = {
+    #     "type": "section",
+    #     "text": {"type": "mrkdwn", "text": moleskin_formatted},
+    #     "block_id": "moleskin_text",
+    # }
 
     backblast_data.pop(actions.BACKBLAST_MOLESKIN, None)
     backblast_data[actions.BACKBLAST_FILE] = file_list
@@ -220,7 +263,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
             }
         )
 
-    blocks = [msg_block, moleskin_block]
+    blocks = [msg_block, moleskin]
     for file in file_list or []:
         blocks.append(
             orm.ImageBlock(
@@ -230,18 +273,21 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         )
     blocks.append(edit_block)
 
+    moleskin_text = parse_rich_block(moleskin)
+    moleskin_text_w_names = replace_user_channel_ids(moleskin_text, region_record, client, logger)
+
     if create_or_edit == "create":
         if region_record.paxminer_schema is None:
             res = client.chat_postMessage(
                 channel=chan,
-                text=post_msg + "\n" + moleskin_formatted,
+                text=post_msg + "\n" + moleskin_text,
                 username=f"{q_name} (via Slackblast)",
                 icon_url=q_url,
             )
         else:
             res = client.chat_postMessage(
                 channel=chan,
-                text=f"{moleskin_formatted}\n\nUse the 'New Backblast' button to create a new backblast",
+                text=f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast",
                 username=f"{q_name} (via Slackblast)",
                 icon_url=q_url,
                 blocks=blocks,
@@ -249,7 +295,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         logger.debug("\nMessage posted to Slack! \n{}".format(post_msg))
         print(json.dumps({"event_type": "successful_slack_post", "team_name": region_record.workspace_name}))
         if (email_send and email_send == "yes") or (email_send is None and region_record.email_enabled == 1):
-            moleskin_msg = moleskin.replace("*", "")
+            moleskin_msg = moleskin_text_w_names
 
             if region_record.postie_format:
                 subject = f"[{ao_name}] {title}"
@@ -278,6 +324,7 @@ COUNT: {count}
                     email_user=region_record.email_user,
                     email_password=email_password_decrypted,
                     email_to=region_record.email_to,
+                    attachments=file_send_list,
                 )
                 logger.debug("\nEmail Sent! \n{}".format(email_msg))
                 print(
@@ -297,7 +344,7 @@ COUNT: {count}
         res = client.chat_update(
             channel=message_channel,
             ts=message_ts,
-            text=f"{moleskin_formatted}\n\nUse the 'New Backblast' button to create a new backblast",
+            text=f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast",
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
             blocks=blocks,
@@ -333,7 +380,9 @@ COUNT: {count}
                     q_user_id=the_q,
                     coq_user_id=the_coq[0] if the_coq else None,
                     pax_count=count,
-                    backblast=f"{post_msg}\n{moleskin_formatted}".replace("*", ""),
+                    backblast=f"{post_msg}\n{moleskin_text}".replace(
+                        "*", ""
+                    ),  # here's where to replace with name versions
                     fngs=fngs_formatted if fngs else "None listed",
                     fng_count=fng_count,
                     json=custom_fields,
@@ -380,6 +429,12 @@ COUNT: {count}
                 "button. Thanks!",
             )
             print(json.dumps({"event_type": "failed_db_insert", "team_name": region_record.workspace_name}))
+
+    for file in file_send_list:
+        try:
+            os.remove(file["filepath"])
+        except Exception as e:
+            logger.error(f"Error removing file: {e}")
 
 
 def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
@@ -432,8 +487,6 @@ def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context:
         body_list.append(f"*Coupons*: {coupons}")
     if fngs:
         body_list.append(f"*FNGs*: {fngs}")
-    if moleskin:
-        body_list.append(moleskin)
 
     msg = "\n".join(body_list)
 
@@ -442,6 +495,8 @@ def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context:
         "text": {"type": "mrkdwn", "text": msg},
         "block_id": "msg_text",
     }
+
+    preblast_data.pop(actions.PREBLAST_MOLESKIN)
     action_block = {
         "type": "actions",
         "elements": [
@@ -468,13 +523,19 @@ def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context:
         ],
         "block_id": actions.PREBLAST_EDIT_BUTTON,
     }
+
+    blocks = [msg_block]
+    if moleskin:
+        blocks.append(moleskin)
+    blocks.append(action_block)
+
     if create_or_edit == "create":
         client.chat_postMessage(
             channel=chan,
             text=msg,
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
-            blocks=[msg_block, action_block],
+            blocks=blocks,
         )
         logger.debug("\nPreblast posted to Slack! \n{}".format(msg))
         print(json.dumps({"event_type": "successful_preblast_create", "team_name": region_record.workspace_name}))
@@ -485,7 +546,7 @@ def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context:
             text=msg,
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
-            blocks=[msg_block, action_block],
+            blocks=blocks,
         )
         logger.debug("\nPreblast updated in Slack! \n{}".format(msg))
         print(json.dumps({"event_type": "successful_preblast_edit", "team_name": region_record.workspace_name}))
@@ -499,8 +560,8 @@ def handle_config_post(body: dict, client: WebClient, logger: Logger, context: d
         Region.email_enabled: 1 if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable" else 0,
         Region.editing_locked: 1 if safe_get(config_data, actions.CONFIG_EDITING_LOCKED) == "yes" else 0,
         Region.default_destination: safe_get(config_data, actions.CONFIG_DEFAULT_DESTINATION),
-        Region.backblast_moleskin_template: safe_get(config_data, actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE) or "",
-        Region.preblast_moleskin_template: safe_get(config_data, actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE) or "",
+        Region.backblast_moleskin_template: safe_get(config_data, actions.CONFIG_BACKBLAST_MOLESKINE_TEMPLATE),
+        Region.preblast_moleskin_template: safe_get(config_data, actions.CONFIG_PREBLAST_MOLESKINE_TEMPLATE),
         Region.strava_enabled: 1 if safe_get(config_data, actions.CONFIG_ENABLE_STRAVA) == "enable" else 0,
     }
     if safe_get(config_data, actions.CONFIG_EMAIL_ENABLE) == "enable":
@@ -523,6 +584,29 @@ def handle_config_post(body: dict, client: WebClient, logger: Logger, context: d
                 Region.postie_format: 1 if safe_get(config_data, actions.CONFIG_POSTIE_ENABLE) == "yes" else 0,
             }
         )
+
+    DbManager.update_record(
+        cls=Region,
+        id=context["team_id"],
+        fields=fields,
+    )
+    update_local_region_records()
+    print(json.dumps({"event_type": "successful_config_update", "team_name": region_record.workspace_name}))
+
+
+def handle_welcome_message_config_post(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region
+):
+    welcome_config_data = forms.WELCOME_MESSAGE_CONFIG_FORM.get_selected_values(body)
+
+    fields = {
+        Region.welcome_dm_enable: 1 if safe_get(welcome_config_data, actions.WELCOME_DM_ENABLE) == "enable" else 0,
+        Region.welcome_dm_template: safe_get(welcome_config_data, actions.WELCOME_DM_TEMPLATE) or "",
+        Region.welcome_channel_enable: (
+            1 if safe_get(welcome_config_data, actions.WELCOME_CHANNEL_ENABLE) == "enable" else 0
+        ),
+        Region.welcome_channel: safe_get(welcome_config_data, actions.WELCOME_CHANNEL) or "",
+    }
 
     DbManager.update_record(
         cls=Region,
@@ -577,3 +661,80 @@ def handle_custom_field_menu(body: dict, client: WebClient, logger: Logger, cont
 
     DbManager.update_record(cls=Region, id=region_record.team_id, fields={Region.custom_fields: custom_fields})
     update_local_region_records()
+
+
+def handle_team_join(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    welcome_channel = region_record.welcome_channel
+    workspace_name = region_record.workspace_name
+    user_id = safe_get(body, "event", "user", "id")
+
+    if region_record.welcome_dm_enable:
+        client.chat_postMessage(channel=user_id, blocks=[region_record.welcome_dm_template], text="Welcome!")
+    if region_record.welcome_channel_enable:
+        client.chat_postMessage(
+            channel=welcome_channel,
+            text=random.choice(constants.WELCOME_MESSAGE_TEMPLATES).format(user=f"<@{user_id}>", region=workspace_name),
+        )
+
+
+def handle_achievements_tag(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    achievement_data = forms.ACHIEVEMENT_FORM.get_selected_values(body)
+    achievement_pax_list = safe_get(achievement_data, actions.ACHIEVEMENT_PAX)
+    achievement_id = int(safe_get(achievement_data, actions.ACHIEVEMENT_SELECT))
+    achievement_date = datetime.strptime(safe_get(achievement_data, actions.ACHIEVEMENT_DATE), "%Y-%m-%d")
+
+    achievement_info = DbManager.get_record(AchievementsList, achievement_id, schema=region_record.paxminer_schema)
+    achievement_name = achievement_info.name
+    achievement_verb = achievement_info.verb
+
+    paxminer_schema = region_record.paxminer_schema
+    if paxminer_schema:
+        weaselbot_region_info = safe_get(
+            DbManager.find_records(
+                cls=WeaselbotRegions,
+                filters=[WeaselbotRegions.paxminer_schema == paxminer_schema],
+                schema="weaselbot",
+            ),
+            0,
+        )
+        if weaselbot_region_info:
+            achievement_channel = weaselbot_region_info.achievement_channel
+        else:
+            achievement_channel = None
+
+    # Get all achievements for the year
+    pax_awards = DbManager.find_records(
+        schema=paxminer_schema,
+        cls=AchievementsAwarded,
+        filters=[
+            AchievementsAwarded.pax_id.in_(achievement_pax_list),
+            AchievementsAwarded.date_awarded >= datetime(achievement_date.year, 1, 1),
+            AchievementsAwarded.date_awarded <= datetime(achievement_date.year, 12, 31),
+        ],
+    )
+    pax_awards_total = {}
+    pax_awards_this_achievement = {}
+    for pax in achievement_pax_list:
+        pax_awards_total[pax] = 0
+        pax_awards_this_achievement[pax] = 0
+    for award in pax_awards:
+        pax_awards_total[award.pax_id] += 1
+        if award.achievement_id == achievement_id:
+            pax_awards_this_achievement[award.pax_id] += 1
+
+    for pax in achievement_pax_list:
+        msg = f"Congrats to our man <@{pax}>! He has achieved *{achievement_name}* for {achievement_verb}!"
+        msg += f" This is achievement #{pax_awards_total[pax]+1} for him this year"
+        if pax_awards_this_achievement[pax] > 0:
+            msg += f" and #{pax_awards_this_achievement[pax]+1} time this year for this achievement."
+        else:
+            msg += "."
+        client.chat_postMessage(channel=achievement_channel, text=msg)
+        DbManager.create_record(
+            schema=paxminer_schema,
+            record=AchievementsAwarded(
+                pax_id=pax,
+                date_awarded=achievement_date,
+                achievement_id=achievement_id,
+            ),
+        )

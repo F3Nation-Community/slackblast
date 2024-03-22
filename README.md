@@ -2,9 +2,9 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Slackblast is a simple application you can get up and running in your Slack environment that will pop up a simple Backblast form for someone to fill out in the Slack App (mobile or desktop or web) when they type `/slackblast`, `/backblast`, or `/preblast`. Slackblast interfaces with your PAXminer database directly, and its posts do not need to be scraped by PAXminer (PAXminer will ignore them).
+Slackblast is a Slack application you can get up and running in your Slack environment that invokes a simple Backblast form for someone to fill out in the Slack App (mobile, desktop, or web) when they type `/slackblast`, `/backblast`, or `/preblast`. Slackblast interfaces with your PAXminer database directly, and its posts do not need to be scraped by PAXminer (PAXminer will ignore them). If you have not already [set up PAXminer](https://f3stlouis.com/paxminer-setup/), do that first.
 
-Slackblast can serve any number of regions and runs on AWS Lambda - installation is as simple as a [simple link click](#getting-started-), without the need for you to get your own server up and running.
+Slackblast serves over 100 regions and runs on AWS Lambda - installation is as simple as a [simple link click](#getting-started-), without the need for you to get your own server up and running.
 
 When the user types `/slackblast`, `/backblast`, or `/preblast` and hits send, a window like the one below will pop up:
 
@@ -48,6 +48,15 @@ If enabled, this will lock down editing of backblasts to the Q / Co-Qs, the orig
 
 These templates will serve as the default when your users start a new backblast or preblast.
 
+# FNG Welcome Message
+
+Slackblast now has functionality to welcome new users (FNGs) into your region's Slack Space! This will trigger automatically as soon as new users join. To configure, use the `/config-welcome-message`. There are two things to enable:
+
+1. **Welcome DMs:** These will be sent to the user via a direct message. You can set your region's template in the editor. This is a good place to help your FNG navigate your Slack space, where to go for help, terminology, etc.
+2. **Channel Welcome Posts:** These are shout-outs in a channel of your choosing. When enabled, this will welcome your user in a fun message, letting the rest of your guys welcome them as well.
+
+<img src="assets/Slackblast-Welcome-Demo.png" width="500">
+
 # Contributing
 
 Slackblast is in active development, and I welcome any and all help or contributions! Feel free to leave an Issue with bugs or feature requests, or even better leave us a Pull Request.
@@ -86,6 +95,10 @@ features:
     - command: /preblast
       url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
       description: Launch preblast template
+      should_escape: false
+    - command: /config-welcome-message
+      url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
+      description: Configures your region's welcome message
       should_escape: false
     - command: /config-slackblast
       url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
