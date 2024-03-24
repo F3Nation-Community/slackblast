@@ -1,7 +1,7 @@
 import os
 import pickle
 from utilities import constants
-from utilities.database.orm import PaxminerAO, PaxminerUser, Region, Backblast, Attendance
+from utilities.database.orm import PaxminerAO, PaxminerUser, Region, Backblast, Attendance, PaxminerRegion
 from utilities.database import DbManager
 from utilities.slack import actions
 from datetime import datetime
@@ -250,20 +250,20 @@ def get_paxminer_schema(team_id: str, logger) -> str:
         return paxminer_schema
 
     else:
-        paxminer_region_records = DbManager.execute_sql_query("select * from paxminer.regions")
+        paxminer_region_records = DbManager.find_records(PaxminerRegion, filters=[True], schema="paxminer")
 
         for region in paxminer_region_records:
-            slack_client = WebClient(region["slack_token"])
+            slack_client = WebClient(region.slack_token)
 
             ao_index = 0
             try:
-                ao_records = DbManager.execute_sql_query(f"select * from {region['schema_name']}.aos")
-                ao_records = [ao for ao in ao_records if ao["channel_id"] is not None]
+                ao_records: List[PaxminerAO] = DbManager.find_records(PaxminerAO, filters=[True], schema=region.schema_name)
+                ao_records = [ao for ao in ao_records if ao.channel_id is not None]
 
                 keep_trying = True
                 while keep_trying and ao_index < len(ao_records):
                     try:
-                        slack_response = slack_client.conversations_info(channel=ao_records[ao_index]["channel_id"])
+                        slack_response = slack_client.conversations_info(channel=ao_records[ao_index].channel_id)
                         keep_trying = False
                     except Exception:
                         ao_index += 1
@@ -274,8 +274,8 @@ def get_paxminer_schema(team_id: str, logger) -> str:
 
             pm_team_id = slack_response["channel"]["shared_team_ids"][0]
             if team_id == pm_team_id:
-                logger.debug(f'PAXMiner schema for {team_id} is {region["schema_name"]}')
-                return region["schema_name"]
+                logger.debug(f'PAXMiner schema for {team_id} is {region.schema_name}')
+                return region.schema_name
 
         logger.debug(f"No PAXMiner schema found for {team_id}")
         return None

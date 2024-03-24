@@ -31,6 +31,8 @@ class BaseClass(DeclarativeBase):
         str100: String(100),
         str255: String(255),
         dict[str, Any]: JSON,
+        longtext: LONGTEXT,
+        text: TEXT,
     }
 
 
@@ -103,7 +105,7 @@ class Backblast(BaseClass, GetDBClass):
 class Attendance(BaseClass, GetDBClass):
     __tablename__ = "bd_attendance"
     timestamp: Mapped[Optional[str45]]
-    ts_edited: Mapped[Optional[str]]
+    ts_edited: Mapped[Optional[str45]]
     user_id: Mapped[str45pk]
     ao_id: Mapped[str45pk]
     date: Mapped[datepk]

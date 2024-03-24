@@ -1,12 +1,21 @@
-from utilities.database import get_engine, orm
-from utilities.database.orm import Base, PaxminerAO, PaxminerUser
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+from utilities.database import get_engine, orm, get_session
 from sqlalchemy.engine import Engine
 from sqlalchemy.schema import CreateSchema
-import os
 from slack_sdk import WebClient
+from sqlalchemy_utils import database_exists, create_database
+import logging
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+logger.addHandler(handler)
 
 def create_tables():
+
+    logger.info("Creating schemas and tables...")
 
     schema_table_map = {
         "slackblast": [orm.Region, orm.User],
@@ -22,14 +31,20 @@ def create_tables():
     }
 
     for schema, tables in schema_table_map.items():
+        tables = [t.__table__ for t in tables]
         engine: Engine = get_engine(schema=schema)
-        if not engine.has_schema(engine, schema):
-            engine.execute(CreateSchema(schema))
-        Base.metadata.create_all(engine)
+        if not database_exists(engine.url):
+            create_database(engine.url)
+        with engine.connect() as conn:
+            orm.BaseClass.metadata.create_all(bind=conn, tables=tables)
         engine.dispose()
+    
+    logger.info("Schemas and tables created!")
 
 
 def initialize_tables():
+
+    logger.info("Initializing tables with data from Slack...")
 
     slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
     client = WebClient(token=slack_bot_token)
@@ -37,7 +52,7 @@ def initialize_tables():
     users = client.users_list().get("members")
 
     ao_list = [
-        PaxminerAO(
+        orm.PaxminerAO(
             channel_id=c["id"],
             ao=c["name"],
             channel_created=c["created"],
@@ -48,7 +63,7 @@ def initialize_tables():
     ]
 
     user_list = [
-        PaxminerUser(
+        orm.PaxminerUser(
             user_id=u["id"],
             user_name=u["profile"]["display_name"],
             real_name=u["profile"]["real_name"],
@@ -57,13 +72,51 @@ def initialize_tables():
         )
         for u in users
     ]
+    
+    achievement_list = [
+        orm.AchievementsList(
+            name="The Priest",
+            description="Post for 25 QSource lessons",
+            verb="posting for 25 QSource lessons",
+            code="the_priest",
+        ),
+        orm.AchievementsList(
+            name="The Monk",
+            description="Post at 4 QSources in a month",
+            verb="posting at 4 QSources in a month",
+            code="the_monk",
+        ),
+        orm.AchievementsList(
+            name="Leader of Men",
+            description="Q at 4 beatdowns in a month",
+            verb="Qing at 4 beatdowns in a month",
+            code="leader_of_men",
+        ),
+    ]
+    
+    paxminer_region = [
+        orm.PaxminerRegion(
+            region = "F3DevRegion",
+            slack_token = os.environ["SLACK_BOT_TOKEN"],
+            schema_name = "f3devregion",
+        )
+    ]
 
-    session = orm.get_session(schema="f3devregion")
-    session.add_all(ao_list)
-    session.add_all(user_list)
+    session = get_session(schema="f3devregion")
+    # session.add_all(ao_list)
+    # session.add_all(user_list)
+    # session.add_all(achievement_list)
     session.commit()
     session.close()
+    
+    session = get_session(schema="paxminer")
+    session.add_all(paxminer_region)
+    session.commit()
+    session.close()
+    
+    logger.info("Tables initialized!")
 
 
 if __name__ == "__main__":
     create_tables()
+    initialize_tables()
