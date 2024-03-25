@@ -1,24 +1,26 @@
 # import json
 import json
+import logging
+import re
+import traceback
+from typing import Callable, Tuple
+
 from slack_bolt import App
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
+
+from utilities import strava
+from utilities.builders import add_loading_form, send_error_response
+from utilities.constants import LOCAL_DEVELOPMENT
+from utilities.database.orm import Region
 from utilities.helper_functions import (
     get_oauth_flow,
-    safe_get,
     get_region_record,
     get_request_type,
+    safe_get,
     update_local_region_records,
 )
-from utilities.constants import LOCAL_DEVELOPMENT
 from utilities.routing import MAIN_MAPPER
 from utilities.slack.actions import LOADING_ID
-import logging
-from utilities.database.orm import Region
-from utilities import strava
-from utilities.builders import send_error_response, add_loading_form
-import re
-from typing import Callable, Tuple
-import traceback
 
 SlackRequestHandler.clear_all_log_handlers()
 logger = logging.getLogger()
@@ -67,7 +69,8 @@ def main_response(body, logger, client, ack, context):
             logger.error(tb_str)
     else:
         logger.error(
-            f"no handler for path: {safe_get(safe_get(MAIN_MAPPER, request_type), request_id) or request_type+', '+request_id}"
+            f"no handler for path: "
+            f"{safe_get(safe_get(MAIN_MAPPER, request_type), request_id) or request_type+', '+request_id}"
         )
 
 

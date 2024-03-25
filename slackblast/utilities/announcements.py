@@ -1,18 +1,29 @@
 # A quick script to make announcements (changelogs, etc) to Slack
-from utilities.database.orm import Region, PaxminerRegion
-from utilities.database import DbManager
-from typing import List
-from slack_sdk import WebClient
-from logging import Logger
 import time
+from logging import Logger
+from typing import List
 
-msg = "Hello, {region}! This is Moneyball, lead developer of the Slackblast app. I wanted to make you aware of updates to Slackblast over the last few months:\n\n"
-msg += ":left_speech_bubble: *Welcome Messages!* - We've added a new feature that allows you to send a welcome message to new members as they join your Slack space. This is a great way to introduce new members to your region and let them know how to navigate your space. Use `/config-welcome-message` to set it up.\n\n"
-msg += ":runner: *Strava Integration!* - Allows Strava PAX to transfer the backblast notes over to Strava, while gathering workout data (calories, distance) from linked devices. Go to `/config-slackblast` to enable.\n\n"
-msg += ":bar_chart: *Custom Fields!* - Does your region want to track something specific in your backblasts (burpee count, gloom index, etc.)? You can create your own fields through the Custom Field menu in `/config-slackblast`.\n\n"
-msg += ":sports_medal: *Weaselbot Achievements (new today)!* - For those using <https://github.com/F3Nation-Community/weaselbot|Weaselbot>, you can now assign achievements to PAX directly without having to create a whole backblast for it. Use the `/tag-achievement` command to get started.\n\n"
-msg += ":mechanic: *Under the Hood!* - Things like rich text input for backblasts, boyband image support, and better error handling.\n\n"
-msg += "\nIf you have any questions or issues, the best way to reach out is on the #paxminer-and-slackblast channel in the Nation space.\n"
+from slack_sdk import WebClient
+
+from utilities.database import DbManager
+from utilities.database.orm import PaxminerRegion, Region
+
+msg = "Hello, {region}! This is Moneyball, lead developer of the Slackblast app. I wanted to make you aware of updates "
+"to Slackblast over the last few months:\n\n"
+msg += ":left_speech_bubble: *Welcome Messages!* - We've added a new feature that allows you to send a welcome message "
+"to new members as they join your Slack space. This is a great way to introduce new members to your region and let them"
+"know how to navigate your space. Use `/config-welcome-message` to set it up.\n\n"
+msg += ":runner: *Strava Integration!* - Allows Strava PAX to transfer the backblast notes over to Strava, while "
+"gathering workout data (calories, distance) from linked devices. Go to `/config-slackblast` to enable.\n\n"
+msg += ":bar_chart: *Custom Fields!* - Does your region want to track something specific in your backblasts (burpee "
+"count, gloom index, etc.)? You can create your own fields through the Custom Field menu in `/config-slackblast`.\n\n"
+msg += ":sports_medal: *Weaselbot Achievements (new today)!* - For those using <https://github.com/F3Nation-Community"
+"/weaselbot|Weaselbot>, you can now assign achievements to PAX directly without having to create a whole backblast "
+"for it. Use the `/tag-achievement` command to get started.\n\n"
+msg += ":mechanic: *Under the Hood!* - Things like rich text input for backblasts, boyband image support, and better "
+"error handling.\n\n"
+msg += "\nIf you have any questions or issues, the best way to reach out is on the #paxminer-and-slackblast channel in "
+"the Nation space.\n"
 msg += "\n~ :moneybag: :baseball:"
 
 

@@ -59,19 +59,54 @@ Slackblast now has functionality to welcome new users (FNGs) into your region's 
 
 # Contributing
 
-Slackblast is in active development, and I welcome any and all help or contributions! Feel free to leave an Issue with bugs or feature requests, or even better leave us a Pull Request.
+Slackblast is in active development, and I welcome any and all help or contributions! Feel free to leave an [Issue](https://github.com/F3Nation-Community/slackblast/issues) with bugs or feature requests, or even better leave us a [Pull Request](https://github.com/F3Nation-Community/slackblast/pulls).
 
 ## Local Development
 
-If you'd like to contribute to Slackblast, I highly recommend setting up a local development environment for testing. Below are the steps to get it running (I did this in unix, YMMV on OSX or Windows):
+If you'd like to contribute to Slackblast, I highly recommend setting up a local development environment for testing. Below are the steps to get it running (I did this in unix via WSL on Windows, YMMV on OSX):
+
+### Development Environment:
+
+If you don’t have a development environment of choice, I’m going to make two strong recommendations; VSCode is a VERY good and free IDE, and I would strongly make the case for using a unix environment.
+
+1. **VSCode:** [Download Visual Studio Code - Mac, Linux, Windows](https://code.visualstudio.com/download)
+2. **Unix environment:** if on Windows 10+, you can enable “Windows Subsystem for Linux” (WSL), that will allow you to run a version of linux directly on top of / inside of Windows. VSCode makes it very easy to “remote” into WSL: [Install WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (I use Ubuntu FWIW).
+3. **Python 3.12:** you may already have this, but if not I recommend pyenv to manage python installations: [pyenv/pyenv: Simple Python version management](https://github.com/pyenv/pyenv?tab=readme-ov-file#installation). Specifically, Slackblast currently uses **Python 3.12**
+4. **MySQL 8:** all of my apps use Beaker’s PAXMiner MySQL 8 instance on AWS RDS in prod, so I would recommend having a local MySQL instance for local development purposes. The easiest way I found to do this was through Docker, which comes pre-installed in most unix environments [How to Run MySQL In A Docker Container (howtogeek.com)](https://www.howtogeek.com/devops/how-to-run-mysql-in-a-docker-container/)
+    - Note, I had to modify some of these steps to accomodate WSL, here's what I ran (where MYDB and MYPASS are of your choosing, remember these for later!):
+```sh
+echo "bind-address = 0.0.0.0" >> /root/docker/f3dev/conf.d/mysqld.cnf
+docker run --detach --name=MYDB --env="MYSQL_ROOT_PASSWORD=MYPASS" --publish 3306:3306 --volume=/root/docker/f3dev/conf.d:/etc/mysql/conf.d --volume=$HOME/mysql-data:/var/lib/mysql mysql
+```
+5. **Ngrok:** you will use this to forward network traffic to your locally running development app: [Download (ngrok.com)](https://ngrok.com/download). You will need to create a free account and install your authtoken: [Your Authtoken - ngrok](https://dashboard.ngrok.com/get-started/your-authtoken)
+6. **Poetry:** I use Poetry for of my apps’ dependency / environment management: [Introduction | Documentation | Poetry - Python dependency management and packaging made easy (python-poetry.org)](https://python-poetry.org/docs/)
+7. **Git:** Git should be installed in most unix environments, here’s unix: [Git (git-scm.com)](https://git-scm.com/download/linux)
+8. **Nodemon:** this is a useful utility for having “hot reload” when you’re developing: [nodemon - npm (npmjs.com)](https://www.npmjs.com/package/nodemon). You will likely need to install npm: [How to install Node.js and NPM on WSL2 (cloudbytes.dev)](https://cloudbytes.dev/snippets/how-to-install-nodejs-and-npm-on-wsl2)
+9. **VSCode extensions:** one of the best things about VSCode are the thousands of extensions that are available to help your coding experience
+    - Once you will need for sure:
+      - WSL (if using WSL)
+      - Remote Explorer (may come with the one above)
+      - Python Extention Pack
+    - Some other favorites of mine
+      - Github Copilot - has blown my mind on how good it is, but it is $10 a month
+      - Gitlens
+      - Error Lens
+      - Ruff
+      - Black Formatter
+
+### Project setup
 
 1. Clone the repo:
 ```sh
-git clone
+git clone https://github.com/F3Nation-Community/slackblast.git
 ```
-2. Install the [AWS Serverless Application Model (SAM) CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html)
-3. Set up a local database (code & instructions coming)
-4. Create the Slack bot: 
+2. Use Poetry to install dependencies:
+```sh
+cd slackblast
+poetry env use 3.12
+poetry install
+```
+3. Create your development Slack bot: 
     1. Navigate to [api.slack.com]()
     2. Click "Create an app"
     3. Click "From a manifest", select your workspace
@@ -80,82 +115,94 @@ git clone
 
 ```yaml
 display_information:
-  name: slackblast-dev # feel free to change this
+  name: slackblast-dev
   description: An invokable form to produce properly-formatted backblasts and preblasts
   background_color: "#000000"
 features:
   bot_user:
-    display_name: slackblast-dev # feel free to change this
+    display_name: slackblast-dev
     always_online: true
   slash_commands:
     - command: /slackblast
-      url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
+      url: https://YOUR-URL.ngrok-free.app/slack/events # You'll be editing this
       description: Launch backblast template
       should_escape: false
     - command: /preblast
-      url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
+      url: https://YOUR-URL.ngrok-free.app/slack/events # You'll be editing this
       description: Launch preblast template
       should_escape: false
-    - command: /config-welcome-message
-      url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
-      description: Configures your region's welcome message
-      should_escape: false
     - command: /config-slackblast
-      url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
+      url: https://YOUR-URL.ngrok-free.app/slack/events # You'll be editing this
       description: Configures your region's instance of slackblast (email settings, etc)
       should_escape: false
     - command: /backblast
-      url: https://YOUR_URL.ngrok.io/slack/events # You'll be editing this
+      url: https://YOUR-URL.ngrok-free.app/slack/events # You'll be editing this
       description: Launch backblast template
+      should_escape: false
+    - command: /config-welcome-message
+      url: https://YOUR-URL.ngrok-free.app/slack/events # You'll be editing this
+      description: Opens a configuration menu for FNG welcome messages
+      should_escape: false
+    - command: /tag-achievement
+      url: https://YOUR-URL.ngrok-free.app/slack/events # You'll be editing this
+      description: Lauches a form for manually tagging Weaselbot achievements
+      should_escape: false
+    - command: /send-announcement
+      url: https://YOUR-URL.ngrok-free.app/slack/events # You'll be editing this
+      description: Triggers a announcement send
       should_escape: false
 oauth_config:
   redirect_urls:
-    - https://YOUR_URL.ngrok.io/slack/install # You'll be editing this
+    - https://YOUR-URL.ngrok-free.app/slack/install # You'll be editing this
   scopes:
+    user:
+      - files:write
     bot:
+      - channels:history
       - channels:read
       - chat:write
       - chat:write.customize
       - chat:write.public
       - commands
+      - files:read
+      - im:history
+      - im:read
       - im:write
       - team:read
       - users:read
+      - files:write
 settings:
+  event_subscriptions:
+    request_url: https://YOUR-URL.ngrok-free.app/slack/events # You'll be editing this
+    bot_events:
+      - team_join
   interactivity:
     is_enabled: true
-    request_url: https://YOUR_URL.ngrok.io/slack/events
+    request_url: https://YOUR-URL.ngrok-free.app/slack/events # You'll be editing this
   org_deploy_enabled: false
   socket_mode_enabled: false
   token_rotation_enabled: false
 ```
-
-
-5. Back to your project, create a `env.json` file at the root of the directory. The file should take the format (you will need to replace most of the values):
-```json
-{
-  "Parameters": {
-    "SLACK_SIGNING_SECRET": "SIGNING_SECRET_FROM_ABOVE",
-    "SLACK_BOT_TOKEN": "BOT_TOKEN_FROM_ABOVE",
-    "DATABASE_HOST": "localhost",
-    "ADMIN_DATABASE_USER": "local_user",
-    "ADMIN_DATABASE_PASSWORD": "local_password",
-    "ADMIN_DATABASE_SCHEMA": "slackblast",
-    "PASSWORD_ENCRYPT_KEY": "ASK_MONEYBALL_FOR_THIS"
-  }
-}
+4. Copy `.env.example`, replacing `ADMIN_DATABASE_PASSWORD` with the one you used to set up MySQL, `SLACK_SIGNING_SECRET` and `SLACK_BOT_TOKEN` from your Slack setup above, and save the new file as `.env` in the base directory
+5. Initialize your local database by running the script:
+```sh
+cd slackblast # if not already in the slackblast subdirectory
+source ../.env && poetry run python utilities/database/create_clear_local_db.py
 ```
-  - Small note: I had to use my local ip address for `DATABASE_HOST`, not "localhost"
-6. Install ngrok and run the following command from your terminal:
+6. Run Ngrok with the following command from your terminal:
 ```sh
 ngrok http 3000
 ```
-7. Copy the Forwarding URL (has ngrok.io at the end)
-8. Back in your browser for the Slack app, replace all of the YOUR_URLs with the ngrok Forwarding URL
+7. Copy the Forwarding URL (has `ngrok-free.app` at the end)
+8. Back in your browser for the Slack app, replace **all** of the YOUR_URLs with the ngrok Forwarding URL
 9. You are now ready to roll! This would be a good time to make sure you're on your own branch :)
-10. To run the app after you've made some changes, use the following command:
+10. To run the app with "hot reload" (restarts anytime you save a file), run from the slackblast subdirectory:
 ```sh
-sam build --use-container --container-env-var-file env.json && sam local start-api --env-vars env.json --warm-containers EAGER
+source ../.env && nodemon --exec "poetry run python app.py" -e py
 ```
-11. The `sam build` command will build a Docker container mimicking the functionality of the deployed Lambda. The `local start-api` command starts a listener on that container. The Slack API will send requests to your ngrok URL, which will route to your local Docker. If you want to make changes to the code, stop the deployment by using [Ctrl-C] in the terminal where you ran the `sam build` command, and re-run the command.
-    - If you want to avoid rebuilding your Docker every time you make a change, you can simply edit the code created by the build command in the `.aws-sam` directory. However, this folder will not be version controlled, so I choose not to use it
+11. Use ctrl-C to stop both Ngrok and nodemon
+12. Repeat steps 6-11 whenever you stop and want to come back to your app
+
+If you want to access your db through dbeaver, you can set it up like a normal db connection. Note, if using WSL, your WSL's IP address CAN CHANGE, meaning you would need to edit your connection when it does. I got the Server Host port number by running `wsl hostname -I` from Powershell from Windows.
+
+<img src="assets/local_setup.png" width="500">

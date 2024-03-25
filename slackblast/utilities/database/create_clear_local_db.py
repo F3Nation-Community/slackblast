@@ -1,20 +1,23 @@
-import sys, os
+import os
+import sys
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from utilities.database import get_engine, orm, get_session
-from sqlalchemy.engine import Engine
-from sqlalchemy.schema import CreateSchema
-from slack_sdk import WebClient
-from sqlalchemy_utils import database_exists, create_database
 import logging
+
+from slack_sdk import WebClient
+from sqlalchemy.engine import Engine
+from sqlalchemy_utils import create_database, database_exists
+
+from utilities.database import get_engine, get_session, orm
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
 logger.addHandler(handler)
 
-def create_tables():
 
+def create_tables():
     logger.info("Creating schemas and tables...")
 
     schema_table_map = {
@@ -38,12 +41,11 @@ def create_tables():
         with engine.connect() as conn:
             orm.BaseClass.metadata.create_all(bind=conn, tables=tables)
         engine.dispose()
-    
+
     logger.info("Schemas and tables created!")
 
 
 def initialize_tables():
-
     logger.info("Initializing tables with data from Slack...")
 
     slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
@@ -72,7 +74,7 @@ def initialize_tables():
         )
         for u in users
     ]
-    
+
     achievement_list = [
         orm.AchievementsList(
             name="The Priest",
@@ -93,27 +95,27 @@ def initialize_tables():
             code="leader_of_men",
         ),
     ]
-    
+
     paxminer_region = [
         orm.PaxminerRegion(
-            region = "F3DevRegion",
-            slack_token = os.environ["SLACK_BOT_TOKEN"],
-            schema_name = "f3devregion",
+            region="F3DevRegion",
+            slack_token=os.environ["SLACK_BOT_TOKEN"],
+            schema_name="f3devregion",
         )
     ]
 
     session = get_session(schema="f3devregion")
-    # session.add_all(ao_list)
-    # session.add_all(user_list)
-    # session.add_all(achievement_list)
+    session.add_all(ao_list)
+    session.add_all(user_list)
+    session.add_all(achievement_list)
     session.commit()
     session.close()
-    
+
     session = get_session(schema="paxminer")
     session.add_all(paxminer_region)
     session.commit()
     session.close()
-    
+
     logger.info("Tables initialized!")
 
 

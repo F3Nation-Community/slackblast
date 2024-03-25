@@ -1,11 +1,13 @@
-from dataclasses import dataclass
-from typing import TypeVar, List
 import os
-from sqlalchemy import create_engine, pool, and_
-from sqlalchemy.orm import sessionmaker
+from dataclasses import dataclass
+from typing import List, TypeVar
+
+from sqlalchemy import and_, create_engine, pool
 from sqlalchemy.engine import Engine
-from utilities.database.orm import BaseClass
+from sqlalchemy.orm import sessionmaker
+
 from utilities import constants
+from utilities.database.orm import BaseClass
 
 
 @dataclass
@@ -100,7 +102,7 @@ class DbManager:
         finally:
             session.commit()
             close_session(session)
-            return record
+            return record # noqa
 
     def create_records(records: List[BaseClass], schema=None):
         session = get_session(schema=schema)

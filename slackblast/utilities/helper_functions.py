@@ -1,17 +1,19 @@
 import os
 import pickle
-from utilities import constants
-from utilities.database.orm import PaxminerAO, PaxminerUser, Region, Backblast, Attendance, PaxminerRegion
-from utilities.database import DbManager
-from utilities.slack import actions
+import re
 from datetime import datetime
-from utilities.constants import LOCAL_DEVELOPMENT
-from typing import Dict, List, Tuple, Any
+from logging import Logger
+from typing import Any, Dict, List, Tuple
+
 from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
 from slack_bolt.oauth.oauth_settings import OAuthSettings
-import re
 from slack_sdk.web import WebClient
-from logging import Logger
+
+from utilities import constants
+from utilities.constants import LOCAL_DEVELOPMENT
+from utilities.database import DbManager
+from utilities.database.orm import Attendance, Backblast, PaxminerAO, PaxminerRegion, PaxminerUser, Region
+from utilities.slack import actions
 
 REGION_RECORDS: Dict[str, Region] = {}
 
@@ -120,7 +122,7 @@ def get_user_names(
         for user_id in array_of_user_ids:
             user = [u for u in user_records if u.user_id == user_id]
             if user:
-                user_name = user[0].user_name
+                user_name = user[0].user_name or user[0].real_name
             else:
                 user_info_dict = client.users_info(user=user_id)
                 user_name = (
@@ -158,7 +160,7 @@ def get_user_ids(user_names, client, user_records: List[PaxminerUser]):
         member_list = {}
         for user in user_records:
             user_name_search = user.user_name.lower()
-            user_name_search = re.sub("\s\(([\s\S]*?\))", "", user_name_search).replace(" ", "_")
+            user_name_search = re.sub(r"\s\(([\s\S]*?\))", "", user_name_search).replace(" ", "_")
             member_list[user_name_search] = user.user_id
     else:
         members = client.users_list()["members"]
@@ -169,7 +171,7 @@ def get_user_ids(user_names, client, user_records: List[PaxminerUser]):
             if member_dict["display_name"] == "":
                 member_dict["display_name"] = member_dict["real_name"]
             member_dict["display_name"] = member_dict["display_name"].lower()
-            member_dict["display_name"] = re.sub("\s\(([\s\S]*?\))", "", member_dict["display_name"]).replace(" ", "_")
+            member_dict["display_name"] = re.sub(r"\s\(([\s\S]*?\))", "", member_dict["display_name"]).replace(" ", "_")
             member_list[member_dict["display_name"]] = member_dict["id"]
 
     user_ids = []
@@ -257,7 +259,9 @@ def get_paxminer_schema(team_id: str, logger) -> str:
 
             ao_index = 0
             try:
-                ao_records: List[PaxminerAO] = DbManager.find_records(PaxminerAO, filters=[True], schema=region.schema_name)
+                ao_records: List[PaxminerAO] = DbManager.find_records(
+                    PaxminerAO, filters=[True], schema=region.schema_name
+                )
                 ao_records = [ao for ao in ao_records if ao.channel_id is not None]
 
                 keep_trying = True
@@ -412,20 +416,6 @@ def parse_rich_block(
         if element["type"] in ["rich_text_section", "rich_text_preformatted", "rich_text_quote"]:
             for text in element["elements"]:
                 msg += process_text_element(text, element)
-                # if text["type"] == "user":
-                #     if parse_users:
-                #         msg += "{user" + f"{user_index}" + "}"
-                #         user_list.append(text["user_id"])
-                #         user_index += 1
-                #     else:
-                #         msg += f'<@{text["user_id"]}>'
-                # if text["type"] == "channel":
-                #     if parse_channels:
-                #         msg += "{channel" + f"{channel_index}" + "}"
-                #         channel_list.append(text["channel_id"])
-                #         channel_index += 1
-                #     else:
-                #         msg += f'<#{text["channel_id"]}>'
         elif element["type"] == "rich_text_list":
             for list_num, item in enumerate(element["elements"]):
                 line_msg = ""
@@ -433,26 +423,6 @@ def parse_rich_block(
                     line_msg += process_text_element(text, item)
                 line_start = f"{list_num+1}. " if element["style"] == "ordered" else "- "  # TODO: handle nested lists
                 msg += f"{line_start}{line_msg}\n"
-
-    # if len(user_list) + len(channel_list) > 0:
-    #     format_dict = {}
-    #     if len(user_list) > 0:
-    #         user_records = None
-    #         if region_record.paxminer_schema:
-    #             user_records = DbManager.find_records(
-    #                 PaxminerUser, filters=[True], schema=region_record.paxminer_schema
-    #             )
-    #         user_names: List[str] = get_user_names(user_list, logger, client, user_records=user_records)
-    #         format_dict.update({f"user{index}": f"@{name}" for index, name in enumerate(user_names)})
-    #     if len(channel_list) > 0:
-    #         channel_records = None
-    #         if region_record.paxminer_schema:
-    #             channel_records = DbManager.find_records(
-    #                 PaxminerAO, filters=[True], schema=region_record.paxminer_schema
-    #             )
-    #         channel_names: List[str] = get_channel_names(channel_list, logger, client, channel_records=channel_records)
-    #         format_dict.update({f"channel{index}": f"#{channel}" for index, channel in enumerate(channel_names)})
-    #     msg.format(**format_dict)
     return msg
 
 
@@ -480,7 +450,6 @@ def replace_user_channel_ids(
     if region_record.paxminer_schema:
         user_records = DbManager.find_records(PaxminerUser, filters=[True], schema=region_record.paxminer_schema)
         channel_records = DbManager.find_records(PaxminerAO, filters=[True], schema=region_record.paxminer_schema)
-
     text = text.replace("{}", "")
 
     slack_user_ids = re.findall(USER_PATTERN, text or "")
