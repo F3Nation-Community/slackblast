@@ -396,10 +396,14 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
             )
             authorization_url, state = oauth.authorization_url("https://www.strava.com/oauth/authorize")
             strava_blocks = [
+                slack_orm.ImageBlock(
+                    image_url="https://slackblast-images.s3.amazonaws.com/btn_strava_connectwith_orange.png",
+                    alt_text="Connect with Strava",
+                ),
                 slack_orm.ActionsBlock(
                     elements=[
                         slack_orm.ButtonElement(
-                            label="Connect Strava Account",
+                            label="Connect",
                             action=actions.STRAVA_CONNECT_BUTTON,
                             url=authorization_url,
                         )
