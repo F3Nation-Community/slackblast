@@ -111,6 +111,16 @@ DEFAULT_PREBLAST_MOLESKINE_TEMPLATE = {
     ],
 }
 
+RICH_TEXT_EXTRA_SPACE = {
+    "type": "rich_text_section",
+    "elements": [
+        {
+            "type": "text",
+            "text": " ",
+        }
+    ]
+}
+
 STATE_METADATA = "STATE_METADATA"
 
 AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID"

@@ -127,9 +127,8 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
                 )
             else:
                 initial_backblast_data[actions.BACKBLAST_MOLESKIN] = moleskin_block
-            # initial_backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
-            #     initial_backblast_data[actions.BACKBLAST_MOLESKIN], client, logger, region_record
-            # )
+        # if editing, add an extra space to the end of the moleskin to prevent slack not connected issue
+        initial_backblast_data[actions.BACKBLAST_MOLESKIN]["elements"].append(constants.RICH_TEXT_EXTRA_SPACE)
     else:
         initial_backblast_data = None
 
