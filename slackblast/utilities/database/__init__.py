@@ -1,10 +1,13 @@
-from dataclasses import dataclass
-from typing import TypeVar, List
 import os
-from sqlalchemy import create_engine, pool, and_
+from dataclasses import dataclass
+from typing import List, TypeVar
+
+from sqlalchemy import and_, create_engine, pool
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
-from utilities.database.orm import BaseClass
+
 from utilities import constants
+from utilities.database.orm import BaseClass
 
 
 @dataclass
@@ -18,20 +21,23 @@ GLOBAL_SESSION = None
 GLOBAL_SCHEMA = None
 
 
+def get_engine(echo=False, schema=None) -> Engine:
+    host = os.environ[constants.DATABASE_HOST]
+    user = os.environ[constants.ADMIN_DATABASE_USER]
+    passwd = os.environ[constants.ADMIN_DATABASE_PASSWORD]
+    database = schema or os.environ[constants.ADMIN_DATABASE_SCHEMA]
+    db_url = f"mysql+pymysql://{user}:{passwd}@{host}:3306/{database}?charset=utf8mb4"
+    return create_engine(db_url, echo=echo, poolclass=pool.NullPool)
+
+
 def get_session(echo=False, schema=None):
     if GLOBAL_SESSION:
         return GLOBAL_SESSION
 
     global GLOBAL_ENGINE, GLOBAL_SCHEMA
     if schema != GLOBAL_SCHEMA or not GLOBAL_ENGINE:
-        host = os.environ[constants.DATABASE_HOST]
-        user = os.environ[constants.ADMIN_DATABASE_USER]
-        passwd = os.environ[constants.ADMIN_DATABASE_PASSWORD]
-        database = schema or os.environ[constants.ADMIN_DATABASE_SCHEMA]
-
-        db_url = f"mysql+pymysql://{user}:{passwd}@{host}:3306/{database}?charset=utf8mb4"
-        GLOBAL_ENGINE = create_engine(db_url, echo=echo, poolclass=pool.NullPool, convert_unicode=True)
-        GLOBAL_SCHEMA = database
+        GLOBAL_ENGINE = get_engine(echo=echo, schema=schema)
+        GLOBAL_SCHEMA = schema or os.environ[constants.ADMIN_DATABASE_SCHEMA]
     return sessionmaker()(bind=GLOBAL_ENGINE)
 
 
@@ -96,7 +102,7 @@ class DbManager:
         finally:
             session.commit()
             close_session(session)
-            return record
+            return record # noqa
 
     def create_records(records: List[BaseClass], schema=None):
         session = get_session(schema=schema)

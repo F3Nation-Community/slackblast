@@ -1,0 +1,49 @@
+[tool.ruff]
+line-length = 120
+
+select = [
+    "E",  # pycodestyle errors (settings from FastAPI, thanks, @tiangolo!)
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+]
+ignore = [
+    "C901",  # too complex
+]
+
+[tool.ruff.isort]
+order-by-type = true
+relative-imports-order = "closest-to-furthest"
+extra-standard-library = ["typing"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+known-first-party = []
+
+[tool.poetry]
+name = "slackblast"
+version = "0.1.0"
+description = ""
+authors = ["Evan Petzoldt <evan.petzoldt@protonmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+slack-bolt = "^1.18.1"
+datetime = "^5.5"
+cryptography = "^42.0.5"
+pymysql = "^1.1.0"
+sqlalchemy = "^2.0.28"
+requests = "^2.31.0"
+requests-oauthlib = "^1.4.0"
+pillow = "^10.2.0"
+pillow-heif = "^0.15.0"
+sqlalchemy-utils = "^0.41.1"
+
+[tool.poetry.group.dev.dependencies]
+boto3 = "^1.34.68"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
