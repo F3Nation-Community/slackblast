@@ -183,7 +183,7 @@ settings:
   socket_mode_enabled: false
   token_rotation_enabled: false
 ```
-4. Copy `.env.example`, replacing `ADMIN_DATABASE_PASSWORD` with the one you used to set up MySQL, `SLACK_SIGNING_SECRET` and `SLACK_BOT_TOKEN` from your Slack setup above, and save the new file as `.env` in the base directory
+4. Copy `.env.example`, replacing `ADMIN_DATABASE_PASSWORD` with the one you used to set up MySQL, `SLACK_SIGNING_SECRET` and `SLACK_BOT_TOKEN` from your Slack setup above, and save the new file as `.env` in the base directory. There are several secrets you will need from Moneyball.
 5. Initialize your local database by running the script:
 ```sh
 cd slackblast # if not already in the slackblast subdirectory
@@ -203,6 +203,11 @@ source ../.env && nodemon --exec "poetry run python app.py" -e py
 11. Use ctrl-C to stop both Ngrok and nodemon
 12. Repeat steps 6-11 whenever you stop and want to come back to your app
 
-If you want to access your db through dbeaver, you can set it up like a normal db connection. Note, if using WSL, your WSL's IP address CAN CHANGE, meaning you would need to edit your connection when it does. I got the Server Host port number by running `wsl hostname -I` from Powershell from Windows.
+> [!NOTE]
+> If you want to access your db through dbeaver, you can set it up like a normal db connection. Note, if using WSL, your WSL's IP address CAN CHANGE, meaning you would need to edit your connection when it does. I got the Server Host port number by running `wsl hostname -I` from Powershell from Windows.
 
 <img src="assets/local_setup.png" width="500">
+
+> [!NOTE]
+> if you add or change packages via `poetry add ...`, you will need to also add it to `slackblast/requirements.txt`. You can make sure that this file fully reflects the poetry virtual environment via: `poetry export -f requirements.txt -o requirements.txt --without-hashes`
+
