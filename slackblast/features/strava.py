@@ -384,4 +384,5 @@ def handle_strava_modify(body: dict, client: WebClient, logger: Logger, context:
         thread_ts=backblast_ts,
         text=msg,
         blocks=blocks,
+        blocks=blocks,
     )

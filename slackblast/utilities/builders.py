@@ -1,14 +1,10 @@
-
 import copy
 from logging import Logger
 
 from slack_sdk.web import WebClient
-
 from utilities import constants
 from utilities.database.orm import Region
-from utilities.helper_functions import (
-    safe_get,
-)
+from utilities.helper_functions import safe_get
 from utilities.slack import actions, forms
 
 # from pymysql.err import ProgrammingError
@@ -25,8 +21,10 @@ def add_loading_form(body: dict, client: WebClient) -> str:
     )
     return safe_get(loading_form_response, "view", "id")
 
+
 def ignore_event(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     logger.debug("Ignoring event")
+
 
 def send_error_response(body: dict, client: WebClient, error: str) -> None:
     error_form = copy.deepcopy(forms.ERROR_FORM)
