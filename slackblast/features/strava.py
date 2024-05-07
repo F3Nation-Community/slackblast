@@ -8,15 +8,10 @@ from typing import Any, Dict, List
 import requests
 from requests_oauthlib import OAuth2Session
 from slack_sdk import WebClient
-
 from utilities import constants
 from utilities.database import DbManager
 from utilities.database.orm import Region, User
-from utilities.helper_functions import (
-    parse_rich_block,
-    replace_user_channel_ids,
-    safe_get,
-)
+from utilities.helper_functions import parse_rich_block, replace_user_channel_ids, safe_get
 from utilities.slack import actions, forms
 from utilities.slack import orm as slack_orm
 
@@ -60,10 +55,14 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
             )
             authorization_url, state = oauth.authorization_url("https://www.strava.com/oauth/authorize")
             strava_blocks = [
+                slack_orm.ImageBlock(
+                    image_url="https://slackblast-images.s3.amazonaws.com/btn_strava_connectwith_orange.png",
+                    alt_text="Connect with Strava",
+                ),
                 slack_orm.ActionsBlock(
                     elements=[
                         slack_orm.ButtonElement(
-                            label="Connect Strava Account",
+                            label="Connect",
                             action=actions.STRAVA_CONNECT_BUTTON,
                             url=authorization_url,
                         )
@@ -162,6 +161,7 @@ def build_strava_modify_form(body: dict, client: WebClient, logger: Logger, cont
         close_button_text="Close without modifying",
         notify_on_close=True,
     )
+
 
 def strava_exchange_token(event, context) -> dict:
     """Exchanges a Strava auth code for an access token."""
@@ -299,7 +299,7 @@ def update_strava_activity(
         json={
             "name": backblast_title,
             "description": backblast_moleskine,
-        }
+        },
         # data={
         #     "name": backblast_title,
         #     "description": backblast_moleskine,
@@ -359,8 +359,8 @@ def handle_strava_modify(body: dict, client: WebClient, logger: Logger, context:
     else:
         activity_data = get_strava_activity(strava_activity_id=strava_activity_id, user_id=user_id, team_id=team_id)
 
-    msg = f"<@{user_id}> has connected this backblast to a "
-    f"<https://www.strava.com/activities/{strava_activity_id}|Strava activity>!"
+    msg = f"<@{user_id}> has connected this backblast to a Strava activity "
+    f"(<https://www.strava.com/activities/{strava_activity_id}|view on Strava>)!"
     if (safe_get(activity_data, "calories") is not None) & (safe_get(activity_data, "distance") is not None):
         msg += f" He traveled {round(activity_data['distance'] * 0.00062137, 1)} miles :runner: and burned "
         msg += f"{activity_data['calories']} calories :fire:."
@@ -369,8 +369,19 @@ def handle_strava_modify(body: dict, client: WebClient, logger: Logger, context:
     elif safe_get(activity_data, "distance"):
         msg += f" He traveled {round(activity_data['distance'] * 0.00062137, 1)} miles :runner:."
 
+    blocks = [
+        slack_orm.SectionBlock(
+            label=msg,
+        ).as_form_field(),
+        slack_orm.ImageBlock(
+            image_url="https://slackblast-images.s3.amazonaws.com/api_logo_pwrdBy_strava_stack_light.png",
+            alt_text="Powered by Strava",
+        ).as_form_field(),
+    ]
+
     client.chat_postMessage(
         channel=channel_id,
         thread_ts=backblast_ts,
         text=msg,
+        blocks=blocks,
     )

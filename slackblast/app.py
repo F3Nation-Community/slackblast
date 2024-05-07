@@ -5,10 +5,9 @@ import re
 import traceback
 from typing import Callable, Tuple
 
+from features import strava
 from slack_bolt import App
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
-
-from utilities import strava
 from utilities.builders import add_loading_form, send_error_response
 from utilities.constants import LOCAL_DEVELOPMENT
 from utilities.database.orm import Region
