@@ -1,7 +1,7 @@
 import smtplib
 from email.message import EmailMessage
-from typing import List, Dict, Any
 from pathlib import Path
+from typing import Any, Dict, List
 
 
 def send(
@@ -24,7 +24,8 @@ def send(
         email_user (str): email user address
         email_password (str): email password
         email_to (str): email recipient address
-        attachments (List[Dict[str, Any]]): list of attachments, each attachment is a dict with keys "filepath" and "meta", where meta includes filename, maintype, and subtype
+        attachments (List[Dict[str, Any]]): list of attachments, each attachment is a dict with keys "filepath" and
+            "meta", where meta includes filename, maintype, and subtype
     """
     msg = EmailMessage()
     msg.set_content(body)
