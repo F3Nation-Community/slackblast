@@ -1,9 +1,10 @@
-from datetime import datetime, date
-from typing import Optional, Any
-from typing_extensions import Annotated
-from sqlalchemy import String, DateTime, ForeignKey, Integer
-from sqlalchemy.dialects.mysql import LONGTEXT, TINYINT, DATE, JSON, TEXT
+from datetime import date, datetime
+from typing import Any, Optional
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy.dialects.mysql import DATE, JSON, LONGTEXT, TEXT, TINYINT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from typing_extensions import Annotated
 
 str30 = Annotated[str, String(30)]
 str45 = Annotated[str, String(45)]

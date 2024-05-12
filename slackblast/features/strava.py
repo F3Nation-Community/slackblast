@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 import requests
 from requests_oauthlib import OAuth2Session
 from slack_sdk import WebClient
+
 from utilities import constants
 from utilities.database import DbManager
 from utilities.database.orm import Region, User
