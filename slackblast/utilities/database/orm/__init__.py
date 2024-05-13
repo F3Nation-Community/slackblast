@@ -1,9 +1,12 @@
-from datetime import datetime, date
-from typing import Optional, Any
+from datetime import date, datetime
+from typing import Any, Optional
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table
+from sqlalchemy.dialects.mysql import DATE, JSON, LONGTEXT, TEXT, TINYINT
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, registry
 from typing_extensions import Annotated
-from sqlalchemy import String, DateTime, ForeignKey, Integer
-from sqlalchemy.dialects.mysql import LONGTEXT, TINYINT, DATE, JSON, TEXT
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+mapper_registry = registry()
 
 str30 = Annotated[str, String(30)]
 str45 = Annotated[str, String(45)]
@@ -77,6 +80,15 @@ class Region(BaseClass, GetDBClass):
     welcome_dm_template: Mapped[Optional[dict[str, Any]]]
     welcome_channel_enable: Mapped[Optional[tinyint]]
     welcome_channel: Mapped[Optional[str100]]
+    send_achievements: Mapped[Optional[tinyint1]]
+    send_aoq_reports: Mapped[Optional[tinyint1]]
+    achievement_channel: Mapped[Optional[str100]]
+    default_siteq: Mapped[Optional[str45]]
+    NO_POST_THRESHOLD: Mapped[Optional[int]] = mapped_column(Integer, default=2)
+    REMINDER_WEEKS: Mapped[Optional[int]] = mapped_column(Integer, default=2)
+    HOME_AO_CAPTURE: Mapped[Optional[int]] = mapped_column(Integer, default=8)
+    NO_Q_THRESHOLD_WEEKS: Mapped[Optional[int]] = mapped_column(Integer, default=4)
+    NO_Q_THRESHOLD_POSTS: Mapped[Optional[int]] = mapped_column(Integer, default=4)
     created: Mapped[dt_create]
     updated: Mapped[dt_update]
 
@@ -89,7 +101,7 @@ class Backblast(BaseClass, GetDBClass):
     timestamp: Mapped[Optional[str45]]
     ts_edited: Mapped[Optional[str45]]
     ao_id: Mapped[str45pk]
-    bd_date: Mapped[date]
+    bd_date: Mapped[datepk]
     q_user_id: Mapped[str45pk]
     coq_user_id: Mapped[Optional[str45]]
     pax_count: Mapped[Optional[int]]
@@ -186,36 +198,63 @@ class AchievementsAwarded(BaseClass, GetDBClass):
 
 
 # eventually this will be on the Regions table in Slackblast
-class WeaselbotRegions(BaseClass, GetDBClass):
-    __tablename__ = "regions_copy"
-    id: Mapped[intpk]
-    paxminer_schema: Mapped[str100]
-    slack_token: Mapped[str100]
-    send_achievements: Mapped[tinyint1]
-    send_aoq_reports: Mapped[tinyint1]
-    achievement_channel: Mapped[str100]
-    default_siteq: Mapped[Optional[str45]]
+# class WeaselbotRegions(BaseClass, GetDBClass):
+#     __tablename__ = "regions_copy"
+#     id: Mapped[intpk]
+#     paxminer_schema: Mapped[str100]
+#     slack_token: Mapped[str100]
+#     send_achievements: Mapped[tinyint1]
+#     send_aoq_reports: Mapped[tinyint1]
+#     achievement_channel: Mapped[str100]
+#     default_siteq: Mapped[Optional[str45]]
 
-    def get_id():
-        return WeaselbotRegions.id
+#     def get_id():
+#         return WeaselbotRegions.id
 
 
-class PaxminerRegion(BaseClass, GetDBClass):
-    __tablename__ = "regions_view"
-    region: Mapped[str45pk]
-    slack_token: Mapped[str90]
-    schema_name: Mapped[Optional[str45]]
-    active: Mapped[Optional[tinyint]]
-    firstf_channel: Mapped[Optional[str45]]
-    contact: Mapped[Optional[str45]]
-    send_pax_charts: Mapped[Optional[tinyint]]
-    send_ao_leaderboard: Mapped[Optional[tinyint]]
-    send_q_charts: Mapped[Optional[tinyint]]
-    send_region_leaderboard: Mapped[Optional[tinyint]]
-    send_region_uniquepax_chart: Mapped[Optional[tinyint]]
-    send_region_stats: Mapped[Optional[str45]] = mapped_column(String(45), default="0")
-    send_mid_month_charts: Mapped[Optional[str45]] = mapped_column(String(45), default="0")
-    comments: Mapped[Optional[text]]
+# class PaxminerRegion(BaseClass, GetDBClass):
+#     __tablename__ = "regions_view"
+#     region: Mapped[str45pk]
+#     slack_token: Mapped[str90]
+#     schema_name: Mapped[Optional[str45]]
+#     active: Mapped[Optional[tinyint]]
+#     firstf_channel: Mapped[Optional[str45]]
+#     contact: Mapped[Optional[str45]]
+#     send_pax_charts: Mapped[Optional[tinyint]]
+#     send_ao_leaderboard: Mapped[Optional[tinyint]]
+#     send_q_charts: Mapped[Optional[tinyint]]
+#     send_region_leaderboard: Mapped[Optional[tinyint]]
+#     send_region_uniquepax_chart: Mapped[Optional[tinyint]]
+#     send_region_stats: Mapped[Optional[str45]] = mapped_column(String(45), default="0")
+#     send_mid_month_charts: Mapped[Optional[str45]] = mapped_column(String(45), default="0")
+#     comments: Mapped[Optional[text]]
 
-    def get_id():
-        return PaxminerRegion.id
+#     def get_id():
+#         return PaxminerRegion.id
+
+paxminer_region = Table(
+    "regions",
+    BaseClass.metadata,
+    Column("region", String(45), primary_key=True),
+    Column("slack_token", String(90)),
+    Column("schema_name", String(45)),
+    Column("active", TINYINT),
+    Column("firstf_channel", String(45)),
+    Column("contact", String(45)),
+    Column("send_pax_charts", TINYINT),
+    Column("send_ao_leaderboard", TINYINT),
+    Column("send_q_charts", TINYINT),
+    Column("send_region_leaderboard", TINYINT),
+    Column("send_region_uniquepax_chart", TINYINT),
+    Column("send_region_stats", String(45), default="0"),
+    Column("send_mid_month_charts", String(45), default="0"),
+    Column("comments", TEXT),
+    schema="paxminer",
+)
+
+
+class PaxminerRegion:
+    pass
+
+
+mapper_registry.map_imperatively(PaxminerRegion, paxminer_region)

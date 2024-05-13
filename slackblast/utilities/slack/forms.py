@@ -1,5 +1,5 @@
-from utilities.slack import orm, actions
 from utilities import constants
+from utilities.slack import actions, orm
 
 BACKBLAST_FORM = orm.BlockView(
     blocks=[
@@ -188,9 +188,21 @@ CONFIG_FORM = orm.BlockView(
     [
         orm.ActionsBlock(
             elements=[
+                # orm.ButtonElement(
+                #     label=":gear: General Settings",
+                #     action=actions.CONFIG_GENERAL,
+                # ),
+                # orm.ButtonElement(
+                #     label=":email: Email Settings",
+                #     action=actions.CONFIG_EMAIL,
+                # ),
                 orm.ButtonElement(
-                    label="Enable / Edit Custom Fields",
+                    label=":bar_chart: Custom Field Settings",
                     action=actions.CONFIG_CUSTOM_FIELDS,
+                ),
+                orm.ButtonElement(
+                    label=":robot_face: Weaselbot Settings",
+                    action=actions.CONFIG_WEASELBOT,
                 ),
             ],
         ),
@@ -343,8 +355,8 @@ WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
         orm.ContextBlock(
             element=orm.ContextElement(
                 initial_value="*This content will be sent to any new user who joins this Slack workspace.*\n\n"
-                + "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your region and how you use Slack.\n"
-                + "Who should they reach out to if they have a question? What channels should they join? What does HC mean and "
+                + "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your region and how you use Slack.\n"  # noqa: E501
+                + "Who should they reach out to if they have a question? What channels should they join? What does HC mean and "  # noqa: E501
                 + "how do they do that? Should their Slack handle be their F3 name?",
             ),
         ),
@@ -448,7 +460,7 @@ LOADING_FORM = orm.BlockView(
         orm.ContextBlock(
             action="loading_context",
             element=orm.ContextElement(
-                initial_value="If this form does not update after a few seconds, an error may have occured. Please try again.",
+                initial_value="If this form does not update after a few seconds, an error may have occured. Please try again.",  # noqa: E501
             ),
         ),
     ]
@@ -470,7 +482,7 @@ ACHIEVEMENT_FORM = orm.BlockView(
         ),
         orm.ContextBlock(
             element=orm.ContextElement(
-                initial_value="Don't see the achievement you're looking for? Talk to your Weasel Shaker / Tech Q about getting it added!",
+                initial_value="Don't see the achievement you're looking for? Talk to your Weasel Shaker / Tech Q about getting it added!",  # noqa: E501
             ),
         ),
         orm.InputBlock(
@@ -487,8 +499,70 @@ ACHIEVEMENT_FORM = orm.BlockView(
         ),
         orm.ContextBlock(
             element=orm.ContextElement(
-                initial_value="Please use a date in the period the achievement was earned, as some achievements can be earned for several periods.",
+                initial_value="Please use a date in the period the achievement was earned, as some achievements can be earned for several periods.",  # noqa: E501
             ),
+        ),
+    ]
+)
+
+WEASELBOT_CONFIG_FORM = orm.BlockView(
+    blocks=[
+        orm.InputBlock(
+            label="Which Weaselbot features should be enabled?",
+            action=actions.WEASELBOT_ENABLE_FEATURES,
+            element=orm.CheckboxInputElement(
+                options=orm.as_selector_options(
+                    names=["Achievements", "Kotter Reports"],
+                    values=["achievements", "kotter_reports"],
+                )
+            ),
+        ),
+        orm.InputBlock(
+            label="Which channel should achievements be posted to?",
+            action=actions.WEASELBOT_ACHIEVEMENT_CHANNEL,
+            optional=True,
+            element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
+        ),
+        orm.InputBlock(
+            label="Which user or channel should Kotter Reports be posted to?",
+            action=actions.WEASELBOT_KOTTER_CHANNEL,
+            optional=True,
+            element=orm.ConversationsSelectElement(placeholder="Select the user or channel..."),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="Please note that Weaselbot will need to be manually added to private channels if selected.",  # noqa: E501
+            ),
+        ),
+        orm.InputBlock(
+            label="How many weeks of no posting should put a PAX on the Kotter Report?",
+            action=actions.WEASELBOT_KOTTER_WEEKS,
+            optional=True,
+            element=orm.NumberInputElement(placeholder="Enter the number of weeks...", is_decimal_allowed=False),
+        ),
+        orm.InputBlock(
+            label="After how many weeks of no posting should a PAX be removed from the Kotter Report?",
+            action=actions.WEASELBOT_KOTTER_REMOVE_WEEKS,
+            optional=True,
+            element=orm.NumberInputElement(placeholder="Enter the number of weeks...", is_decimal_allowed=False),
+        ),
+        orm.InputBlock(
+            label="How many weeks of activity should be used to base a PAX's home AO?",
+            action=actions.WEASELBOT_HOME_AO_WEEKS,
+            optional=True,
+            element=orm.NumberInputElement(placeholder="Enter the number of weeks...", is_decimal_allowed=False),
+        ),
+        orm.InputBlock(
+            label="After how many weeks of no Qing should a PAX be put on the Q list?",
+            action=actions.WEASELBOT_Q_WEEKS,
+            optional=True,
+            element=orm.NumberInputElement(placeholder="Enter the number of weeks...", is_decimal_allowed=False),
+        ),
+        orm.InputBlock(
+            label="What should be the minimum number of posts over that time to be eligible for the Q list?",
+            action=actions.WEASELBOT_Q_POSTS,
+            optional=True,
+            element=orm.NumberInputElement(placeholder="Enter the number of posts...", is_decimal_allowed=False),
         ),
     ]
 )

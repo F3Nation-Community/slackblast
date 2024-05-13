@@ -32,6 +32,7 @@ VIEW_MAPPER = {
     actions.CUSTOM_FIELD_ADD_CALLBACK_ID: (custom_fields.handle_custom_field_add, False),
     actions.CUSTOM_FIELD_MENU_CALLBACK_ID: (custom_fields.handle_custom_field_menu, False),
     actions.ACHIEVEMENT_CALLBACK_ID: (weaselbot.handle_achievements_tag, False),
+    actions.WEASELBOT_CONFIG_CALLBACK_ID: (weaselbot.handle_config_form, False),
 }
 
 ACTION_MAPPER = {
@@ -50,6 +51,7 @@ ACTION_MAPPER = {
     actions.CUSTOM_FIELD_DELETE: (custom_fields.delete_custom_field, False),
     actions.PREBLAST_NEW_BUTTON: (preblast.build_preblast_form, True),
     actions.PREBLAST_EDIT_BUTTON: (preblast.handle_preblast_edit_button, True),
+    actions.CONFIG_WEASELBOT: (weaselbot.build_config_form, False),
 }
 
 VIEW_CLOSED_MAPPER = {
