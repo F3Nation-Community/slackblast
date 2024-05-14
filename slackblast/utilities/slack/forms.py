@@ -205,14 +205,14 @@ CONFIG_FORM = orm.BlockView(
                     label=":speech_balloon: Welcomebot Settings",
                     action=actions.CONFIG_WELCOME_MESSAGE,
                 ),
-                orm.ButtonElement(
-                    label=":robot_face: Weaselbot Settings",
-                    action=actions.CONFIG_WEASELBOT,
-                ),
-                orm.ButtonElement(
-                    label=":pick: Paxminer Settings",
-                    action=actions.CONFIG_PAXMINER,
-                ),
+                # orm.ButtonElement(
+                #     label=":robot_face: Weaselbot Settings",
+                #     action=actions.CONFIG_WEASELBOT,
+                # ),
+                # orm.ButtonElement(
+                #     label=":pick: Paxminer Settings",
+                #     action=actions.CONFIG_PAXMINER,
+                # ),
             ],
         ),
     ]
