@@ -197,41 +197,6 @@ class AchievementsAwarded(BaseClass, GetDBClass):
         return AchievementsAwarded.id
 
 
-# eventually this will be on the Regions table in Slackblast
-# class WeaselbotRegions(BaseClass, GetDBClass):
-#     __tablename__ = "regions_copy"
-#     id: Mapped[intpk]
-#     paxminer_schema: Mapped[str100]
-#     slack_token: Mapped[str100]
-#     send_achievements: Mapped[tinyint1]
-#     send_aoq_reports: Mapped[tinyint1]
-#     achievement_channel: Mapped[str100]
-#     default_siteq: Mapped[Optional[str45]]
-
-#     def get_id():
-#         return WeaselbotRegions.id
-
-
-# class PaxminerRegion(BaseClass, GetDBClass):
-#     __tablename__ = "regions_view"
-#     region: Mapped[str45pk]
-#     slack_token: Mapped[str90]
-#     schema_name: Mapped[Optional[str45]]
-#     active: Mapped[Optional[tinyint]]
-#     firstf_channel: Mapped[Optional[str45]]
-#     contact: Mapped[Optional[str45]]
-#     send_pax_charts: Mapped[Optional[tinyint]]
-#     send_ao_leaderboard: Mapped[Optional[tinyint]]
-#     send_q_charts: Mapped[Optional[tinyint]]
-#     send_region_leaderboard: Mapped[Optional[tinyint]]
-#     send_region_uniquepax_chart: Mapped[Optional[tinyint]]
-#     send_region_stats: Mapped[Optional[str45]] = mapped_column(String(45), default="0")
-#     send_mid_month_charts: Mapped[Optional[str45]] = mapped_column(String(45), default="0")
-#     comments: Mapped[Optional[text]]
-
-#     def get_id():
-#         return PaxminerRegion.id
-
 paxminer_region = Table(
     "regions",
     BaseClass.metadata,
@@ -258,6 +223,3 @@ class PaxminerRegion(BaseClass, GetDBClass):
 
     def get_id():
         return PaxminerRegion.schema_name
-
-
-# mapper_registry.map_imperatively(PaxminerRegion, paxminer_region)

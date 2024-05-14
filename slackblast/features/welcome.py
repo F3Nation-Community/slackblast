@@ -33,11 +33,12 @@ def build_welcome_config_form(body: dict, client: WebClient, logger: Logger, con
         client=client,
         trigger_id=safe_get(body, "trigger_id"),
         callback_id=actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID,
-        title_text="FNG Welcome Config",
+        title_text="Welcomebot Settings",
         new_or_add="add",
     )
 
 
+# eventually will not need this when we take out the /config-welcome-message command
 def build_welcome_message_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     update_view_id = safe_get(body, actions.LOADING_ID)
     welcome_message_config_form = copy.deepcopy(forms.WELCOME_MESSAGE_CONFIG_FORM)
@@ -55,7 +56,7 @@ def build_welcome_message_form(body: dict, client: WebClient, logger: Logger, co
         client=client,
         view_id=update_view_id,
         callback_id=actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID,
-        title_text="FNG Welcome Config",
+        title_text="Welcomebot Settings",
         parent_metadata=None,
     )
 

@@ -1,26 +1,17 @@
 import copy
 from datetime import datetime
 from logging import Logger
-from typing import Optional
 
 import pytz
 from slack_sdk.web import WebClient
-from sqlalchemy import Integer
 from sqlalchemy.exc import ProgrammingError
-from sqlalchemy.orm import Mapped, mapped_column
 
 from utilities import constants
 from utilities.database import DbManager
 from utilities.database.orm import (
     AchievementsAwarded,
     AchievementsList,
-    BaseClass,
-    GetDBClass,
     Region,
-    intpk,
-    str45,
-    str100,
-    tinyint1,
 )
 from utilities.helper_functions import (
     safe_get,
@@ -28,25 +19,6 @@ from utilities.helper_functions import (
 )
 from utilities.slack import actions, forms
 from utilities.slack import orm as slack_orm
-
-
-class WeaselbotRegions(BaseClass, GetDBClass):
-    __tablename__ = "regions_copy"
-    id: Mapped[intpk]
-    paxminer_schema: Mapped[str100]
-    slack_token: Mapped[str100]
-    send_achievements: Mapped[tinyint1]
-    send_aoq_reports: Mapped[tinyint1]
-    achievement_channel: Mapped[str100]
-    default_siteq: Mapped[Optional[str45]]
-    NO_POST_THRESHOLD: Mapped[int] = mapped_column(Integer, default=2)
-    REMINDER_WEEKS: Mapped[int] = mapped_column(Integer, default=2)
-    HOME_AO_CAPTURE: Mapped[int] = mapped_column(Integer, default=8)
-    NO_Q_THRESHOLD_WEEKS: Mapped[int] = mapped_column(Integer, default=4)
-    NO_Q_THRESHOLD_POSTS: Mapped[int] = mapped_column(Integer, default=4)
-
-    def get_id():
-        return WeaselbotRegions.id
 
 
 def build_achievement_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
@@ -117,24 +89,9 @@ def handle_achievements_tag(body: dict, client: WebClient, logger: Logger, conte
     achievement_name = achievement_info.name
     achievement_verb = achievement_info.verb
 
-    paxminer_schema = region_record.paxminer_schema
-    if paxminer_schema:
-        weaselbot_region_info = safe_get(
-            DbManager.find_records(
-                cls=WeaselbotRegions,
-                filters=[WeaselbotRegions.paxminer_schema == paxminer_schema],
-                schema="weaselbot",
-            ),
-            0,
-        )
-        if weaselbot_region_info:
-            achievement_channel = weaselbot_region_info.achievement_channel
-        else:
-            achievement_channel = None
-
     # Get all achievements for the year
     pax_awards = DbManager.find_records(
-        schema=paxminer_schema,
+        schema=region_record.paxminer_schema,
         cls=AchievementsAwarded,
         filters=[
             AchievementsAwarded.pax_id.in_(achievement_pax_list),
@@ -159,9 +116,9 @@ def handle_achievements_tag(body: dict, client: WebClient, logger: Logger, conte
             msg += f" and #{pax_awards_this_achievement[pax]+1} time this year for this achievement."
         else:
             msg += "."
-        client.chat_postMessage(channel=achievement_channel, text=msg)
+        client.chat_postMessage(channel=region_record.achievement_channel, text=msg)
         DbManager.create_record(
-            schema=paxminer_schema,
+            schema=region_record.paxminer_schema,
             record=AchievementsAwarded(
                 pax_id=pax,
                 date_awarded=achievement_date,
