@@ -128,3 +128,11 @@ WELCOME_MESSAGE_TEMPLATES = [
 MAX_HEIC_SIZE = 1000
 
 ERROR_FORM_MESSAGE_TEMPLATE = ":warning: Sorry, the following error occurred:\n\n```{error}```"
+
+PAXMINER_REPORT_DICT = {
+    "send_pax_charts": "pax_charts",
+    "send_ao_leaderboard": "ao_leaderboard",
+    "send_q_charts": "q_charts",
+    "send_region_leaderboard": "region_leaderboard",
+    "send_region_stats": "region_stats",
+}

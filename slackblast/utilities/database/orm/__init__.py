@@ -253,8 +253,11 @@ paxminer_region = Table(
 )
 
 
-class PaxminerRegion:
-    pass
+class PaxminerRegion(BaseClass, GetDBClass):
+    __table__ = paxminer_region
+
+    def get_id():
+        return PaxminerRegion.schema_name
 
 
-mapper_registry.map_imperatively(PaxminerRegion, paxminer_region)
+# mapper_registry.map_imperatively(PaxminerRegion, paxminer_region)

@@ -343,8 +343,28 @@ class ChannelsSelectElement(BaseElement):
 
 
 @dataclass
+class MultiChannelsSelectElement(BaseElement):
+    initial_value: List[str] = None
+
+    def get_selected_value(self, input_data, action):
+        return safe_get(input_data, action, action, "selected_channels")
+
+    def as_form_field(self, action: str):
+        j = {
+            "type": "multi_channels_select",
+            "action_id": action,
+        }
+        if self.placeholder:
+            j.update(self.make_placeholder_field())
+        if self.initial_value:
+            j["initial_channels"] = self.initial_value
+        return j
+
+
+@dataclass
 class ConversationsSelectElement(BaseElement):
     initial_value: str = None
+    filter: List[str] = None
 
     def get_selected_value(self, input_data, action):
         return safe_get(input_data, action, action, "selected_conversation")
@@ -358,6 +378,8 @@ class ConversationsSelectElement(BaseElement):
             j.update(self.make_placeholder_field())
         if self.initial_value:
             j["initial_conversation"] = self.initial_value
+        if self.filter:
+            j["filter"] = {"include": self.filter}
         return j
 
 

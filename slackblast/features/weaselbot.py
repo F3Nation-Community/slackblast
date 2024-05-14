@@ -24,6 +24,7 @@ from utilities.database.orm import (
 )
 from utilities.helper_functions import (
     safe_get,
+    update_local_region_records,
 )
 from utilities.slack import actions, forms
 from utilities.slack import orm as slack_orm
@@ -176,32 +177,52 @@ def build_config_form(body: dict, client: WebClient, logger: Logger, context: di
     callback_id = actions.WEASELBOT_CONFIG_CALLBACK_ID
     trigger_id = safe_get(body, "trigger_id")
 
-    initial_features = []
-    if region_record.send_achievements:
-        initial_features.append("achievements")
-    if region_record.send_aoq_reports:
-        initial_features.append("kotter_reports")
+    try:
+        weaselbot_achievements = DbManager.find_records(
+            cls=AchievementsList,
+            filters=[True],
+            schema=region_record.paxminer_schema,
+        )
+    except ProgrammingError:
+        weaselbot_achievements = None
 
-    config_form.set_initial_values(
-        {
-            actions.WEASELBOT_ENABLE_FEATURES: initial_features,
-            actions.WEASELBOT_ACHIEVEMENT_CHANNEL: region_record.achievement_channel,
-            actions.WEASELBOT_KOTTER_CHANNEL: region_record.default_siteq,
-            actions.WEASELBOT_KOTTER_WEEKS: region_record.NO_POST_THRESHOLD,
-            actions.WEASELBOT_KOTTER_REMOVE_WEEKS: region_record.REMINDER_WEEKS,
-            actions.WEASELBOT_HOME_AO_WEEKS: region_record.HOME_AO_CAPTURE,
-            actions.WEASELBOT_Q_WEEKS: region_record.NO_Q_THRESHOLD_WEEKS,
-            actions.WEASELBOT_Q_POSTS: region_record.NO_Q_THRESHOLD_POSTS,
-        }
-    )
+    if not weaselbot_achievements:
+        config_form = copy.deepcopy(forms.NO_WEASELBOT_CONFIG_FORM)
+        config_form.post_modal(
+            client=client,
+            trigger_id=trigger_id,
+            callback_id=callback_id,
+            new_or_add="add",
+            title_text="Weaselbot Settings",
+            submit_button_text="None",
+        )
+    else:
+        initial_features = []
+        if region_record.send_achievements:
+            initial_features.append("achievements")
+        if region_record.send_aoq_reports:
+            initial_features.append("kotter_reports")
 
-    config_form.post_modal(
-        client=client,
-        trigger_id=trigger_id,
-        callback_id=callback_id,
-        new_or_add="add",
-        title_text="Weaselbot Configuration",
-    )
+        config_form.set_initial_values(
+            {
+                actions.WEASELBOT_ENABLE_FEATURES: initial_features,
+                actions.WEASELBOT_ACHIEVEMENT_CHANNEL: region_record.achievement_channel,
+                actions.WEASELBOT_KOTTER_CHANNEL: region_record.default_siteq,
+                actions.WEASELBOT_KOTTER_WEEKS: region_record.NO_POST_THRESHOLD,
+                actions.WEASELBOT_KOTTER_REMOVE_WEEKS: region_record.REMINDER_WEEKS,
+                actions.WEASELBOT_HOME_AO_WEEKS: region_record.HOME_AO_CAPTURE,
+                actions.WEASELBOT_Q_WEEKS: region_record.NO_Q_THRESHOLD_WEEKS,
+                actions.WEASELBOT_Q_POSTS: region_record.NO_Q_THRESHOLD_POSTS,
+            }
+        )
+
+        config_form.post_modal(
+            client=client,
+            trigger_id=trigger_id,
+            callback_id=callback_id,
+            new_or_add="add",
+            title_text="Weaselbot Settings",
+        )
 
 
 def handle_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
@@ -226,3 +247,4 @@ def handle_config_form(body: dict, client: WebClient, logger: Logger, context: d
         id=context["team_id"],
         fields=fields,
     )
+    update_local_region_records()
