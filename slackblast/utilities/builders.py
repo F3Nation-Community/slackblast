@@ -2,6 +2,7 @@ import copy
 from logging import Logger
 
 from slack_sdk.web import WebClient
+
 from utilities import constants
 from utilities.database.orm import Region
 from utilities.helper_functions import safe_get
