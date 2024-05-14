@@ -5,9 +5,10 @@ import re
 import traceback
 from typing import Callable, Tuple
 
-from features import strava
 from slack_bolt import App
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
+
+from features import strava
 from utilities.builders import add_loading_form, send_error_response
 from utilities.constants import LOCAL_DEVELOPMENT
 from utilities.database.orm import Region
@@ -64,7 +65,7 @@ def main_response(body, logger, client, ack, context):
         except Exception as exc:
             logger.info("sending error response")
             tb_str = "".join(traceback.format_exception(None, exc, exc.__traceback__))
-            send_error_response(body=body, client=client, error=tb_str)
+            send_error_response(body=body, client=client, error=str(exc)[:3000])
             logger.error(tb_str)
     else:
         logger.error(

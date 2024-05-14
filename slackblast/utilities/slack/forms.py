@@ -1,5 +1,6 @@
-from utilities.slack import orm, actions
 from utilities import constants
+from utilities.database.orm import PaxminerRegion
+from utilities.slack import actions, orm
 
 BACKBLAST_FORM = orm.BlockView(
     blocks=[
@@ -189,22 +190,36 @@ CONFIG_FORM = orm.BlockView(
         orm.ActionsBlock(
             elements=[
                 orm.ButtonElement(
-                    label="Enable / Edit Custom Fields",
+                    label=":gear: General Settings",
+                    action=actions.CONFIG_GENERAL,
+                ),
+                orm.ButtonElement(
+                    label=":email: Email Settings",
+                    action=actions.CONFIG_EMAIL,
+                ),
+                orm.ButtonElement(
+                    label=":bar_chart: Custom Field Settings",
                     action=actions.CONFIG_CUSTOM_FIELDS,
                 ),
+                orm.ButtonElement(
+                    label=":speech_balloon: Welcomebot Settings",
+                    action=actions.CONFIG_WELCOME_MESSAGE,
+                ),
+                # orm.ButtonElement(
+                #     label=":robot_face: Weaselbot Settings",
+                #     action=actions.CONFIG_WEASELBOT,
+                # ),
+                # orm.ButtonElement(
+                #     label=":pick: Paxminer Settings",
+                #     action=actions.CONFIG_PAXMINER,
+                # ),
             ],
         ),
-        orm.DividerBlock(),
-        orm.InputBlock(
-            label="Enable Strava Integration?",
-            action=actions.CONFIG_ENABLE_STRAVA,
-            optional=False,
-            element=orm.RadioButtonsElement(
-                initial_value="no",
-                options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
-            ),
-        ),
-        orm.DividerBlock(),
+    ]
+)
+
+CONFIG_EMAIL_FORM = orm.BlockView(
+    [
         orm.InputBlock(
             label="Slackblast Email",
             action=actions.CONFIG_EMAIL_ENABLE,
@@ -213,7 +228,6 @@ CONFIG_FORM = orm.BlockView(
                 initial_value="disable",
                 options=orm.as_selector_options(names=["Enable Email", "Disable Email"], values=["enable", "disable"]),
             ),
-            dispatch_action=True,
         ),
         orm.InputBlock(
             label="Show email option in form?",
@@ -276,6 +290,20 @@ CONFIG_FORM = orm.BlockView(
             element=orm.ContextElement(
                 initial_value="This will put the AO name as a category for the post, and will put PAX names at the end"
                 "as tags.",
+            ),
+        ),
+    ]
+)
+
+CONFIG_GENERAL_FORM = orm.BlockView(
+    [
+        orm.InputBlock(
+            label="Enable Strava Integration?",
+            action=actions.CONFIG_ENABLE_STRAVA,
+            optional=False,
+            element=orm.RadioButtonsElement(
+                initial_value="no",
+                options=orm.as_selector_options(names=["Enable", "Disable"], values=["enable", "disable"]),
             ),
         ),
         orm.DividerBlock(),
@@ -343,8 +371,8 @@ WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
         orm.ContextBlock(
             element=orm.ContextElement(
                 initial_value="*This content will be sent to any new user who joins this Slack workspace.*\n\n"
-                + "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your region and how you use Slack.\n"
-                + "Who should they reach out to if they have a question? What channels should they join? What does HC mean and "
+                + "This is a good time to tell an FNG or long-time Slack hold out what they need to know about your region and how you use Slack.\n"  # noqa: E501
+                + "Who should they reach out to if they have a question? What channels should they join? What does HC mean and "  # noqa: E501
                 + "how do they do that? Should their Slack handle be their F3 name?",
             ),
         ),
@@ -448,7 +476,7 @@ LOADING_FORM = orm.BlockView(
         orm.ContextBlock(
             action="loading_context",
             element=orm.ContextElement(
-                initial_value="If this form does not update after a few seconds, an error may have occured. Please try again.",
+                initial_value="If this form does not update after a few seconds, an error may have occured. Please try again.",  # noqa: E501
             ),
         ),
     ]
@@ -470,7 +498,7 @@ ACHIEVEMENT_FORM = orm.BlockView(
         ),
         orm.ContextBlock(
             element=orm.ContextElement(
-                initial_value="Don't see the achievement you're looking for? Talk to your Weasel Shaker / Tech Q about getting it added!",
+                initial_value="Don't see the achievement you're looking for? Talk to your Weasel Shaker / Tech Q about getting it added!",  # noqa: E501
             ),
         ),
         orm.InputBlock(
@@ -487,8 +515,140 @@ ACHIEVEMENT_FORM = orm.BlockView(
         ),
         orm.ContextBlock(
             element=orm.ContextElement(
-                initial_value="Please use a date in the period the achievement was earned, as some achievements can be earned for several periods.",
+                initial_value="Please use a date in the period the achievement was earned, as some achievements can be earned for several periods.",  # noqa: E501
             ),
         ),
+    ]
+)
+
+WEASELBOT_CONFIG_FORM = orm.BlockView(
+    blocks=[
+        orm.InputBlock(
+            label="Which Weaselbot features should be enabled?",
+            action=actions.WEASELBOT_ENABLE_FEATURES,
+            element=orm.CheckboxInputElement(
+                options=orm.as_selector_options(
+                    names=["Achievements", "Kotter Reports"],
+                    values=["achievements", "kotter_reports"],
+                )
+            ),
+        ),
+        orm.InputBlock(
+            label="Which channel should achievements be posted to?",
+            action=actions.WEASELBOT_ACHIEVEMENT_CHANNEL,
+            optional=True,
+            element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
+        ),
+        orm.InputBlock(
+            label="Which user or channel should Kotter Reports be posted to?",
+            action=actions.WEASELBOT_KOTTER_CHANNEL,
+            optional=True,
+            element=orm.ConversationsSelectElement(placeholder="Select the user or channel..."),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="Please note that Weaselbot will need to be manually added to private channels if selected.",  # noqa: E501
+            ),
+        ),
+        orm.InputBlock(
+            label="How many weeks of no posting should put a PAX on the Kotter Report?",
+            action=actions.WEASELBOT_KOTTER_WEEKS,
+            optional=True,
+            element=orm.NumberInputElement(placeholder="Enter the number of weeks...", is_decimal_allowed=False),
+        ),
+        orm.InputBlock(
+            label="After how many weeks of no posting should a PAX be removed from the Kotter Report?",
+            action=actions.WEASELBOT_KOTTER_REMOVE_WEEKS,
+            optional=True,
+            element=orm.NumberInputElement(placeholder="Enter the number of weeks...", is_decimal_allowed=False),
+        ),
+        orm.InputBlock(
+            label="How many weeks of activity should be used to base a PAX's home AO?",
+            action=actions.WEASELBOT_HOME_AO_WEEKS,
+            optional=True,
+            element=orm.NumberInputElement(placeholder="Enter the number of weeks...", is_decimal_allowed=False),
+        ),
+        orm.InputBlock(
+            label="After how many weeks of no Qing should a PAX be put on the Q list?",
+            action=actions.WEASELBOT_Q_WEEKS,
+            optional=True,
+            element=orm.NumberInputElement(placeholder="Enter the number of weeks...", is_decimal_allowed=False),
+        ),
+        orm.InputBlock(
+            label="What should be the minimum number of posts over that time to be eligible for the Q list?",
+            action=actions.WEASELBOT_Q_POSTS,
+            optional=True,
+            element=orm.NumberInputElement(placeholder="Enter the number of posts...", is_decimal_allowed=False),
+        ),
+    ]
+)
+
+PAXMINER_REPORT_DICT = {
+    "names": ["PAX Charts", "Q Charts", "AO Leaderboards", "Region Leaderboard", "Region Stats"],
+    "values": ["pax_charts", "q_charts", "ao_leaderboards", "region_leaderboard", "region_stats"],
+    "fields": [
+        "send_pax_charts",
+        "send_q_charts",
+        "send_ao_leaderboard",
+        "send_region_leaderboard",
+        "send_region_stats",
+    ],
+    "schema": [
+        PaxminerRegion.send_pax_charts,
+        PaxminerRegion.send_q_charts,
+        PaxminerRegion.send_ao_leaderboard,
+        PaxminerRegion.send_region_leaderboard,
+        PaxminerRegion.send_region_stats,
+    ],
+}
+
+CONFIG_PAXMINER_FORM = orm.BlockView(
+    blocks=[
+        orm.InputBlock(
+            label="1st F Channel (for reports)",
+            action=actions.CONFIG_PAXMINER_1STF_CHANNEL,
+            optional=False,
+            element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
+        ),
+        orm.InputBlock(
+            label="Which reports should be enabled?",
+            action=actions.CONFIG_PAXMINER_ENABLE_REPORTS,
+            element=orm.CheckboxInputElement(
+                options=orm.as_selector_options(
+                    names=PAXMINER_REPORT_DICT["names"],
+                    values=PAXMINER_REPORT_DICT["values"],
+                )
+            ),
+            optional=False,
+        ),
+        orm.InputBlock(
+            label="Which channels should be scraped by PAXMiner?",
+            action=actions.CONFIG_PAXMINER_SCRAPE_CHANNELS,
+            element=orm.MultiChannelsSelectElement(placeholder="Select some channels..."),
+        ),
+    ]
+)
+
+CONFIG_NO_PAXMINER_FORM = orm.BlockView(
+    blocks=[
+        orm.SectionBlock(
+            label="PAXMiner doesn't appear to be configured for this Slack workspace. Please follow <https://f3stlouis.com/paxminer-setup/|these instructions> to get started!",  # noqa: E501
+        )
+    ]
+)
+
+NO_WEASELBOT_CONFIG_FORM = orm.BlockView(
+    blocks=[
+        orm.SectionBlock(
+            label="Weaselbot and / or PAXMiner doesn't appear to be configured for this Slack workspace. Please follow <https://github.com/F3Nation-Community/weaselbot|these instructions> to get started!",  # noqa: E501
+        )
+    ]
+)
+
+CONFIG_NO_PERMISSIONS_FORM = orm.BlockView(
+    blocks=[
+        orm.SectionBlock(
+            label="You must be a Slack admin to access your Slackblast region settings. Your local Slack admin can follow <https://slack.com/help/articles/218124397-Change-a-members-role|these instructions> to grant you admin access.",  # noqa: E501
+        )
     ]
 )

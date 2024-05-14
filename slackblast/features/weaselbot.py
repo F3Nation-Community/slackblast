@@ -12,17 +12,16 @@ from utilities.database.orm import (
     AchievementsAwarded,
     AchievementsList,
     Region,
-    WeaselbotRegions,
 )
 from utilities.helper_functions import (
     safe_get,
+    update_local_region_records,
 )
 from utilities.slack import actions, forms
 from utilities.slack import orm as slack_orm
 
 
 def build_achievement_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-
     paxminer_schema = region_record.paxminer_schema
     update_view_id = safe_get(body, actions.LOADING_ID)
     achievement_form = copy.deepcopy(forms.ACHIEVEMENT_FORM)
@@ -79,6 +78,7 @@ def build_achievement_form(body: dict, client: WebClient, logger: Logger, contex
         title_text="Tag achievements",
     )
 
+
 def handle_achievements_tag(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     achievement_data = forms.ACHIEVEMENT_FORM.get_selected_values(body)
     achievement_pax_list = safe_get(achievement_data, actions.ACHIEVEMENT_PAX)
@@ -89,24 +89,9 @@ def handle_achievements_tag(body: dict, client: WebClient, logger: Logger, conte
     achievement_name = achievement_info.name
     achievement_verb = achievement_info.verb
 
-    paxminer_schema = region_record.paxminer_schema
-    if paxminer_schema:
-        weaselbot_region_info = safe_get(
-            DbManager.find_records(
-                cls=WeaselbotRegions,
-                filters=[WeaselbotRegions.paxminer_schema == paxminer_schema],
-                schema="weaselbot",
-            ),
-            0,
-        )
-        if weaselbot_region_info:
-            achievement_channel = weaselbot_region_info.achievement_channel
-        else:
-            achievement_channel = None
-
     # Get all achievements for the year
     pax_awards = DbManager.find_records(
-        schema=paxminer_schema,
+        schema=region_record.paxminer_schema,
         cls=AchievementsAwarded,
         filters=[
             AchievementsAwarded.pax_id.in_(achievement_pax_list),
@@ -131,12 +116,92 @@ def handle_achievements_tag(body: dict, client: WebClient, logger: Logger, conte
             msg += f" and #{pax_awards_this_achievement[pax]+1} time this year for this achievement."
         else:
             msg += "."
-        client.chat_postMessage(channel=achievement_channel, text=msg)
+        client.chat_postMessage(channel=region_record.achievement_channel, text=msg)
         DbManager.create_record(
-            schema=paxminer_schema,
+            schema=region_record.paxminer_schema,
             record=AchievementsAwarded(
                 pax_id=pax,
                 date_awarded=achievement_date,
                 achievement_id=achievement_id,
             ),
         )
+
+
+def build_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    # paxminer_schema = region_record.paxminer_schema
+    # update_view_id = safe_get(body, actions.LOADING_ID)
+    config_form = copy.deepcopy(forms.WEASELBOT_CONFIG_FORM)
+    callback_id = actions.WEASELBOT_CONFIG_CALLBACK_ID
+    trigger_id = safe_get(body, "trigger_id")
+
+    try:
+        weaselbot_achievements = DbManager.find_records(
+            cls=AchievementsList,
+            filters=[True],
+            schema=region_record.paxminer_schema,
+        )
+    except ProgrammingError:
+        weaselbot_achievements = None
+
+    if not weaselbot_achievements:
+        config_form = copy.deepcopy(forms.NO_WEASELBOT_CONFIG_FORM)
+        config_form.post_modal(
+            client=client,
+            trigger_id=trigger_id,
+            callback_id=callback_id,
+            new_or_add="add",
+            title_text="Weaselbot Settings",
+            submit_button_text="None",
+        )
+    else:
+        initial_features = []
+        if region_record.send_achievements:
+            initial_features.append("achievements")
+        if region_record.send_aoq_reports:
+            initial_features.append("kotter_reports")
+
+        config_form.set_initial_values(
+            {
+                actions.WEASELBOT_ENABLE_FEATURES: initial_features,
+                actions.WEASELBOT_ACHIEVEMENT_CHANNEL: region_record.achievement_channel,
+                actions.WEASELBOT_KOTTER_CHANNEL: region_record.default_siteq,
+                actions.WEASELBOT_KOTTER_WEEKS: region_record.NO_POST_THRESHOLD,
+                actions.WEASELBOT_KOTTER_REMOVE_WEEKS: region_record.REMINDER_WEEKS,
+                actions.WEASELBOT_HOME_AO_WEEKS: region_record.HOME_AO_CAPTURE,
+                actions.WEASELBOT_Q_WEEKS: region_record.NO_Q_THRESHOLD_WEEKS,
+                actions.WEASELBOT_Q_POSTS: region_record.NO_Q_THRESHOLD_POSTS,
+            }
+        )
+
+        config_form.post_modal(
+            client=client,
+            trigger_id=trigger_id,
+            callback_id=callback_id,
+            new_or_add="add",
+            title_text="Weaselbot Settings",
+        )
+
+
+def handle_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    config_data = forms.WEASELBOT_CONFIG_FORM.get_selected_values(body)
+    fields = {
+        Region.send_achievements: 1
+        if "achievements" in safe_get(config_data, actions.WEASELBOT_ENABLE_FEATURES)
+        else 0,
+        Region.send_aoq_reports: 1
+        if "kotter_reports" in safe_get(config_data, actions.WEASELBOT_ENABLE_FEATURES)
+        else 0,
+        Region.achievement_channel: safe_get(config_data, actions.WEASELBOT_ACHIEVEMENT_CHANNEL),
+        Region.default_siteq: safe_get(config_data, actions.WEASELBOT_KOTTER_CHANNEL),
+        Region.NO_POST_THRESHOLD: safe_get(config_data, actions.WEASELBOT_KOTTER_WEEKS),
+        Region.REMINDER_WEEKS: safe_get(config_data, actions.WEASELBOT_KOTTER_REMOVE_WEEKS),
+        Region.HOME_AO_CAPTURE: safe_get(config_data, actions.WEASELBOT_HOME_AO_WEEKS),
+        Region.NO_Q_THRESHOLD_WEEKS: safe_get(config_data, actions.WEASELBOT_Q_WEEKS),
+        Region.NO_Q_THRESHOLD_POSTS: safe_get(config_data, actions.WEASELBOT_Q_POSTS),
+    }
+    DbManager.update_record(
+        cls=Region,
+        id=context["team_id"],
+        fields=fields,
+    )
+    update_local_region_records()

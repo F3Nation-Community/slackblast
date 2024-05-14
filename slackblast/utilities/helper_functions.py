@@ -89,7 +89,7 @@ def get_channel_names(
 
     else:
         for channel_id in array_of_channel_ids:
-            channel_info_dict = client.channels_info(channel=channel_id)
+            channel_info_dict = client.conversations_info(channel=channel_id)
             channel_name = safe_get(channel_info_dict, "channel", "name") or None
             if channel_name:
                 names.append(channel_name)
@@ -247,6 +247,7 @@ def get_paxminer_schema(team_id: str, logger) -> str:
         paxminer_dict = pickle.load(f)
 
     paxminer_schema = safe_get(paxminer_dict, team_id)
+    slack_response = None
     if paxminer_schema:
         logger.debug(f"PAXMiner schema for {team_id} is {paxminer_schema}")
         return paxminer_schema
@@ -276,9 +277,9 @@ def get_paxminer_schema(team_id: str, logger) -> str:
                 logger.debug("No AOs table, skipping...")
                 continue
 
-            pm_team_id = slack_response["channel"]["shared_team_ids"][0]
+            pm_team_id = safe_get(slack_response, "channel", "shared_team_ids", 0)
             if team_id == pm_team_id:
-                logger.debug(f'PAXMiner schema for {team_id} is {region.schema_name}')
+                logger.debug(f"PAXMiner schema for {team_id} is {region.schema_name}")
                 return region.schema_name
 
         logger.debug(f"No PAXMiner schema found for {team_id}")
