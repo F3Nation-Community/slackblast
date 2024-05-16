@@ -25,8 +25,9 @@ from utilities.slack.actions import LOADING_ID
 SlackRequestHandler.clear_all_log_handlers()
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-logger.addHandler(handler)
+if LOCAL_DEVELOPMENT:
+    handler = logging.StreamHandler()
+    logger.addHandler(handler)
 
 app = App(
     process_before_response=not LOCAL_DEVELOPMENT,
