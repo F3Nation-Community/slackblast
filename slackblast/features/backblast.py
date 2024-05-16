@@ -585,7 +585,7 @@ COUNT: {count}
             )
 
             attendance_records = []
-            for pax_id in list(set(pax) | set(the_coq or []) | set(the_q)):
+            for pax_id in list(set(pax) | set(the_coq or []) | {the_q}):
                 attendance_records.append(
                     Attendance(
                         timestamp=message_ts or res["ts"],
