@@ -136,3 +136,5 @@ PAXMINER_REPORT_DICT = {
     "send_region_leaderboard": "region_leaderboard",
     "send_region_stats": "region_stats",
 }
+
+ALLOWED_BOYBAND_FILETYPES = ["png", "jpg", "heic", "bmp"]

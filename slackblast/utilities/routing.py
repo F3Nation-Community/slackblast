@@ -1,4 +1,6 @@
-from features import backblast, config, custom_fields, preblast, strava, weaselbot, welcome
+from features import config, custom_fields, preblast, strava, weaselbot, welcome
+from features.backblast.build import build_backblast_form
+from features.backblast.handle import handle_backblast_edit_button, handle_backblast_post
 from utilities import announcements, builders
 from utilities.slack import actions
 
@@ -12,8 +14,8 @@ from utilities.slack import actions
 # The boolean value indicates whether a loading modal should be triggered before running the function
 
 COMMAND_MAPPER = {
-    "/backblast": (backblast.build_backblast_form, True),
-    "/slackblast": (backblast.build_backblast_form, True),
+    "/backblast": (build_backblast_form, True),
+    "/slackblast": (build_backblast_form, True),
     "/preblast": (preblast.build_preblast_form, True),
     "/config-welcome-message": (welcome.build_welcome_message_form, True),
     "/config-slackblast": (config.build_config_form, True),
@@ -22,8 +24,8 @@ COMMAND_MAPPER = {
 }
 
 VIEW_MAPPER = {
-    actions.BACKBLAST_CALLBACK_ID: (backblast.handle_backblast_post, False),
-    actions.BACKBLAST_EDIT_CALLBACK_ID: (backblast.handle_backblast_post, False),
+    actions.BACKBLAST_CALLBACK_ID: (handle_backblast_post, False),
+    actions.BACKBLAST_EDIT_CALLBACK_ID: (handle_backblast_post, False),
     actions.PREBLAST_CALLBACK_ID: (preblast.handle_preblast_post, False),
     actions.PREBLAST_EDIT_CALLBACK_ID: (preblast.handle_preblast_post, False),
     actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID: (welcome.handle_welcome_message_config_post, False),
@@ -38,13 +40,13 @@ VIEW_MAPPER = {
 }
 
 ACTION_MAPPER = {
-    actions.BACKBLAST_EDIT_BUTTON: (backblast.handle_backblast_edit_button, True),
-    actions.BACKBLAST_NEW_BUTTON: (backblast.build_backblast_form, True),
+    actions.BACKBLAST_EDIT_BUTTON: (handle_backblast_edit_button, True),
+    actions.BACKBLAST_NEW_BUTTON: (build_backblast_form, True),
     actions.BACKBLAST_STRAVA_BUTTON: (strava.build_strava_form, True),
     actions.STRAVA_ACTIVITY_BUTTON: (strava.build_strava_modify_form, False),
-    actions.BACKBLAST_AO: (backblast.build_backblast_form, False),
-    actions.BACKBLAST_DATE: (backblast.build_backblast_form, False),
-    actions.BACKBLAST_Q: (backblast.build_backblast_form, False),
+    actions.BACKBLAST_AO: (build_backblast_form, False),
+    actions.BACKBLAST_DATE: (build_backblast_form, False),
+    actions.BACKBLAST_Q: (build_backblast_form, False),
     # actions.CONFIG_EMAIL_ENABLE: (config.build_config_form, False),
     actions.STRAVA_CONNECT_BUTTON: (builders.ignore_event, False),
     actions.CONFIG_CUSTOM_FIELDS: (custom_fields.build_custom_field_menu, False),
