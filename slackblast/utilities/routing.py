@@ -1,4 +1,6 @@
-from features import backblast, calendar, config, custom_fields, preblast, strava, weaselbot, welcome
+from features import backblast, config, custom_fields, preblast, strava, weaselbot, welcome
+from features.calendar.config.build import build_calendar_config_form
+from features.calendar.location.build import build_location_add_form, handle_location_add
 from utilities import announcements, builders
 from utilities.slack import actions
 
@@ -35,6 +37,7 @@ VIEW_MAPPER = {
     actions.ACHIEVEMENT_CALLBACK_ID: (weaselbot.handle_achievements_tag, False),
     actions.WEASELBOT_CONFIG_CALLBACK_ID: (weaselbot.handle_config_form, False),
     actions.CONFIG_PAXMINER_CALLBACK_ID: (config.handle_config_paxminer_post, False),
+    actions.ADD_LOCATION_CALLBACK_ID: (handle_location_add, False),
 }
 
 ACTION_MAPPER = {
@@ -59,7 +62,8 @@ ACTION_MAPPER = {
     actions.CONFIG_GENERAL: (config.build_config_general_form, False),
     actions.CONFIG_WELCOME_MESSAGE: (welcome.build_welcome_config_form, False),
     actions.CONFIG_PAXMINER: (config.build_config_paxminer_form, False),
-    actions.CONFIG_CALENDAR: (calendar.build_calendar_config_form, False),
+    actions.CONFIG_CALENDAR: (build_calendar_config_form, False),
+    actions.CALENDAR_ADD_LOCATION: (build_location_add_form, False),
 }
 
 VIEW_CLOSED_MAPPER = {
