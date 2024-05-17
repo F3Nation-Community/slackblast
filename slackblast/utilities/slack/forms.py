@@ -213,6 +213,10 @@ CONFIG_FORM = orm.BlockView(
                 #     label=":pick: Paxminer Settings",
                 #     action=actions.CONFIG_PAXMINER,
                 # ),
+                orm.ButtonElement(
+                    label=":date: Calendar Settings",
+                    action=actions.CONFIG_CALENDAR,
+                ),
             ],
         ),
     ]

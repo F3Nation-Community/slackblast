@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Any, Optional
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table
-from sqlalchemy.dialects.mysql import DATE, JSON, LONGTEXT, TEXT, TINYINT
+from sqlalchemy.dialects.mysql import BLOB, DATE, JSON, LONGTEXT, TEXT, TINYINT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, registry
 from typing_extensions import Annotated
 
@@ -24,6 +24,7 @@ dt_create = Annotated[datetime, mapped_column(DateTime, default=datetime.utcnow)
 dt_update = Annotated[datetime, mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)]
 str45pk = Annotated[str, mapped_column(String(45), primary_key=True)]
 datepk = Annotated[date, mapped_column(DATE, primary_key=True)]
+blob = Annotated[bytes, BLOB]
 
 
 class BaseClass(DeclarativeBase):
@@ -223,3 +224,101 @@ class PaxminerRegion(BaseClass, GetDBClass):
 
     def get_id():
         return PaxminerRegion.schema_name
+
+
+class Event(BaseClass, GetDBClass):
+    __tablename__ = "events"
+
+    id: Mapped[intpk]
+    org_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
+    location_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("locations.id"))
+    event_type_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("event_types.id"))
+    series_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("events.id"))
+    is_series: Mapped[bool]
+    start_time: Mapped[Optional[datetime]]
+    end_time: Mapped[Optional[datetime]]
+    day_of_week: Mapped[Optional[int]]
+    name: Mapped[str]
+    description: Mapped[Optional[str]]
+    recurrence_pattern: Mapped[Optional[str30]]
+    recurrence_interval: Mapped[Optional[int]]
+    index_within_interval: Mapped[Optional[int]]
+    pax_count: Mapped[Optional[int]]
+    fng_count: Mapped[Optional[int]]
+    preblast: Mapped[Optional[longtext]]
+    backblast: Mapped[Optional[longtext]]
+    meta: Mapped[Optional[dict[str, Any]]]
+
+
+class EventType(BaseClass, GetDBClass):
+    __tablename__ = "event_types"
+
+    id: Mapped[intpk]
+    name: Mapped[str]
+    category_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_categories.id"))
+    description: Mapped[Optional[str]]
+
+
+class EventCategory(BaseClass, GetDBClass):
+    __tablename__ = "event_categories"
+
+    id: Mapped[intpk]
+    name: Mapped[str]
+    description: Mapped[Optional[str]]
+
+
+class Location(BaseClass, GetDBClass):
+    __tablename__ = "locations"
+
+    id: Mapped[intpk]
+    name: Mapped[str]
+    description: Mapped[Optional[str]]
+    lat: Mapped[Optional[float]]
+    lon: Mapped[Optional[float]]
+    meta: Mapped[Optional[dict[str, Any]]]
+
+
+class AttendanceNew(BaseClass, GetDBClass):
+    __tablename__ = "attendance"
+
+    id: Mapped[intpk]
+    event_id: Mapped[int] = mapped_column(Integer, ForeignKey("events.id"))
+    user_id: Mapped[Optional[int]]
+    attendance_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("attendance_types.id"))
+    is_planned: Mapped[bool]
+    meta: Mapped[Optional[dict[str, Any]]]
+
+
+class AttendanceType(BaseClass, GetDBClass):
+    __tablename__ = "attendance_types"
+
+    id: Mapped[intpk]
+    type: Mapped[str]
+    description: Mapped[Optional[str]]
+
+
+class Org(BaseClass, GetDBClass):
+    __tablename__ = "orgs"
+
+    id: Mapped[intpk]
+    parent_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
+    org_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("org_types.id"))
+    name: Mapped[str]
+    description: Mapped[Optional[str]]
+    logo: Mapped[Optional[blob]]
+    website: Mapped[Optional[str]]
+    email: Mapped[Optional[str]]
+    twitter: Mapped[Optional[str]]
+    facebook: Mapped[Optional[str]]
+    instagram: Mapped[Optional[str]]
+    slack_id: Mapped[Optional[str]]
+    slack_app_settings: Mapped[Optional[dict[str, Any]]]
+    last_annual_review: Mapped[Optional[date]]
+    meta: Mapped[Optional[dict[str, Any]]]
+
+
+class OrgType(BaseClass, GetDBClass):
+    __tablename__ = "org_types"
+
+    id: Mapped[intpk]
+    name: Mapped[str]

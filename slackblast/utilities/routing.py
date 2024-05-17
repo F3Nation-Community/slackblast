@@ -1,4 +1,4 @@
-from features import backblast, config, custom_fields, preblast, strava, weaselbot, welcome
+from features import backblast, calendar, config, custom_fields, preblast, strava, weaselbot, welcome
 from utilities import announcements, builders
 from utilities.slack import actions
 
@@ -59,6 +59,7 @@ ACTION_MAPPER = {
     actions.CONFIG_GENERAL: (config.build_config_general_form, False),
     actions.CONFIG_WELCOME_MESSAGE: (welcome.build_welcome_config_form, False),
     actions.CONFIG_PAXMINER: (config.build_config_paxminer_form, False),
+    actions.CONFIG_CALENDAR: (calendar.build_calendar_config_form, False),
 }
 
 VIEW_CLOSED_MAPPER = {

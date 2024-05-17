@@ -21,7 +21,7 @@ def create_tables():
     logger.info("Creating schemas and tables...")
 
     schema_table_map = {
-        "slackblast": [orm.Region, orm.User],
+        "slackblast": [orm.Region, orm.User, orm.OrgType],
         "f3devregion": [
             orm.Backblast,
             orm.Attendance,
@@ -104,6 +104,32 @@ def initialize_tables():
         )
     ]
 
+    org_type_list = [
+        orm.OrgType(id=1, name="AO"),
+        orm.OrgType(id=2, name="Region"),
+        orm.OrgType(id=3, name="Area"),
+        orm.OrgType(id=4, name="Sector"),
+    ]
+
+    event_category_list = [
+        orm.EventCategory(id=1, name="1st F - Core Workout"),
+        orm.EventCategory(id=2, name="2nd F - Fellowship"),
+        orm.EventCategory(id=3, name="3rd F - Faith"),
+    ]
+
+    event_type_list = [
+        orm.EventType(id=1, name="Bootcamp", category_id=1),
+        orm.EventType(id=2, name="Run", category_id=1),
+        orm.EventType(id=3, name="Ruck", category_id=1),
+        orm.EventType(id=4, name="QSource", category_id=3),
+    ]
+
+    attendance_type_list = [
+        orm.AttendanceType(id=1, name="PAX"),
+        orm.AttendanceType(id=2, name="Q"),
+        orm.AttendanceType(id=3, name="Co-Q"),
+    ]
+
     session = get_session(schema="f3devregion")
     session.add_all(ao_list)
     session.add_all(user_list)
@@ -113,6 +139,14 @@ def initialize_tables():
 
     session = get_session(schema="paxminer")
     session.add_all(paxminer_region)
+    session.commit()
+    session.close()
+
+    session = get_session(schema="slackblast")
+    session.add_all(org_type_list)
+    session.add_all(event_category_list)
+    session.add_all(event_type_list)
+    session.add_all(attendance_type_list)
     session.commit()
     session.close()
 
