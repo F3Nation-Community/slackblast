@@ -31,6 +31,7 @@ from utilities.slack import orm as slack_orm
 
 register_heif_opener()
 
+
 def add_custom_field_blocks(form: slack_orm.BlockView, region_record: Region) -> slack_orm.BlockView:
     output_form = copy.deepcopy(form)
     for custom_field in (region_record.custom_fields or {}).values():
@@ -46,14 +47,14 @@ def add_custom_field_blocks(form: slack_orm.BlockView, region_record: Region) ->
             if safe_get(custom_field, "type") == "Dropdown":
                 output_form.set_options(
                     {
-                        actions.CUSTOM_FIELD_PREFIX
-                        + custom_field["name"]: slack_orm.as_selector_options(
+                        actions.CUSTOM_FIELD_PREFIX + custom_field["name"]: slack_orm.as_selector_options(
                             names=custom_field["options"],
                             values=custom_field["options"],
                         )
                     }
                 )
     return output_form
+
 
 def build_backblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     """This function builds the backblast form and posts it to Slack. There are several entry points for this function:
@@ -108,7 +109,9 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
     elif (safe_get(body, "view", "callback_id") == actions.BACKBLAST_EDIT_CALLBACK_ID) or (
         safe_get(body, "actions", 0, "action_id") == actions.BACKBLAST_EDIT_BUTTON
     ):
-        initial_backblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
+        initial_backblast_data = safe_get(body, "message", "metadata", "event_payload") or json.loads(
+            safe_get(body, "actions", 0, "value") or "{}"
+        )
         if not safe_get(initial_backblast_data, actions.BACKBLAST_MOLESKIN):
             moleskin_block = safe_get(body, "message", "blocks", 1)
             if moleskin_block.get("type") == "section":
@@ -222,6 +225,7 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
             title_text="Backblast",
             parent_metadata=backblast_metadata,
         )
+
 
 def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     create_or_edit = "create" if safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID else "edit"
@@ -422,7 +426,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                     "text": ":pencil: Edit this backblast",
                     "emoji": True,
                 },
-                "value": json.dumps(backblast_data),
+                "value": "edit",
                 "action_id": actions.BACKBLAST_EDIT_BUTTON,
             },
             {
@@ -480,6 +484,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                 username=f"{q_name} (via Slackblast)",
                 icon_url=q_url,
                 blocks=blocks,
+                metadata={"event_type": "backblast", "event_payload": backblast_data},
             )
         logger.debug("\nMessage posted to Slack! \n{}".format(post_msg))
         print(json.dumps({"event_type": "successful_slack_post", "team_name": region_record.workspace_name}))
@@ -537,6 +542,7 @@ COUNT: {count}
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
             blocks=blocks,
+            metadata={"event_type": "backblast", "event_payload": backblast_data},
         )
         logger.debug("\nBackblast updated in Slack! \n{}".format(post_msg))
         print(json.dumps({"event_type": "successful_slack_edit", "team_name": region_record.workspace_name}))
@@ -579,7 +585,7 @@ COUNT: {count}
             )
 
             attendance_records = []
-            for pax_id in list(set(pax) | set(the_coq or []) | set(the_q)):
+            for pax_id in list(set(pax) | set(the_coq or []) | {the_q}):
                 attendance_records.append(
                     Attendance(
                         timestamp=message_ts or res["ts"],
@@ -625,11 +631,14 @@ COUNT: {count}
         except Exception as e:
             logger.error(f"Error removing file: {e}")
 
+
 def handle_backblast_edit_button(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
 
-    backblast_data = json.loads(safe_get(body, "actions", 0, "value") or "{}")
+    backblast_data = safe_get(body, "message", "metadata", "event_payload") or json.loads(
+        safe_get(body, "actions", 0, "value") or "{}"
+    )
 
     user_info_dict = client.users_info(user=user_id)
     user_admin: bool = user_info_dict["user"]["is_admin"]

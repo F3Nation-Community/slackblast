@@ -1,8 +1,9 @@
 import json
-from typing import Any, List, Dict
-from dataclasses import dataclass, field
-from utilities.helper_functions import safe_get
 import re
+from dataclasses import dataclass, field
+from typing import Any, Dict, List
+
+from utilities.helper_functions import safe_get
 
 
 @dataclass
@@ -172,7 +173,7 @@ class SelectorOption:
     description: str = None
 
 
-def as_selector_options(names: List[str], values: List[str] = [], descriptions: List[str] = []) -> List[SelectorOption]:
+def as_selector_options(names: List[str], values: List[str] = [], descriptions: List[str] = []) -> List[SelectorOption]:  # noqa: B006
     if values == [] and descriptions == []:
         selectors = [SelectorOption(name=x, value=x) for x in names]
     elif values == []:
@@ -342,6 +343,47 @@ class ChannelsSelectElement(BaseElement):
 
 
 @dataclass
+class MultiChannelsSelectElement(BaseElement):
+    initial_value: List[str] = None
+
+    def get_selected_value(self, input_data, action):
+        return safe_get(input_data, action, action, "selected_channels")
+
+    def as_form_field(self, action: str):
+        j = {
+            "type": "multi_channels_select",
+            "action_id": action,
+        }
+        if self.placeholder:
+            j.update(self.make_placeholder_field())
+        if self.initial_value:
+            j["initial_channels"] = self.initial_value
+        return j
+
+
+@dataclass
+class ConversationsSelectElement(BaseElement):
+    initial_value: str = None
+    filter: List[str] = None
+
+    def get_selected_value(self, input_data, action):
+        return safe_get(input_data, action, action, "selected_conversation")
+
+    def as_form_field(self, action: str):
+        j = {
+            "type": "conversations_select",
+            "action_id": action,
+        }
+        if self.placeholder:
+            j.update(self.make_placeholder_field())
+        if self.initial_value:
+            j["initial_conversation"] = self.initial_value
+        if self.filter:
+            j["filter"] = {"include": self.filter}
+        return j
+
+
+@dataclass
 class DatepickerElement(BaseElement):
     initial_value: str = None
 
@@ -435,6 +477,39 @@ class FileInputElement(BaseElement):
         if self.filetypes:
             j["filetypes"] = self.filetypes
         return j
+
+
+@dataclass
+class CheckboxInputElement(BaseElement):
+    initial_value: List[str] = None
+    options: List[SelectorOption] = None
+
+    def get_selected_value(self, input_data, action):
+        return [o["value"] for o in safe_get(input_data, action, action, "selected_options")]
+
+    def as_form_field(self, action: str):
+        if not self.options:
+            self.options = as_selector_options(["Default"])
+
+        option_elements = [self.__make_option(o) for o in self.options]
+        j = {
+            "type": "checkboxes",
+            "options": option_elements,
+            "action_id": action,
+        }
+
+        initial_options = []
+        if self.initial_value:
+            initial_options = [x for x in option_elements if x["value"] in self.initial_value]
+            if initial_options:
+                j["initial_options"] = initial_options
+        return j
+
+    def __make_option(self, option: SelectorOption):
+        return {
+            "text": {"type": "plain_text", "text": option.name, "emoji": True},
+            "value": option.value,
+        }
 
 
 @dataclass

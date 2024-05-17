@@ -1,4 +1,3 @@
-
 import copy
 import json
 import random
@@ -18,6 +17,28 @@ from utilities.helper_functions import (
 from utilities.slack import actions, forms
 
 
+def build_welcome_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    welcome_message_config_form = copy.deepcopy(forms.WELCOME_MESSAGE_CONFIG_FORM)
+
+    welcome_message_config_form.set_initial_values(
+        {
+            actions.WELCOME_DM_TEMPLATE: region_record.welcome_dm_template,
+            actions.WELCOME_DM_ENABLE: "enable" if region_record.welcome_dm_enable else "disable",
+            actions.WELCOME_CHANNEL: region_record.welcome_channel or "",
+            actions.WELCOME_CHANNEL_ENABLE: "enable" if region_record.welcome_channel_enable else "disable",
+        }
+    )
+
+    welcome_message_config_form.post_modal(
+        client=client,
+        trigger_id=safe_get(body, "trigger_id"),
+        callback_id=actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID,
+        title_text="Welcomebot Settings",
+        new_or_add="add",
+    )
+
+
+# eventually will not need this when we take out the /config-welcome-message command
 def build_welcome_message_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     update_view_id = safe_get(body, actions.LOADING_ID)
     welcome_message_config_form = copy.deepcopy(forms.WELCOME_MESSAGE_CONFIG_FORM)
@@ -35,9 +56,10 @@ def build_welcome_message_form(body: dict, client: WebClient, logger: Logger, co
         client=client,
         view_id=update_view_id,
         callback_id=actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID,
-        title_text="FNG Welcome Config",
+        title_text="Welcomebot Settings",
         parent_metadata=None,
     )
+
 
 def handle_welcome_message_config_post(
     body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region
@@ -60,6 +82,7 @@ def handle_welcome_message_config_post(
     )
     update_local_region_records()
     print(json.dumps({"event_type": "successful_config_update", "team_name": region_record.workspace_name}))
+
 
 def handle_team_join(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     welcome_channel = region_record.welcome_channel
