@@ -21,10 +21,15 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
+    # lambda_function_host = (
+    #     safe_get(context, "lambda_request", "headers", "Host") or os.environ[constants.LOCAL_HOST_DOMAIN]
+    # )  # noqa
     lambda_function_host = safe_get(context, "lambda_request", "headers", "Host")
 
     backblast_ts = body["message"]["ts"]
-    backblast_meta = json.loads(body["message"]["blocks"][-1]["elements"][0]["value"])
+    backblast_meta = safe_get(body, "message", "metadata", "event_payload") or json.loads(
+        safe_get(body, "message", "blocks", -1, "elements", 0, "value") or "{}"
+    )
     moleskine = body["message"]["blocks"][1]
     moleskine_text = replace_user_channel_ids(parse_rich_block(moleskine), region_record, client, logger)
     if "COT:" in moleskine_text:
@@ -360,8 +365,7 @@ def handle_strava_modify(body: dict, client: WebClient, logger: Logger, context:
     else:
         activity_data = get_strava_activity(strava_activity_id=strava_activity_id, user_id=user_id, team_id=team_id)
 
-    msg = f"<@{user_id}> has connected this backblast to a Strava activity "
-    f"(<https://www.strava.com/activities/{strava_activity_id}|view on Strava>)!"
+    msg = f"<@{user_id}> has connected this backblast to a Strava activity (<https://www.strava.com/activities/{strava_activity_id}|view on Strava>)!"  # noqa
     if (safe_get(activity_data, "calories") is not None) & (safe_get(activity_data, "distance") is not None):
         msg += f" He traveled {round(activity_data['distance'] * 0.00062137, 1)} miles :runner: and burned "
         msg += f"{activity_data['calories']} calories :fire:."
