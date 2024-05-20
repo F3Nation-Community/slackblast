@@ -12,8 +12,8 @@ from utilities.slack import actions, orm
 def build_ao_add_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     form = copy.deepcopy(ADD_AO_FORM)
 
-    locations = DbManager.find_records(Location, [True])
-    event_types = DbManager.find_records(EventType, [True])
+    locations = DbManager.find_records(Location, [True])  # TODO: filter by region
+    event_types = DbManager.find_records(EventType, [True])  # TODO: filter by region
     form.set_options(
         {
             actions.CALENDAR_ADD_AO_LOCATION: orm.as_selector_options(
