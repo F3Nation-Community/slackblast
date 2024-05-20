@@ -322,3 +322,21 @@ class OrgType(BaseClass, GetDBClass):
 
     id: Mapped[intpk]
     name: Mapped[str]
+
+
+class EventType_x_Org(BaseClass, GetDBClass):
+    __tablename__ = "event_types_x_org"
+
+    id: Mapped[intpk]
+    event_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_types.id"))
+    org_id: Mapped[int] = mapped_column(Integer, ForeignKey("orgs.id"))
+    is_default: Mapped[bool]
+
+
+class Location_x_Org(BaseClass, GetDBClass):
+    __tablename__ = "location_x_org"
+
+    id: Mapped[intpk]
+    location_id: Mapped[int] = mapped_column(Integer, ForeignKey("locations.id"))
+    org_id: Mapped[int] = mapped_column(Integer, ForeignKey("orgs.id"))
+    is_default: Mapped[bool]
