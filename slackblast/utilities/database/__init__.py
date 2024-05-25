@@ -102,16 +102,18 @@ class DbManager:
         finally:
             session.commit()
             close_session(session)
-            return record # noqa
+            return record  # noqa
 
     def create_records(records: List[BaseClass], schema=None):
         session = get_session(schema=schema)
         try:
             session.add_all(records)
             session.flush()
+            session.expunge_all()
         finally:
             session.commit()
             close_session(session)
+            return records  # noqa
 
     def delete_record(cls: T, id, schema=None):
         session = get_session(schema=schema)

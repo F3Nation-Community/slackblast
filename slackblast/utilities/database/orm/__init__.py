@@ -235,11 +235,13 @@ class Event(BaseClass, GetDBClass):
     event_type_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("event_types.id"))
     series_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("events.id"))
     is_series: Mapped[bool]
-    start_time: Mapped[Optional[datetime]]
-    end_time: Mapped[Optional[datetime]]
+    start_date: Mapped[date]
+    end_date: Mapped[Optional[date]]
+    start_time: Mapped[Optional[int]]
+    end_time: Mapped[Optional[int]]
     day_of_week: Mapped[Optional[int]]
-    name: Mapped[str]
-    description: Mapped[Optional[str]]
+    name: Mapped[str100]
+    description: Mapped[Optional[str255]]
     recurrence_pattern: Mapped[Optional[str30]]
     recurrence_interval: Mapped[Optional[int]]
     index_within_interval: Mapped[Optional[int]]
@@ -249,30 +251,33 @@ class Event(BaseClass, GetDBClass):
     backblast: Mapped[Optional[longtext]]
     meta: Mapped[Optional[dict[str, Any]]]
 
+    def get_id():
+        return Event.id
+
 
 class EventType(BaseClass, GetDBClass):
     __tablename__ = "event_types"
 
     id: Mapped[intpk]
-    name: Mapped[str]
+    name: Mapped[str100]
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_categories.id"))
-    description: Mapped[Optional[str]]
+    description: Mapped[Optional[str255]]
 
 
 class EventCategory(BaseClass, GetDBClass):
     __tablename__ = "event_categories"
 
     id: Mapped[intpk]
-    name: Mapped[str]
-    description: Mapped[Optional[str]]
+    name: Mapped[str100]
+    description: Mapped[Optional[str255]]
 
 
 class Location(BaseClass, GetDBClass):
     __tablename__ = "locations"
 
     id: Mapped[intpk]
-    name: Mapped[str]
-    description: Mapped[Optional[str]]
+    name: Mapped[str100]
+    description: Mapped[Optional[str255]]
     lat: Mapped[Optional[float]]
     lon: Mapped[Optional[float]]
     meta: Mapped[Optional[dict[str, Any]]]
@@ -293,8 +298,8 @@ class AttendanceType(BaseClass, GetDBClass):
     __tablename__ = "attendance_types"
 
     id: Mapped[intpk]
-    type: Mapped[str]
-    description: Mapped[Optional[str]]
+    type: Mapped[str100]
+    description: Mapped[Optional[str255]]
 
 
 class Org(BaseClass, GetDBClass):
@@ -303,15 +308,15 @@ class Org(BaseClass, GetDBClass):
     id: Mapped[intpk]
     parent_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
     org_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("org_types.id"))
-    name: Mapped[str]
-    description: Mapped[Optional[str]]
+    name: Mapped[str100]
+    description: Mapped[Optional[str255]]
     logo: Mapped[Optional[blob]]
-    website: Mapped[Optional[str]]
-    email: Mapped[Optional[str]]
-    twitter: Mapped[Optional[str]]
-    facebook: Mapped[Optional[str]]
-    instagram: Mapped[Optional[str]]
-    slack_id: Mapped[Optional[str]]
+    website: Mapped[Optional[str100]]
+    email: Mapped[Optional[str100]]
+    twitter: Mapped[Optional[str100]]
+    facebook: Mapped[Optional[str100]]
+    instagram: Mapped[Optional[str100]]
+    slack_id: Mapped[Optional[str30]]
     slack_app_settings: Mapped[Optional[dict[str, Any]]]
     last_annual_review: Mapped[Optional[date]]
     meta: Mapped[Optional[dict[str, Any]]]
@@ -321,7 +326,7 @@ class OrgType(BaseClass, GetDBClass):
     __tablename__ = "org_types"
 
     id: Mapped[intpk]
-    name: Mapped[str]
+    name: Mapped[str100]
 
 
 class EventType_x_Org(BaseClass, GetDBClass):

@@ -10,13 +10,12 @@ from utilities.slack import actions, orm
 
 def build_calendar_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     form = copy.deepcopy(CALENDAR_CONFIG_FORM)
-    form.post_modal(
+    form.update_modal(  # TODO: add a "back to main menu" button?
         client=client,
-        trigger_id=safe_get(body, "trigger_id"),
+        view_id=safe_get(body, "view", "id"),
         title_text="Calendar Settings",
         callback_id=actions.CALENDAR_CONFIG_CALLBACK_ID,
         submit_button_text="None",
-        new_or_add="add",
     )
 
 
@@ -61,7 +60,7 @@ CALENDAR_CONFIG_FORM = orm.BlockView(
                     value="add",
                 ),
                 orm.ButtonElement(
-                    label="Edit Series",
+                    label="Edit or Delete Series",
                     action=actions.CALENDAR_EDIT_SERIES,
                     value="edit",
                 ),

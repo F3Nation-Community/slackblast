@@ -36,7 +36,7 @@ def handle_location_add(body: dict, client: WebClient, logger: Logger, context: 
         name=safe_get(form_data, actions.CALENDAR_ADD_LOCATION_NAME),
         description=safe_get(form_data, actions.CALENDAR_ADD_LOCATION_DESCRIPTION),
         lat=google_lat,
-        long=google_long,
+        lon=google_long,
     )
 
     DbManager.create_record(location)

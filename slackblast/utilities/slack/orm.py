@@ -186,9 +186,30 @@ def as_selector_options(names: List[str], values: List[str] = [], descriptions: 
 
 
 @dataclass
+class ConfirmObject:
+    title: str
+    text: str
+    confirm: str
+    deny: str
+    style: str = None
+
+    def as_form_field(self):
+        r = {
+            "title": {"type": "plain_text", "text": self.title[:100]},
+            "text": {"type": "plain_text", "text": self.text[:300]},
+            "confirm": {"type": "plain_text", "text": self.confirm[:30]},
+            "deny": {"type": "plain_text", "text": self.deny[:30]},
+        }
+        if self.style:
+            r["style"] = self.style
+        return r
+
+
+@dataclass
 class StaticSelectElement(BaseElement):
     initial_value: str = None
     options: List[SelectorOption] = None
+    confirm: ConfirmObject = None
 
     # def with_options(self, options: List[SelectorOption]):
     #   return SelectorElement(self.label, self.action, options)
@@ -207,6 +228,9 @@ class StaticSelectElement(BaseElement):
             initial_option = next((x for x in option_elements if x["value"] == self.initial_value), None)
             if initial_option:
                 j["initial_option"] = initial_option
+
+        if self.confirm:
+            j["confirm"] = self.confirm.as_form_field()
         return j
 
     def get_selected_value(self, input_data, action):
@@ -485,7 +509,7 @@ class CheckboxInputElement(BaseElement):
     options: List[SelectorOption] = None
 
     def get_selected_value(self, input_data, action):
-        return [o["value"] for o in safe_get(input_data, action, action, "selected_options")]
+        return [o["value"] for o in safe_get(input_data, action, action, "selected_options") or []]
 
     def as_form_field(self, action: str):
         if not self.options:

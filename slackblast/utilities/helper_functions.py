@@ -348,6 +348,8 @@ def get_request_type(body: dict) -> Tuple[str]:
         block_action = safe_get(body, "actions", 0, "action_id")
         if block_action[: len(actions.STRAVA_ACTIVITY_BUTTON)] == actions.STRAVA_ACTIVITY_BUTTON:
             return ("block_actions", actions.STRAVA_ACTIVITY_BUTTON)
+        elif block_action[: len(actions.SERIES_EDIT_DELETE)] == actions.SERIES_EDIT_DELETE:
+            return ("block_actions", actions.SERIES_EDIT_DELETE)
         else:
             return ("block_actions", block_action)
     elif request_type == "view_submission":
@@ -516,3 +518,19 @@ def plain_text_to_rich_block(text: str) -> Dict[str, Any]:
             }
         ],
     }
+
+
+def safe_convert(value: str | None, conversion, args=None) -> Any | None:
+    args = args or []
+    try:
+        return conversion(value, *args)
+    except TypeError:
+        return None
+
+
+def time_int_to_str(time: int) -> str:
+    return f"{time // 100:02d}:{time % 100:02d}"
+
+
+def time_str_to_int(time: str) -> int:
+    return int(time.replace(":", ""))

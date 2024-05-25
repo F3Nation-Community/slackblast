@@ -18,12 +18,12 @@ def build_ao_add_form(body: dict, client: WebClient, logger: Logger, context: di
         {
             actions.CALENDAR_ADD_AO_LOCATION: orm.as_selector_options(
                 names=[location.name for location in locations],
-                values=[location.id for location in locations],
+                values=[str(location.id) for location in locations],
                 # descriptions=[location.description for location in locations],
             ),
             actions.CALENDAR_ADD_AO_TYPE: orm.as_selector_options(
                 names=[event_type.name for event_type in event_types],
-                values=[event_type.id for event_type in event_types],
+                values=[str(event_type.id) for event_type in event_types],
                 # descriptions=[event_type.description for event_type in event_types],
             ),
         }
@@ -72,42 +72,34 @@ ADD_AO_FORM = orm.BlockView(
     blocks=[
         orm.InputBlock(
             label="AO Title",
-            element=orm.PlainTextInputElement(
-                action_id=actions.CALENDAR_ADD_AO_NAME,
-                placeholder="Enter the AO name",
-            ),
+            action=actions.CALENDAR_ADD_AO_NAME,
+            element=orm.PlainTextInputElement(placeholder="Enter the AO name"),
             optional=False,
         ),
         orm.InputBlock(
             label="Description",
-            element=orm.PlainTextInputElement(
-                action_id=actions.CALENDAR_ADD_AO_DESCRIPTION,
-                placeholder="Enter a description for the AO",
-            ),
+            action=actions.CALENDAR_ADD_AO_DESCRIPTION,
+            element=orm.PlainTextInputElement(placeholder="Enter a description for the AO"),
         ),
         orm.InputBlock(
             label="Channel associated with this AO:",
-            element=orm.ChannelsSelectElement(
-                action_id=actions.CALENDAR_ADD_AO_CHANNEL,
-                placeholder="Select a channel",
-            ),
+            action=actions.CALENDAR_ADD_AO_CHANNEL,
+            element=orm.ChannelsSelectElement(placeholder="Select a channel"),
         ),
         orm.InputBlock(
             label="Default Location",
-            element=orm.StaticSelectElement(
-                action_id=actions.CALENDAR_ADD_AO_LOCATION,
-                placeholder="Select a location",
-            ),
+            action=actions.CALENDAR_ADD_AO_LOCATION,
+            element=orm.StaticSelectElement(placeholder="Select a location"),
         ),
         orm.InputBlock(
             label="Default Event Type",
-            element=orm.StaticSelectElement(
-                action_id=actions.CALENDAR_ADD_AO_TYPE,
-                placeholder="Select an event type",
-            ),
+            action=actions.CALENDAR_ADD_AO_TYPE,
+            element=orm.StaticSelectElement(placeholder="Select an event type"),
         ),
         orm.ContextBlock(
-            element=orm.ContextElement("These options can be changed later for specific series or events.")
+            element=orm.ContextElement(
+                initial_value="These options can be changed later for specific series or events."
+            )
         ),  # noqa
     ]
 )

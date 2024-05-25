@@ -137,3 +137,9 @@ PAXMINER_REPORT_DICT = {
     "send_region_leaderboard": "region_leaderboard",
     "send_region_stats": "region_stats",
 }
+
+FREQUENCY_OPTIONS = ["Weekly", "Monthly"]
+DAY_OF_WEEK_OPTIONS = {
+    "names": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    "values": [1, 2, 3, 4, 5, 6, 7],
+}
