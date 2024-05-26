@@ -1,4 +1,5 @@
 import copy
+import json
 from datetime import datetime, timedelta
 from logging import Logger
 
@@ -67,7 +68,6 @@ def build_series_add_form(
             actions.CALENDAR_ADD_SERIES_INTERVAL: 1,
             actions.CALENDAR_ADD_SERIES_INDEX: 1,
         }
-    print(initial_values)
 
     # This is triggered when the AO is selected, defaults are loaded for the location and event type
     # TODO: is there a better way to update the modal without having to rebuild everything?
@@ -107,7 +107,7 @@ def build_series_add_form(
 
 def handle_series_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     form_data = SERIES_FORM.get_selected_values(body)
-    metadata = safe_get(body, "view", "private_metadata")
+    metadata = safe_convert(safe_get(body, "view", "private_metadata"), json.loads)
 
     end_date = safe_convert(safe_get(form_data, actions.CALENDAR_ADD_SERIES_END_DATE), datetime.strptime, ["%Y-%m-%d"])
 
@@ -152,14 +152,20 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
             index_within_interval=index_within_interval,
             day_of_week=int(dow),
             is_series=True,
+            is_active=True,
         )
         series_records.append(series)
 
     if safe_get(metadata, "series_id"):
-        # Need to build this out
-        series_id = metadata["series_id"]
-        series_records[0].id = series_id
-        DbManager.update_record(series_records[0], series_id, fields=series_records[0].__dict__)
+        # series_id is passed in the metadata if this is an edit
+        update_dict = series_records[0].__dict__
+        update_dict.pop("_sa_instance_state")
+        DbManager.update_record(Event, metadata["series_id"], fields=update_dict)
+        records = [Event(id=metadata["series_id"], **update_dict)]
+
+        # Delete all future events associated with the series
+        # TODO: I could do a check to see if dates / times have changed, if not we could update the events instead of deleting them # noqa
+        DbManager.delete_records(Event, [Event.series_id == metadata["series_id"], Event.start_date >= datetime.now()])
     else:
         records = DbManager.create_records(series_records)
 
@@ -201,6 +207,7 @@ def create_events(records: list[Event]):
                             start_time=series.start_time,
                             end_time=series.end_time,
                             is_series=False,
+                            is_active=True,
                             series_id=series.id,
                         )
                         event_records.append(event)
@@ -212,7 +219,7 @@ def create_events(records: list[Event]):
 
 
 def build_series_list_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    series_records = DbManager.find_records(Event, [Event.is_series, Event.org_id == region_record.id])
+    series_records = DbManager.find_records(Event, [Event.is_series, Event.org_id == region_record.id, Event.is_active])
 
     # TODO: separate into weekly / non-weekly series?
     blocks = [
@@ -246,18 +253,17 @@ def build_series_list_form(body: dict, client: WebClient, logger: Logger, contex
 
 
 def handle_series_edit_delete(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    action_id = safe_get(body, "actions", 0, "action_id")
-    print(action_id)
-    print(action_id.split("_"))
     series_id = safe_convert(safe_get(body, "actions", 0, "action_id").split("_")[1], int)
     action = safe_get(body, "actions", 0, "selected_option", "value")
 
     if action == "Edit":
-        print(series_id)
         series = DbManager.get_record(Event, series_id)
         build_series_add_form(body, client, logger, context, region_record, edit_series=series)
     elif action == "Delete":
-        DbManager.delete_record(Event, series_id)
+        DbManager.update_record(Event, series_id, fields={"is_active": False})
+        DbManager.update_records(
+            Event, [Event.series_id == series_id, Event.start_date >= datetime.now()], fields={"is_active": False}
+        )  # noqa
 
 
 SERIES_FORM = orm.BlockView(

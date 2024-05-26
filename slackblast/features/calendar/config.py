@@ -31,23 +31,28 @@ CALENDAR_CONFIG_FORM = orm.BlockView(
                 )
             ],
         ),
-        orm.SectionBlock(label=":date: Manage Single Events"),
+        orm.SectionBlock(label=":round_pushpin: Manage Locations"),
         orm.ActionsBlock(
             elements=[
                 orm.ButtonElement(
-                    label="Add Single Event",
-                    action=actions.CALENDAR_ADD_SINGLE_EVENT,
+                    label="Add Location",
+                    action=actions.CALENDAR_ADD_LOCATION,
+                    value="add",
+                ),
+            ],
+        ),
+        orm.SectionBlock(label=":world_map: Manage AOs"),
+        orm.ActionsBlock(
+            elements=[
+                orm.ButtonElement(
+                    label="Add AO",
+                    action=actions.CALENDAR_ADD_AO,
                     value="add",
                 ),
                 orm.ButtonElement(
-                    label="Edit Single Event",
-                    action=actions.CALENDAR_EDIT_SINGLE_EVENT,
+                    label="Edit or Delete AOs",
+                    action=actions.CALENDAR_EDIT_AO,
                     value="edit",
-                ),
-                orm.ButtonElement(
-                    label="Delete Single Event",
-                    action=actions.CALENDAR_DELETE_SINGLE_EVENT,
-                    value="delete",
                 ),
             ],
         ),
@@ -64,40 +69,20 @@ CALENDAR_CONFIG_FORM = orm.BlockView(
                     action=actions.CALENDAR_EDIT_SERIES,
                     value="edit",
                 ),
-                orm.ButtonElement(
-                    label="Delete Series",
-                    action=actions.CALENDAR_DELETE_SERIES,
-                    value="delete",
-                ),
             ],
         ),
-        orm.SectionBlock(label=":world_map: Manage AOs"),
+        orm.SectionBlock(label=":date: Manage Single Events"),
         orm.ActionsBlock(
             elements=[
                 orm.ButtonElement(
-                    label="Add AO",
-                    action=actions.CALENDAR_ADD_AO,
+                    label="Add Single Event",
+                    action=actions.CALENDAR_ADD_SINGLE_EVENT,
                     value="add",
                 ),
                 orm.ButtonElement(
-                    label="Edit AO",
-                    action=actions.CALENDAR_EDIT_AO,
+                    label="Edit or Delete Single Events",
+                    action=actions.CALENDAR_EDIT_SINGLE_EVENT,
                     value="edit",
-                ),
-                orm.ButtonElement(
-                    label="Delete AO",
-                    action=actions.CALENDAR_DELETE_AO,
-                    value="delete",
-                ),
-            ],
-        ),
-        orm.SectionBlock(label=":round_pushpin: Manage Locations"),
-        orm.ActionsBlock(
-            elements=[
-                orm.ButtonElement(
-                    label="Add Location",
-                    action=actions.CALENDAR_ADD_LOCATION,
-                    value="add",
                 ),
             ],
         ),

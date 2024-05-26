@@ -79,7 +79,7 @@ ADD_AO_FORM = orm.BlockView(
         orm.InputBlock(
             label="Description",
             action=actions.CALENDAR_ADD_AO_DESCRIPTION,
-            element=orm.PlainTextInputElement(placeholder="Enter a description for the AO"),
+            element=orm.PlainTextInputElement(placeholder="Enter a description for the AO", multiline=True),
         ),
         orm.InputBlock(
             label="Channel associated with this AO:",

@@ -47,7 +47,7 @@ ADD_LOCATION_FORM = orm.BlockView(
         orm.InputBlock(
             label="Location Name",
             action=actions.CALENDAR_ADD_LOCATION_NAME,
-            element=orm.PlainTextInputElement(placeholder="Enter the location name"),
+            element=orm.PlainTextInputElement(placeholder="ie Central Park - Main Entrance"),
             optional=False,
         ),
         orm.InputBlock(
