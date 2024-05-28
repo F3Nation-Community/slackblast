@@ -4,7 +4,6 @@ from logging import Logger
 
 from slack_sdk.web import WebClient
 
-from utilities import builders
 from utilities.database import DbManager
 from utilities.database.orm import (
     Region,
@@ -182,6 +181,7 @@ def handle_custom_field_delete(
         trigger_id=trigger_id,
     )
 
+
 def delete_custom_field(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     custom_field_name = safe_get(body, "actions", 0, "value")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
@@ -192,6 +192,7 @@ def delete_custom_field(body: dict, client: WebClient, logger: Logger, context: 
     DbManager.update_record(cls=Region, id=team_id, fields={"custom_fields": custom_fields})
     update_local_region_records()
     build_custom_field_menu(body, client, logger, context, region_record, update_view_id=view_id)
+
 
 def handle_custom_field_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     config_data = forms.CUSTOM_FIELD_ADD_EDIT_FORM.get_selected_values(body)
@@ -221,7 +222,7 @@ def handle_custom_field_add(body: dict, client: WebClient, logger: Logger, conte
     )
 
     previous_view_id = safe_get(body, "view", "previous_view_id")
-    builders.build_custom_field_menu(body, client, logger, context, region_record, update_view_id=previous_view_id)
+    build_custom_field_menu(body, client, logger, context, region_record, update_view_id=previous_view_id)
 
 
 def handle_custom_field_menu(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
@@ -237,4 +238,3 @@ def handle_custom_field_menu(body: dict, client: WebClient, logger: Logger, cont
 
     DbManager.update_record(cls=Region, id=region_record.team_id, fields={Region.custom_fields: custom_fields})
     update_local_region_records()
-
