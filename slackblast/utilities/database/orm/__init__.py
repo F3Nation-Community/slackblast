@@ -315,6 +315,7 @@ class Org(BaseClass, GetDBClass):
     org_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("org_types.id"))
     name: Mapped[str100]
     description: Mapped[Optional[longtext]]
+    is_active: Mapped[bool]
     logo: Mapped[Optional[blob]]
     website: Mapped[Optional[str100]]
     email: Mapped[Optional[str100]]
@@ -325,6 +326,9 @@ class Org(BaseClass, GetDBClass):
     slack_app_settings: Mapped[Optional[dict[str, Any]]]
     last_annual_review: Mapped[Optional[date]]
     meta: Mapped[Optional[dict[str, Any]]]
+
+    def get_id():
+        return Org.id
 
 
 class OrgType(BaseClass, GetDBClass):

@@ -160,9 +160,12 @@ SERIES_EDIT_DELETE = "series-edit-delete"
 CALENDAR_EDIT_LOCATION = "calendar_edit_location"
 LOCATION_EDIT_DELETE = "location-edit-delete"
 EDIT_DELETE_LOCATION_CALLBACK_ID = "edit-delete-location-id"
+AO_EDIT_DELETE = "ao-edit-delete"
+EDIT_DELETE_AO_CALLBACK_ID = "edit-delete-ao-id"
 
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,
     SERIES_EDIT_DELETE,
     LOCATION_EDIT_DELETE,
+    AO_EDIT_DELETE,
 ]

@@ -73,6 +73,8 @@ ACTION_MAPPER = {
     actions.SERIES_EDIT_DELETE: (series.handle_series_edit_delete, False),
     actions.CALENDAR_EDIT_LOCATION: (location.build_location_list_form, False),
     actions.LOCATION_EDIT_DELETE: (location.handle_location_edit_delete, False),
+    actions.AO_EDIT_DELETE: (ao.handle_ao_edit_delete, False),
+    actions.CALENDAR_EDIT_AO: (ao.build_ao_list_form, False),
 }
 
 VIEW_CLOSED_MAPPER = {
