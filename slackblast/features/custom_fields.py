@@ -28,10 +28,6 @@ def build_custom_field_menu(
         callback_id (str): The event's callback id
     """
     trigger_id = safe_get(body, "trigger_id")
-    if safe_get(body, "actions", 0, "action_id") == actions.CONFIG_CUSTOM_FIELDS:
-        update_view_id = None
-    else:
-        update_view_id = safe_get(body, "view", "id") or safe_get(body, "container", "view_id")
 
     blocks = []
     custom_fields = region_record.custom_fields or {}
@@ -178,7 +174,7 @@ def handle_custom_field_delete(
         logger=logger,
         context=context,
         region_record=region_record,
-        trigger_id=trigger_id,
+        update_view_id=safe_get(body, "view", "id"),
     )
 
 
