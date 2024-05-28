@@ -177,7 +177,7 @@ class AchievementsList(BaseClass, GetDBClass):
     __tablename__ = "achievements_list"
     id: Mapped[intpk]
     name: Mapped[str255]
-    description: Mapped[str255]
+    description: Mapped[longtext]
     verb: Mapped[str255]
     code: Mapped[str255]
 
@@ -242,7 +242,7 @@ class Event(BaseClass, GetDBClass):
     end_time: Mapped[Optional[int]]
     day_of_week: Mapped[Optional[int]]
     name: Mapped[str100]
-    description: Mapped[Optional[str255]]
+    description: Mapped[Optional[longtext]]
     recurrence_pattern: Mapped[Optional[str30]]
     recurrence_interval: Mapped[Optional[int]]
     index_within_interval: Mapped[Optional[int]]
@@ -262,7 +262,7 @@ class EventType(BaseClass, GetDBClass):
     id: Mapped[intpk]
     name: Mapped[str100]
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_categories.id"))
-    description: Mapped[Optional[str255]]
+    description: Mapped[Optional[longtext]]
 
 
 class EventCategory(BaseClass, GetDBClass):
@@ -270,7 +270,7 @@ class EventCategory(BaseClass, GetDBClass):
 
     id: Mapped[intpk]
     name: Mapped[str100]
-    description: Mapped[Optional[str255]]
+    description: Mapped[Optional[longtext]]
 
 
 class Location(BaseClass, GetDBClass):
@@ -278,10 +278,14 @@ class Location(BaseClass, GetDBClass):
 
     id: Mapped[intpk]
     name: Mapped[str100]
-    description: Mapped[Optional[str255]]
+    description: Mapped[Optional[longtext]]
+    is_active: Mapped[bool]
     lat: Mapped[Optional[float]]
     lon: Mapped[Optional[float]]
     meta: Mapped[Optional[dict[str, Any]]]
+
+    def get_id():
+        return Location.id
 
 
 class AttendanceNew(BaseClass, GetDBClass):
@@ -300,7 +304,7 @@ class AttendanceType(BaseClass, GetDBClass):
 
     id: Mapped[intpk]
     type: Mapped[str100]
-    description: Mapped[Optional[str255]]
+    description: Mapped[Optional[longtext]]
 
 
 class Org(BaseClass, GetDBClass):
@@ -310,7 +314,7 @@ class Org(BaseClass, GetDBClass):
     parent_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
     org_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("org_types.id"))
     name: Mapped[str100]
-    description: Mapped[Optional[str255]]
+    description: Mapped[Optional[longtext]]
     logo: Mapped[Optional[blob]]
     website: Mapped[Optional[str100]]
     email: Mapped[Optional[str100]]

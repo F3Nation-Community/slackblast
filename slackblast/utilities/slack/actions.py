@@ -157,3 +157,12 @@ CALENDAR_ADD_SERIES_DOW = "calendar_add_series_dow"
 ADD_SERIES_CALLBACK_ID = "add-series-id"
 EDIT_DELETE_SERIES_CALLBACK_ID = "edit-delete-series-id"
 SERIES_EDIT_DELETE = "series-edit-delete"
+CALENDAR_EDIT_LOCATION = "calendar_edit_location"
+LOCATION_EDIT_DELETE = "location-edit-delete"
+EDIT_DELETE_LOCATION_CALLBACK_ID = "edit-delete-location-id"
+
+ACTION_PREFIXES = [
+    STRAVA_ACTIVITY_BUTTON,
+    SERIES_EDIT_DELETE,
+    LOCATION_EDIT_DELETE,
+]

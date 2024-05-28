@@ -39,6 +39,11 @@ CALENDAR_CONFIG_FORM = orm.BlockView(
                     action=actions.CALENDAR_ADD_LOCATION,
                     value="add",
                 ),
+                orm.ButtonElement(
+                    label="Edit or Delete Locations",
+                    action=actions.CALENDAR_EDIT_LOCATION,
+                    value="edit",
+                ),
             ],
         ),
         orm.SectionBlock(label=":world_map: Manage AOs"),

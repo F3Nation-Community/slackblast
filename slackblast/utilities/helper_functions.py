@@ -346,12 +346,10 @@ def get_request_type(body: dict) -> Tuple[str]:
         return ("event_callback", safe_get(body, "event", "type"))
     elif request_type == "block_actions":
         block_action = safe_get(body, "actions", 0, "action_id")
-        if block_action[: len(actions.STRAVA_ACTIVITY_BUTTON)] == actions.STRAVA_ACTIVITY_BUTTON:
-            return ("block_actions", actions.STRAVA_ACTIVITY_BUTTON)
-        elif block_action[: len(actions.SERIES_EDIT_DELETE)] == actions.SERIES_EDIT_DELETE:
-            return ("block_actions", actions.SERIES_EDIT_DELETE)
-        else:
-            return ("block_actions", block_action)
+        for action in actions.ACTION_PREFIXES:
+            if block_action[: len(action)] == action:
+                return ("block_actions", action)
+        return ("block_actions", block_action)
     elif request_type == "view_submission":
         return ("view_submission", safe_get(body, "view", "callback_id"))
     elif not request_type and "command" in body:
