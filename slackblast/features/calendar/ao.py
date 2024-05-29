@@ -3,8 +3,10 @@ import datetime
 import json
 from logging import Logger
 
+import requests
 from slack_sdk.web import WebClient
 
+from utilities import constants
 from utilities.database import DbManager
 from utilities.database.orm import Event, EventType, EventType_x_Org, Location, Org, Region
 from utilities.helper_functions import safe_convert, safe_get
@@ -80,14 +82,27 @@ def handle_ao_add(body: dict, client: WebClient, logger: Logger, context: dict, 
     region_org_id = region_record.org_id
     metatdata = safe_convert(safe_get(body, "view", "private_metadata"), json.loads)
 
+    file = safe_get(form_data, actions.CALENDAR_ADD_AO_LOGO, 0)
+    if file:
+        try:
+            r = requests.get(file["url_private_download"], headers={"Authorization": f"Bearer {client.token}"})
+            r.raise_for_status()
+            logo = r.content
+        except Exception as exc:
+            logger.error(f"Error downloading file: {exc}")
+            logo = None
+    else:
+        logo = None
+
     ao: Org = Org(
         parent_id=region_org_id,
-        org_type_id=1,
+        org_type_id=constants.ORG_TYPES["AO"],
         is_active=True,
         name=safe_get(form_data, actions.CALENDAR_ADD_AO_NAME),
         description=safe_get(form_data, actions.CALENDAR_ADD_AO_DESCRIPTION),
         slack_id=safe_get(form_data, actions.CALENDAR_ADD_AO_CHANNEL),
         default_location_id=safe_get(form_data, actions.CALENDAR_ADD_AO_LOCATION),
+        logo=logo,
     )
 
     if safe_get(metatdata, "ao_id"):
@@ -185,6 +200,20 @@ AO_FORM = orm.BlockView(
             element=orm.ContextElement(
                 initial_value="These options can be changed later for specific series or events."
             )
+        ),
+        orm.InputBlock(
+            label="AO Logo",
+            action=actions.CALENDAR_ADD_AO_LOGO,
+            optional=True,
+            element=orm.FileInputElement(
+                max_files=1,
+                filetypes=[
+                    "png",
+                    "jpg",
+                    "heic",
+                    "bmp",
+                ],
+            ),
         ),
     ]
 )

@@ -143,3 +143,10 @@ DAY_OF_WEEK_OPTIONS = {
     "names": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     "values": [1, 2, 3, 4, 5, 6, 7],
 }
+
+ORG_TYPES = {
+    "AO": 1,
+    "Region": 2,
+    "Area": 3,
+    "Sector": 4,
+}
