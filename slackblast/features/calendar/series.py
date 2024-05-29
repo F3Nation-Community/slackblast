@@ -136,10 +136,17 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
     recurrence_interval = safe_convert(safe_get(form_data, actions.CALENDAR_ADD_SERIES_INTERVAL), int)
     index_within_interval = safe_convert(safe_get(form_data, actions.CALENDAR_ADD_SERIES_INDEX), int)
 
+    if safe_get(form_data, actions.CALENDAR_ADD_SERIES_NAME):
+        series_name = safe_get(form_data, actions.CALENDAR_ADD_SERIES_NAME)
+    else:
+        org = DbManager.get_record(Org, org_id)
+        event_type = DbManager.get_record(EventType, event_type_id)
+        series_name = f"{org.name} {event_type.name if event_type else ''}"
+
     series_records = []
     for dow in safe_get(form_data, actions.CALENDAR_ADD_SERIES_DOW):
         series = Event(
-            name=safe_get(form_data, actions.CALENDAR_ADD_SERIES_NAME),
+            name=series_name,
             description=safe_get(form_data, actions.CALENDAR_ADD_SERIES_DESCRIPTION),
             org_id=org_id,
             location_id=location_id,
@@ -275,7 +282,9 @@ SERIES_FORM = orm.BlockView(
             label="Series Name",
             action=actions.CALENDAR_ADD_SERIES_NAME,
             element=orm.PlainTextInputElement(placeholder="Enter the series name"),
-            optional=False,
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(initial_value="If left blank, will default to the AO name + event type.")
         ),
         orm.InputBlock(
             label="Description",

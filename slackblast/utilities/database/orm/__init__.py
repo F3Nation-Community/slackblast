@@ -265,6 +265,9 @@ class EventType(BaseClass, GetDBClass):
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_categories.id"))
     description: Mapped[Optional[longtext]]
 
+    def get_id():
+        return EventType.id
+
 
 class EventCategory(BaseClass, GetDBClass):
     __tablename__ = "event_categories"
@@ -272,6 +275,9 @@ class EventCategory(BaseClass, GetDBClass):
     id: Mapped[intpk]
     name: Mapped[str100]
     description: Mapped[Optional[longtext]]
+
+    def get_id():
+        return EventCategory.id
 
 
 class Location(BaseClass, GetDBClass):
@@ -300,6 +306,9 @@ class AttendanceNew(BaseClass, GetDBClass):
     is_planned: Mapped[bool]
     meta: Mapped[Optional[dict[str, Any]]]
 
+    def get_id():
+        return AttendanceNew.id
+
 
 class AttendanceType(BaseClass, GetDBClass):
     __tablename__ = "attendance_types"
@@ -307,6 +316,9 @@ class AttendanceType(BaseClass, GetDBClass):
     id: Mapped[intpk]
     type: Mapped[str100]
     description: Mapped[Optional[longtext]]
+
+    def get_id():
+        return AttendanceType.id
 
 
 class Org(BaseClass, GetDBClass):
@@ -340,6 +352,9 @@ class OrgType(BaseClass, GetDBClass):
     id: Mapped[intpk]
     name: Mapped[str100]
 
+    def get_id():
+        return OrgType.id
+
 
 class EventType_x_Org(BaseClass, GetDBClass):
     __tablename__ = "event_types_x_org"
@@ -348,3 +363,6 @@ class EventType_x_Org(BaseClass, GetDBClass):
     event_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_types.id"))
     org_id: Mapped[int] = mapped_column(Integer, ForeignKey("orgs.id"))
     is_default: Mapped[bool]
+
+    def get_id():
+        return EventType_x_Org.id

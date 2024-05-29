@@ -131,6 +131,11 @@ LOCATION_FORM = orm.BlockView(
             element=orm.PlainTextInputElement(placeholder="ie Central Park - Main Entrance"),
             optional=False,
         ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="Use the actual name of the location, ie park name, etc. You will define the F3 AO name when you create AOs."  # noqa
+            ),
+        ),
         orm.InputBlock(
             label="Description / Address",
             action=actions.CALENDAR_ADD_LOCATION_DESCRIPTION,
