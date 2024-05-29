@@ -7,7 +7,7 @@ from slack_sdk.web import WebClient
 
 from utilities import constants
 from utilities.database import DbManager
-from utilities.database.orm import Event, EventType, EventType_x_Org, Location, Location_x_Org, Org, Region
+from utilities.database.orm import Event, EventType, EventType_x_Org, Location, Org, Region
 from utilities.helper_functions import safe_convert, safe_get, time_int_to_str, time_str_to_int
 from utilities.slack import actions, orm
 
@@ -22,9 +22,12 @@ def build_series_add_form(
 ):
     form = copy.deepcopy(SERIES_FORM)
 
-    aos = DbManager.find_records(Org, [True])  # TODO: filter by region
-    locations = DbManager.find_records(Location, [True])  # TODO: filter by region / AO?
-    event_types = DbManager.find_records(EventType, [True])  # TODO: filter by region / AO?
+    aos = DbManager.find_records(Org, [Org.parent_id == region_record.org_id, Org.is_active, Org.org_type_id == 1])
+    locations = DbManager.find_records(Location, [Location.org_id == region_record.org_id, Location.is_active])
+    event_types = DbManager.find_join_records2(
+        EventType, EventType_x_Org, [EventType_x_Org.org_id == region_record.org_id]
+    )
+    event_types = [x[0] for x in event_types]
 
     form.set_options(
         {
@@ -73,16 +76,14 @@ def build_series_add_form(
     # TODO: is there a better way to update the modal without having to rebuild everything?
     if safe_get(body, "actions", 0, "action_id") == actions.CALENDAR_ADD_SERIES_AO:
         form_data = SERIES_FORM.get_selected_values(body)
-        default_location = DbManager.find_records(
-            Location_x_Org,
-            [Location_x_Org.org_id == safe_get(form_data, actions.CALENDAR_ADD_SERIES_AO), Location_x_Org.is_default],
-        )
+        ao: Org = DbManager.get_record(Org, safe_convert(safe_get(form_data, actions.CALENDAR_ADD_SERIES_AO), int))
         default_event_type = DbManager.find_records(
             EventType_x_Org,
             [EventType_x_Org.org_id == safe_get(form_data, actions.CALENDAR_ADD_SERIES_AO), EventType_x_Org.is_default],
         )
-        if default_location:
-            initial_values[actions.CALENDAR_ADD_SERIES_LOCATION] = str(default_location[0].location_id)
+        if ao:
+            if ao.default_location_id:
+                initial_values[actions.CALENDAR_ADD_SERIES_LOCATION] = str(ao.default_location_id)
         if default_event_type:
             initial_values[actions.CALENDAR_ADD_SERIES_TYPE] = str(default_event_type[0].event_type_id)
 
@@ -219,7 +220,9 @@ def create_events(records: list[Event]):
 
 
 def build_series_list_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    series_records = DbManager.find_records(Event, [Event.is_series, Event.org_id == region_record.id, Event.is_active])
+    series_records = DbManager.find_records(
+        Event, [Event.is_series, Event.org_id == region_record.org_id, Event.is_active]
+    )
 
     # TODO: separate into weekly / non-weekly series?
     blocks = [

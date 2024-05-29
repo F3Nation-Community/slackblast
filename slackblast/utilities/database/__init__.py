@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import List, TypeVar
+from typing import List, Tuple, TypeVar
 
 from sqlalchemy import and_, create_engine, pool
 from sqlalchemy.engine import Engine
@@ -70,6 +70,35 @@ class DbManager:
             records = session.query(cls).filter(and_(*filters)).all()
             for r in records:
                 session.expunge(r)
+            return records
+        finally:
+            session.rollback()
+            close_session(session)
+
+    def find_join_records2(left_cls: T, right_cls: T, filters, schema=None) -> List[Tuple[T]]:
+        session = get_session(schema=schema)
+        try:
+            records = session.query(left_cls, right_cls).join(right_cls).filter(and_(*filters)).all()
+            session.expunge_all()
+            return records
+        finally:
+            session.rollback()
+            close_session(session)
+
+    def find_join_records3(
+        left_cls: T, right_cls1: T, right_cls2: T, filters, schema=None, left_join=False
+    ) -> List[Tuple[T]]:
+        session = get_session(schema=schema)
+        try:
+            records = (
+                session.query(left_cls, right_cls1, right_cls2)
+                .select_from(left_cls)
+                .join(right_cls1, isouter=left_join)
+                .join(right_cls2, isouter=left_join)
+                .filter(and_(*filters))
+                .all()
+            )
+            session.expunge_all()
             return records
         finally:
             session.rollback()

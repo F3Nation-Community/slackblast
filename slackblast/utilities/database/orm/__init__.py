@@ -90,6 +90,7 @@ class Region(BaseClass, GetDBClass):
     HOME_AO_CAPTURE: Mapped[Optional[int]] = mapped_column(Integer, default=8)
     NO_Q_THRESHOLD_WEEKS: Mapped[Optional[int]] = mapped_column(Integer, default=4)
     NO_Q_THRESHOLD_POSTS: Mapped[Optional[int]] = mapped_column(Integer, default=4)
+    org_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
     created: Mapped[dt_create]
     updated: Mapped[dt_update]
 
@@ -277,6 +278,7 @@ class Location(BaseClass, GetDBClass):
     __tablename__ = "locations"
 
     id: Mapped[intpk]
+    org_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
     name: Mapped[str100]
     description: Mapped[Optional[longtext]]
     is_active: Mapped[bool]
@@ -313,6 +315,7 @@ class Org(BaseClass, GetDBClass):
     id: Mapped[intpk]
     parent_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
     org_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("org_types.id"))
+    default_location_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("locations.id"))
     name: Mapped[str100]
     description: Mapped[Optional[longtext]]
     is_active: Mapped[bool]
@@ -343,14 +346,5 @@ class EventType_x_Org(BaseClass, GetDBClass):
 
     id: Mapped[intpk]
     event_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_types.id"))
-    org_id: Mapped[int] = mapped_column(Integer, ForeignKey("orgs.id"))
-    is_default: Mapped[bool]
-
-
-class Location_x_Org(BaseClass, GetDBClass):
-    __tablename__ = "location_x_org"
-
-    id: Mapped[intpk]
-    location_id: Mapped[int] = mapped_column(Integer, ForeignKey("locations.id"))
     org_id: Mapped[int] = mapped_column(Integer, ForeignKey("orgs.id"))
     is_default: Mapped[bool]

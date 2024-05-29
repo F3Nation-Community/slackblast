@@ -12,7 +12,16 @@ from slack_sdk.web import WebClient
 from utilities import constants
 from utilities.constants import LOCAL_DEVELOPMENT
 from utilities.database import DbManager
-from utilities.database.orm import Attendance, Backblast, PaxminerAO, PaxminerRegion, PaxminerUser, Region
+from utilities.database.orm import (
+    Attendance,
+    Backblast,
+    EventType_x_Org,
+    Org,
+    PaxminerAO,
+    PaxminerRegion,
+    PaxminerUser,
+    Region,
+)
 from utilities.slack import actions
 
 REGION_RECORDS: Dict[str, Region] = {}
@@ -323,7 +332,17 @@ def get_region_record(team_id: str, body, context, client, logger) -> Region:
             team_name = team_info["team"]["name"]
         except Exception:
             team_name = team_domain
+
         paxminer_schema = get_paxminer_schema(team_id, logger)
+
+        org_record = Org(
+            org_type_id=2,
+            name=team_name,
+            is_active=True,
+            slack_id=team_id,
+        )
+        org_record: Org = DbManager.create_record(org_record)
+
         region_record: Region = DbManager.create_record(
             Region(
                 team_id=team_id,
@@ -333,9 +352,20 @@ def get_region_record(team_id: str, body, context, client, logger) -> Region:
                 email_enabled=0,
                 email_option_show=0,
                 editing_locked=0,
+                org_id=org_record.id,
             )
         )
         REGION_RECORDS[team_id] = region_record
+
+        event_type_x_org_records = [
+            EventType_x_Org(
+                org_id=org_record.id,
+                event_type_id=i,
+                is_default=False,
+            )
+            for i in range(1, 5)
+        ]
+        DbManager.create_records(event_type_x_org_records)
 
     return region_record
 

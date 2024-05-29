@@ -66,6 +66,7 @@ def handle_location_add(body: dict, client: WebClient, logger: Logger, context: 
         is_active=True,
         lat=google_lat,
         lon=google_long,
+        org_id=region_record.org_id,
     )
 
     if safe_get(metadata, "location_id"):
@@ -74,13 +75,11 @@ def handle_location_add(body: dict, client: WebClient, logger: Logger, context: 
         update_dict.pop("_sa_instance_state")
         DbManager.update_record(Location, metadata["location_id"], fields=update_dict)
     else:
-        DbManager.create_record(location)
+        location = DbManager.create_record(location)
 
 
 def build_location_list_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    location_records = DbManager.find_records(
-        Location, [True]
-    )  # TODO: filter by region, I think we need a Location_x_Org table # noqa
+    location_records = DbManager.find_records(Location, [Location.org_id == region_record.org_id])
 
     blocks = [
         orm.SectionBlock(

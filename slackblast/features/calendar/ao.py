@@ -6,7 +6,7 @@ from logging import Logger
 from slack_sdk.web import WebClient
 
 from utilities.database import DbManager
-from utilities.database.orm import Event, EventType, EventType_x_Org, Location, Location_x_Org, Org, Region
+from utilities.database.orm import Event, EventType, EventType_x_Org, Location, Org, Region
 from utilities.helper_functions import safe_convert, safe_get
 from utilities.slack import actions, orm
 
@@ -22,8 +22,14 @@ def build_ao_add_form(
     form = copy.deepcopy(AO_FORM)
 
     # Pull locations and event types for the region
-    locations = DbManager.find_records(Location, [True])  # TODO: filter by region
-    event_types = DbManager.find_records(EventType, [True])  # TODO: filter by region
+    locations = DbManager.find_records(Location, [Location.org_id == region_record.org_id])
+    locations = sorted(locations, key=lambda x: x.name)
+    event_types = DbManager.find_join_records2(
+        EventType, EventType_x_Org, [EventType_x_Org.org_id == region_record.org_id]
+    )
+    event_types = [x[0] for x in event_types]
+    event_types = sorted(event_types, key=lambda x: x.name)
+
     form.set_options(
         {
             actions.CALENDAR_ADD_AO_LOCATION: orm.as_selector_options(
@@ -40,9 +46,6 @@ def build_ao_add_form(
     )
 
     if edit_ao:
-        default_location = safe_get(
-            DbManager.find_records(Location_x_Org, [Location_x_Org.org_id == edit_ao.id, Location_x_Org.is_default]), 0
-        )
         default_event_type = safe_get(
             DbManager.find_records(EventType_x_Org, [EventType_x_Org.org_id == edit_ao.id, EventType_x_Org.is_default]),
             0,
@@ -54,9 +57,9 @@ def build_ao_add_form(
                 actions.CALENDAR_ADD_AO_CHANNEL: edit_ao.slack_id,
             }
         )
-        if default_location:
-            form.set_initial_values({actions.CALENDAR_ADD_AO_LOCATION: str(default_location.location_id)})
-        if default_event_type:
+        if edit_ao.default_location_id:
+            form.set_initial_values({actions.CALENDAR_ADD_AO_LOCATION: str(edit_ao.default_location_id)})
+        if edit_ao.default_event_type:
             form.set_initial_values({actions.CALENDAR_ADD_AO_TYPE: str(default_event_type.event_type_id)})
         title_text = "Edit AO"
     else:
@@ -74,7 +77,7 @@ def build_ao_add_form(
 
 def handle_ao_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     form_data = AO_FORM.get_selected_values(body)
-    region_org_id = region_record.id  # TODO: make this truly from the org_id
+    region_org_id = region_record.org_id
     metatdata = safe_convert(safe_get(body, "view", "private_metadata"), json.loads)
 
     ao: Org = Org(
@@ -84,6 +87,7 @@ def handle_ao_add(body: dict, client: WebClient, logger: Logger, context: dict, 
         name=safe_get(form_data, actions.CALENDAR_ADD_AO_NAME),
         description=safe_get(form_data, actions.CALENDAR_ADD_AO_DESCRIPTION),
         slack_id=safe_get(form_data, actions.CALENDAR_ADD_AO_CHANNEL),
+        default_location_id=safe_get(form_data, actions.CALENDAR_ADD_AO_LOCATION),
     )
 
     if safe_get(metatdata, "ao_id"):
@@ -93,25 +97,18 @@ def handle_ao_add(body: dict, client: WebClient, logger: Logger, context: dict, 
     else:
         DbManager.create_record(ao)
 
-    if safe_get(form_data, actions.CALENDAR_ADD_AO_LOCATION):
-        location_x_org: Location_x_Org = Location_x_Org(
-            location_id=safe_get(form_data, actions.CALENDAR_ADD_AO_LOCATION),
-            org_id=metatdata["ao_id"] or ao.id,
-            is_default=True,
-        )
-        DbManager.create_record(location_x_org)
-
     if safe_get(form_data, actions.CALENDAR_ADD_AO_TYPE):
         event_type_x_org: EventType_x_Org = EventType_x_Org(
             event_type_id=safe_get(form_data, actions.CALENDAR_ADD_AO_TYPE),
-            org_id=metatdata["ao_id"] or ao.id,
+            org_id=safe_get(metatdata, "ao_id") or ao.id,
             is_default=True,
         )
+        print(event_type_x_org)
         DbManager.create_record(event_type_x_org)
 
 
 def build_ao_list_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    ao_records = DbManager.find_records(Org, [Org.parent_id == region_record.id, Org.org_type_id == 1])
+    ao_records = DbManager.find_records(Org, [Org.parent_id == region_record.org_id, Org.org_type_id == 1])
 
     blocks = [
         orm.SectionBlock(
@@ -188,6 +185,6 @@ AO_FORM = orm.BlockView(
             element=orm.ContextElement(
                 initial_value="These options can be changed later for specific series or events."
             )
-        ),  # noqa
+        ),
     ]
 )

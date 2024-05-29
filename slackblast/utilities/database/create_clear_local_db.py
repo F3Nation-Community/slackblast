@@ -34,7 +34,6 @@ def create_tables():
             orm.EventCategory,
             orm.EventType,
             orm.Location,
-            orm.Location_x_Org,
             orm.Event,
             orm.EventType_x_Org,
             orm.AttendanceType,
