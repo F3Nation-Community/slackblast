@@ -161,6 +161,7 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
             day_of_week=int(dow),
             is_series=True,
             is_active=True,
+            highlight=safe_get(form_data, actions.CALENDAR_ADD_SERIES_HIGHLIGHT) == "True",
         )
         series_records.append(series)
 
@@ -217,6 +218,7 @@ def create_events(records: list[Event]):
                             is_series=False,
                             is_active=True,
                             series_id=series.id,
+                            highlight=series.highlight,
                         )
                         event_records.append(event)
                     current_interval = current_interval + 1 if current_interval < max_interval else 1
@@ -294,6 +296,17 @@ SERIES_FORM = orm.BlockView(
                 multiline=True,
             ),
             optional=True,
+        ),
+        orm.InputBlock(
+            label="Highlight on Special Events Page?",
+            action=actions.CALENDAR_ADD_SERIES_HIGHLIGHT,
+            element=orm.CheckboxInputElement(
+                options=orm.as_selector_options(names=["Yes"], values=["True"]),
+            ),
+            optional=False,
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(initial_value="Primarily used for 2nd F events, convergences, etc.")
         ),
         orm.InputBlock(
             label="AO",

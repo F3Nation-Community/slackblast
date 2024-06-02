@@ -1,5 +1,5 @@
 from features import backblast, config, custom_fields, preblast, strava, weaselbot, welcome
-from features.calendar import ao, location, series
+from features.calendar import ao, home, location, series
 from features.calendar import config as calendar_config
 from utilities import announcements, builders
 from utilities.slack import actions
@@ -21,6 +21,7 @@ COMMAND_MAPPER = {
     "/config-slackblast": (config.build_config_form, True),
     "/tag-achievement": (weaselbot.build_achievement_form, True),
     "/send-announcement": (announcements.send, False),
+    "/calendar": (home.build_home_form, True),
 }
 
 VIEW_MAPPER = {

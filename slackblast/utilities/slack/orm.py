@@ -210,16 +210,17 @@ class StaticSelectElement(BaseElement):
     initial_value: str = None
     options: List[SelectorOption] = None
     confirm: ConfirmObject = None
+    action: str = None
 
     # def with_options(self, options: List[SelectorOption]):
     #   return SelectorElement(self.label, self.action, options)
 
-    def as_form_field(self, action: str):
+    def as_form_field(self, action: str = None):
         if not self.options:
             self.options = as_selector_options(["Default"])
 
         option_elements = [self.__make_option(o) for o in self.options]
-        j = {"type": "static_select", "options": option_elements, "action_id": action}
+        j = {"type": "static_select", "options": option_elements, "action_id": action or self.action}
         if self.placeholder:
             j.update(self.make_placeholder_field())
 
@@ -507,11 +508,12 @@ class FileInputElement(BaseElement):
 class CheckboxInputElement(BaseElement):
     initial_value: List[str] = None
     options: List[SelectorOption] = None
+    action: str = None
 
     def get_selected_value(self, input_data, action):
         return [o["value"] for o in safe_get(input_data, action, action, "selected_options") or []]
 
-    def as_form_field(self, action: str):
+    def as_form_field(self, action: str = None):
         if not self.options:
             self.options = as_selector_options(["Default"])
 
@@ -519,7 +521,7 @@ class CheckboxInputElement(BaseElement):
         j = {
             "type": "checkboxes",
             "options": option_elements,
-            "action_id": action,
+            "action_id": action or self.action,
         }
 
         initial_options = []
@@ -527,6 +529,34 @@ class CheckboxInputElement(BaseElement):
             initial_options = [x for x in option_elements if x["value"] in self.initial_value]
             if initial_options:
                 j["initial_options"] = initial_options
+        return j
+
+    def __make_option(self, option: SelectorOption):
+        return {
+            "text": {"type": "plain_text", "text": option.name, "emoji": True},
+            "value": option.value,
+        }
+
+
+@dataclass
+class OverflowElement(BaseElement):
+    options: List[SelectorOption] = None
+    action: str = None
+    confirm: ConfirmObject = None
+
+    def as_form_field(self, action: str = None):
+        if not self.options:
+            self.options = as_selector_options(["Default"])
+
+        option_elements = [self.__make_option(o) for o in self.options]
+        j = {
+            "type": "overflow",
+            "options": option_elements,
+            "action_id": action or self.action,
+        }
+        if self.confirm:
+            j["confirm"] = self.confirm.as_form_field()
+
         return j
 
     def __make_option(self, option: SelectorOption):

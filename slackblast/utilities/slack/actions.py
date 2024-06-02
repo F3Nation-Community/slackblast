@@ -155,6 +155,7 @@ CALENDAR_ADD_SERIES_FREQUENCY = "calendar_add_series_frequency"
 CALENDAR_ADD_SERIES_INTERVAL = "calendar_add_series_interval"
 CALENDAR_ADD_SERIES_INDEX = "calendar_add_series_index"
 CALENDAR_ADD_SERIES_DOW = "calendar_add_series_dow"
+CALENDAR_ADD_SERIES_HIGHLIGHT = "calendar_add_series_highlight"
 ADD_SERIES_CALLBACK_ID = "add-series-id"
 EDIT_DELETE_SERIES_CALLBACK_ID = "edit-delete-series-id"
 SERIES_EDIT_DELETE = "series-edit-delete"
@@ -163,10 +164,16 @@ LOCATION_EDIT_DELETE = "location-edit-delete"
 EDIT_DELETE_LOCATION_CALLBACK_ID = "edit-delete-location-id"
 AO_EDIT_DELETE = "ao-edit-delete"
 EDIT_DELETE_AO_CALLBACK_ID = "edit-delete-ao-id"
+CALENDAR_HOME_CALLBACK_ID = "calendar-home-id"
+CALENDAR_HOME_EVENT = "calendar-home-event"
+CALENDAR_HOME_AO_FILTER = "calendar-home-ao-filter"
+CALENDAR_HOME_EVENT_TYPE_FILTER = "calendar-home-event-type-filter"
+CALENDAR_HOME_Q_FILTER = "calendar-home-q-filter"
 
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,
     SERIES_EDIT_DELETE,
     LOCATION_EDIT_DELETE,
     AO_EDIT_DELETE,
+    CALENDAR_HOME_EVENT,
 ]

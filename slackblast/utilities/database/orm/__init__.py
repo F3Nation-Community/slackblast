@@ -237,6 +237,7 @@ class Event(BaseClass, GetDBClass):
     series_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("events.id"))
     is_series: Mapped[bool]
     is_active: Mapped[bool]
+    # highlight: Mapped[bool]
     start_date: Mapped[date]
     end_date: Mapped[Optional[date]]
     start_time: Mapped[Optional[int]]

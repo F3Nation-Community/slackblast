@@ -118,7 +118,6 @@ def handle_ao_add(body: dict, client: WebClient, logger: Logger, context: dict, 
             org_id=safe_get(metatdata, "ao_id") or ao.id,
             is_default=True,
         )
-        print(event_type_x_org)
         DbManager.create_record(event_type_x_org)
 
 
