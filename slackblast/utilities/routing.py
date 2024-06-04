@@ -76,6 +76,9 @@ ACTION_MAPPER = {
     actions.LOCATION_EDIT_DELETE: (location.handle_location_edit_delete, False),
     actions.AO_EDIT_DELETE: (ao.handle_ao_edit_delete, False),
     actions.CALENDAR_EDIT_AO: (ao.build_ao_list_form, False),
+    actions.CALENDAR_ADD_SINGLE_EVENT: (series.build_series_add_form, False),
+    actions.CALENDAR_ADD_EVENT_AO: (series.build_series_add_form, False),
+    actions.CALENDAR_EDIT_SINGLE_EVENT: (series.build_series_list_form, False),
 }
 
 VIEW_CLOSED_MAPPER = {

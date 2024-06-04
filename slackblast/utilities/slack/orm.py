@@ -411,14 +411,15 @@ class ConversationsSelectElement(BaseElement):
 @dataclass
 class DatepickerElement(BaseElement):
     initial_value: str = None
+    action: str = None
 
     def get_selected_value(self, input_data, action):
         return safe_get(input_data, action, action, "selected_date")
 
-    def as_form_field(self, action: str):
+    def as_form_field(self, action: str = None):
         j = {
             "type": "datepicker",
-            "action_id": action,
+            "action_id": action or self.action,
         }
         if self.placeholder:
             j.update(self.make_placeholder_field())

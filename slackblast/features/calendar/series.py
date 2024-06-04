@@ -18,9 +18,19 @@ def build_series_add_form(
     logger: Logger,
     context: dict,
     region_record: Region,
-    edit_series: Event | None = None,
+    edit_event: Event | None = None,
 ):
-    form = copy.deepcopy(SERIES_FORM)
+    parent_metadata = {"series_id": edit_event.id} if edit_event else {}
+    if (
+        safe_get(body, "actions", 0, "action_id")[: len(actions.CALENDAR_ADD_SERIES)] == actions.CALENDAR_ADD_SERIES
+    ) or (safe_get(body, "actions", 0, "action_id") == actions.CALENDAR_ADD_SERIES_AO):
+        title_text = "Add a Series"
+        form = copy.deepcopy(SERIES_FORM)
+        parent_metadata.update({"is_series": "True"})
+    else:
+        title_text = "Add an Event"
+        form = copy.deepcopy(EVENT_FORM)
+        parent_metadata.update({"is_series": "False"})
 
     aos = DbManager.find_records(Org, [Org.parent_id == region_record.org_id, Org.is_active, Org.org_type_id == 1])
     locations = DbManager.find_records(Location, [Location.org_id == region_record.org_id, Location.is_active])
@@ -35,6 +45,10 @@ def build_series_add_form(
                 names=[ao.name for ao in aos],
                 values=[str(ao.id) for ao in aos],
             ),
+            actions.CALENDAR_ADD_EVENT_AO: orm.as_selector_options(
+                names=[ao.name for ao in aos],
+                values=[str(ao.id) for ao in aos],
+            ),
             actions.CALENDAR_ADD_SERIES_LOCATION: orm.as_selector_options(
                 names=[location.name for location in locations],
                 values=[str(location.id) for location in locations],
@@ -46,23 +60,24 @@ def build_series_add_form(
         }
     )
 
-    if edit_series:
+    if edit_event:
         initial_values = {
-            actions.CALENDAR_ADD_SERIES_NAME: edit_series.name,
-            actions.CALENDAR_ADD_SERIES_DESCRIPTION: edit_series.description,
-            actions.CALENDAR_ADD_SERIES_AO: str(edit_series.org_id),
-            actions.CALENDAR_ADD_SERIES_LOCATION: str(edit_series.location_id),
-            actions.CALENDAR_ADD_SERIES_TYPE: str(edit_series.event_type_id),
+            actions.CALENDAR_ADD_SERIES_NAME: edit_event.name,
+            actions.CALENDAR_ADD_SERIES_DESCRIPTION: edit_event.description,
+            actions.CALENDAR_ADD_SERIES_AO: str(edit_event.org_id),
+            actions.CALENDAR_ADD_EVENT_AO: str(edit_event.org_id),
+            actions.CALENDAR_ADD_SERIES_LOCATION: str(edit_event.location_id),
+            actions.CALENDAR_ADD_SERIES_TYPE: str(edit_event.event_type_id),
             actions.CALENDAR_ADD_SERIES_START_DATE: safe_convert(
-                edit_series.start_date, datetime.strftime, ["%Y-%m-%d"]
+                edit_event.start_date, datetime.strftime, ["%Y-%m-%d"]
             ),
-            actions.CALENDAR_ADD_SERIES_END_DATE: safe_convert(edit_series.end_date, datetime.strftime, ["%Y-%m-%d"]),
-            actions.CALENDAR_ADD_SERIES_START_TIME: safe_convert(edit_series.start_time, time_int_to_str),
-            actions.CALENDAR_ADD_SERIES_END_TIME: safe_convert(edit_series.end_time, time_int_to_str),
-            actions.CALENDAR_ADD_SERIES_DOW: [str(edit_series.day_of_week)],
-            actions.CALENDAR_ADD_SERIES_FREQUENCY: edit_series.recurrence_pattern,
-            actions.CALENDAR_ADD_SERIES_INTERVAL: edit_series.recurrence_interval,
-            actions.CALENDAR_ADD_SERIES_INDEX: edit_series.index_within_interval,
+            actions.CALENDAR_ADD_SERIES_END_DATE: safe_convert(edit_event.end_date, datetime.strftime, ["%Y-%m-%d"]),
+            actions.CALENDAR_ADD_SERIES_START_TIME: safe_convert(edit_event.start_time, time_int_to_str),
+            actions.CALENDAR_ADD_SERIES_END_TIME: safe_convert(edit_event.end_time, time_int_to_str),
+            actions.CALENDAR_ADD_SERIES_DOW: [str(edit_event.day_of_week)],
+            actions.CALENDAR_ADD_SERIES_FREQUENCY: edit_event.recurrence_pattern,
+            actions.CALENDAR_ADD_SERIES_INTERVAL: edit_event.recurrence_interval,
+            actions.CALENDAR_ADD_SERIES_INDEX: edit_event.index_within_interval,
         }
     else:
         initial_values = {
@@ -74,12 +89,16 @@ def build_series_add_form(
 
     # This is triggered when the AO is selected, defaults are loaded for the location and event type
     # TODO: is there a better way to update the modal without having to rebuild everything?
-    if safe_get(body, "actions", 0, "action_id") == actions.CALENDAR_ADD_SERIES_AO:
-        form_data = SERIES_FORM.get_selected_values(body)
-        ao: Org = DbManager.get_record(Org, safe_convert(safe_get(form_data, actions.CALENDAR_ADD_SERIES_AO), int))
+    action_id = safe_get(body, "actions", 0, "action_id")
+    if action_id in (actions.CALENDAR_ADD_SERIES_AO, actions.CALENDAR_ADD_EVENT_AO):
+        if action_id == actions.CALENDAR_ADD_SERIES_AO:
+            form_data = SERIES_FORM.get_selected_values(body)
+        else:
+            form_data = EVENT_FORM.get_selected_values(body)
+        ao: Org = DbManager.get_record(Org, safe_convert(safe_get(form_data, action_id), int))
         default_event_type = DbManager.find_records(
             EventType_x_Org,
-            [EventType_x_Org.org_id == safe_get(form_data, actions.CALENDAR_ADD_SERIES_AO), EventType_x_Org.is_default],
+            [EventType_x_Org.org_id == safe_get(form_data, action_id), EventType_x_Org.is_default],
         )
         if ao:
             if ao.default_location_id:
@@ -92,23 +111,27 @@ def build_series_add_form(
             client=client,
             view_id=safe_get(body, "view", "id"),
             callback_id=actions.ADD_SERIES_CALLBACK_ID,
-            title_text="Add a Series",
+            title_text=title_text,
+            parent_metadata=parent_metadata,
         )
     else:
         form.set_initial_values(initial_values)
         form.post_modal(
             client=client,
             trigger_id=safe_get(body, "trigger_id"),
-            title_text="Add a Series",
+            title_text=title_text,
             callback_id=actions.ADD_SERIES_CALLBACK_ID,
             new_or_add="add",
-            parent_metadata={"series_id": edit_series.id} if edit_series else {},
+            parent_metadata=parent_metadata,
         )
 
 
 def handle_series_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    form_data = SERIES_FORM.get_selected_values(body)
     metadata = safe_convert(safe_get(body, "view", "private_metadata"), json.loads)
+    if metadata.get("is_series") == "False":
+        form_data = EVENT_FORM.get_selected_values(body)
+    else:
+        form_data = SERIES_FORM.get_selected_values(body)
 
     end_date = safe_convert(safe_get(form_data, actions.CALENDAR_ADD_SERIES_END_DATE), datetime.strptime, ["%Y-%m-%d"])
 
@@ -132,7 +155,9 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
     # Apply int conversion to all values if not null
     location_id = safe_convert(location_id, int)
     event_type_id = safe_convert(event_type_id, int)
-    org_id = safe_convert(safe_get(form_data, actions.CALENDAR_ADD_SERIES_AO), int)
+    org_id = safe_convert(
+        safe_get(form_data, actions.CALENDAR_ADD_SERIES_AO) or safe_get(form_data, actions.CALENDAR_ADD_EVENT_AO), int
+    )
     recurrence_interval = safe_convert(safe_get(form_data, actions.CALENDAR_ADD_SERIES_INTERVAL), int)
     index_within_interval = safe_convert(safe_get(form_data, actions.CALENDAR_ADD_SERIES_INDEX), int)
 
@@ -144,26 +169,45 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
         series_name = f"{org.name} {event_type.name if event_type else ''}"
 
     series_records = []
-    for dow in safe_get(form_data, actions.CALENDAR_ADD_SERIES_DOW):
-        series = Event(
-            name=series_name,
-            description=safe_get(form_data, actions.CALENDAR_ADD_SERIES_DESCRIPTION),
-            org_id=org_id,
-            location_id=location_id,
-            event_type_id=event_type_id,
-            start_date=datetime.strptime(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_DATE), "%Y-%m-%d"),
-            end_date=end_date,
-            start_time=time_str_to_int(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_TIME)),
-            end_time=end_time,
-            recurrence_pattern=safe_get(form_data, actions.CALENDAR_ADD_SERIES_FREQUENCY),
-            recurrence_interval=recurrence_interval,
-            index_within_interval=index_within_interval,
-            day_of_week=int(dow),
-            is_series=True,
-            is_active=True,
-            highlight=safe_get(form_data, actions.CALENDAR_ADD_SERIES_HIGHLIGHT) == "True",
-        )
-        series_records.append(series)
+    day_of_weeks = safe_get(form_data, actions.CALENDAR_ADD_SERIES_DOW)
+
+    # day_of_weeks will be None if this is a one-time event
+    if not day_of_weeks:
+        series_records = [
+            Event(
+                name=series_name,
+                org_id=org_id,
+                location_id=location_id,
+                event_type_id=event_type_id,
+                start_date=datetime.strptime(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_DATE), "%Y-%m-%d"),
+                start_time=time_str_to_int(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_TIME)),
+                end_time=end_time,
+                is_series=False,
+                is_active=True,
+                highlight=safe_get(form_data, actions.CALENDAR_ADD_SERIES_HIGHLIGHT) == ["True"],
+            )
+        ]
+    else:
+        for dow in day_of_weeks:
+            series = Event(
+                name=series_name,
+                description=safe_get(form_data, actions.CALENDAR_ADD_SERIES_DESCRIPTION),
+                org_id=org_id,
+                location_id=location_id,
+                event_type_id=event_type_id,
+                start_date=datetime.strptime(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_DATE), "%Y-%m-%d"),
+                end_date=end_date,
+                start_time=time_str_to_int(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_TIME)),
+                end_time=end_time,
+                recurrence_pattern=safe_get(form_data, actions.CALENDAR_ADD_SERIES_FREQUENCY),
+                recurrence_interval=recurrence_interval,
+                index_within_interval=index_within_interval,
+                day_of_week=int(dow),
+                is_series=True,
+                is_active=True,
+                highlight=safe_get(form_data, actions.CALENDAR_ADD_SERIES_HIGHLIGHT) == ["True"],
+            )
+            series_records.append(series)
 
     if safe_get(metadata, "series_id"):
         # series_id is passed in the metadata if this is an edit
@@ -179,7 +223,8 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
         records = DbManager.create_records(series_records)
 
     # Now that the series has been created, we need to create the individual events
-    create_events(records)
+    if day_of_weeks:
+        create_events(records)
 
 
 def create_events(records: list[Event]):
@@ -228,40 +273,81 @@ def create_events(records: list[Event]):
     DbManager.create_records(event_records)
 
 
-def build_series_list_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    series_records = DbManager.find_records(
-        Event, [Event.is_series, Event.org_id == region_record.org_id, Event.is_active]
+def build_series_list_form(
+    body: dict,
+    client: WebClient,
+    logger: Logger,
+    context: dict,
+    region_record: Region,
+    update_view_id=None,
+):
+    if safe_get(body, "actions", 0, "action_id") == actions.CALENDAR_EDIT_SERIES:
+        is_series = True
+        title_text = "Delete or Edit a Series"
+        confirm_text = "Are you sure you want to edit / delete this series? This cannot be undone. Also, editing or deleting a series will also edit or delete all future events associated with the series."  # noqa
+    else:
+        is_series = False
+        title_text = "Delete or Edit an Event"
+        confirm_text = "Are you sure you want to edit / delete this event? This cannot be undone."
+
+    series_records = DbManager.find_join_records2(
+        Event,
+        Org,
+        [
+            Event.is_series == is_series,
+            (Event.org_id == region_record.org_id) or (Org.parent_id == region_record.org_id),
+            Event.is_active,
+            Event.start_date >= datetime.now(),
+        ],
     )
+    series_records = [x[0] for x in series_records][:40]
 
     # TODO: separate into weekly / non-weekly series?
-    blocks = [
-        orm.SectionBlock(
-            label=f"{s.name} ({constants.DAY_OF_WEEK_OPTIONS["names"][s.day_of_week-1]} @ {time_int_to_str(s.start_time).replace(":","")})"[  # noqa
+    # TODO: add an AO filter
+    blocks = []
+    for s in series_records:
+        if is_series:
+            label = f"{s.name} ({constants.DAY_OF_WEEK_OPTIONS['names'][s.day_of_week+1]} @ {time_int_to_str(s.start_time).replace(':', '')})"[  # noqa
                 :50
-            ],  # noqa
-            action=f"{actions.SERIES_EDIT_DELETE}_{s.id}",
-            element=orm.StaticSelectElement(
-                placeholder="Edit or Delete",
-                options=orm.as_selector_options(names=["Edit", "Delete"]),
-                confirm=orm.ConfirmObject(
-                    title="Are you sure?",
-                    text="Are you sure you want to edit / delete this series? This cannot be undone. Also, editing or deleting a series will also edit or delete all future events associated with the series.",  # noqa
-                    confirm="Yes, I'm sure",
-                    deny="Whups, never mind",
+            ]
+        else:
+            label = f"{s.name} ({s.start_date.strftime('%m/%d/%Y')})"[:50]
+
+        blocks.append(
+            orm.SectionBlock(
+                label=label,
+                action=f"{actions.SERIES_EDIT_DELETE}_{s.id}",
+                element=orm.StaticSelectElement(
+                    placeholder="Edit or Delete",
+                    options=orm.as_selector_options(names=["Edit", "Delete"]),
+                    confirm=orm.ConfirmObject(
+                        title="Are you sure?",
+                        text=confirm_text,
+                        confirm="Yes, I'm sure",
+                        deny="Whups, never mind",
+                    ),
                 ),
-            ),
+            )
         )
-        for s in series_records
-    ]
     form = orm.BlockView(blocks=blocks)
-    form.post_modal(
-        client=client,
-        trigger_id=safe_get(body, "trigger_id"),
-        title_text="Edit or Delete a Series",
-        callback_id=actions.EDIT_DELETE_SERIES_CALLBACK_ID,
-        submit_button_text="None",
-        new_or_add="add",
-    )
+    if update_view_id:
+        form.update_modal(
+            client=client,
+            view_id=update_view_id,
+            callback_id=actions.EDIT_DELETE_SERIES_CALLBACK_ID,
+            title_text=title_text,
+            submit_button_text="None",
+        )
+    else:
+        form.post_modal(
+            client=client,
+            trigger_id=safe_get(body, "trigger_id"),
+            title_text=title_text,
+            callback_id=actions.EDIT_DELETE_SERIES_CALLBACK_ID,
+            submit_button_text="None",
+            new_or_add="add",
+            parent_metadata={"is_series": str(is_series)},
+        )
 
 
 def handle_series_edit_delete(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
@@ -270,12 +356,15 @@ def handle_series_edit_delete(body: dict, client: WebClient, logger: Logger, con
 
     if action == "Edit":
         series = DbManager.get_record(Event, series_id)
-        build_series_add_form(body, client, logger, context, region_record, edit_series=series)
+        build_series_add_form(body, client, logger, context, region_record, edit_event=series)
     elif action == "Delete":
         DbManager.update_record(Event, series_id, fields={"is_active": False})
         DbManager.update_records(
             Event, [Event.series_id == series_id, Event.start_date >= datetime.now()], fields={"is_active": False}
-        )  # noqa
+        )
+        build_series_list_form(
+            body, client, logger, context, region_record, update_view_id=safe_get(body, "view", "id")
+        )
 
 
 SERIES_FORM = orm.BlockView(
@@ -303,7 +392,6 @@ SERIES_FORM = orm.BlockView(
             element=orm.CheckboxInputElement(
                 options=orm.as_selector_options(names=["Yes"], values=["True"]),
             ),
-            optional=False,
         ),
         orm.ContextBlock(
             element=orm.ContextElement(initial_value="Primarily used for 2nd F events, convergences, etc.")
@@ -402,6 +490,68 @@ SERIES_FORM = orm.BlockView(
         orm.ContextBlock(
             element=orm.ContextElement(
                 initial_value="For example, Index=2 and Frequency=Monthly would mean the second week of the month. If left blank, the index will assumed to be 1."  # noqa
+            )
+        ),
+    ]
+)
+
+EVENT_FORM = orm.BlockView(
+    blocks=[
+        orm.InputBlock(
+            label="Event Name",
+            action=actions.CALENDAR_ADD_SERIES_NAME,
+            element=orm.PlainTextInputElement(placeholder="Enter the event name"),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(initial_value="If left blank, will default to the AO name + event type.")
+        ),
+        orm.InputBlock(
+            label="Highlight on Special Events Page?",
+            action=actions.CALENDAR_ADD_SERIES_HIGHLIGHT,
+            element=orm.CheckboxInputElement(
+                options=orm.as_selector_options(names=["Yes"], values=["True"]),
+            ),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(initial_value="Primarily used for 2nd F events, convergences, etc.")
+        ),
+        orm.InputBlock(
+            label="AO",
+            action=actions.CALENDAR_ADD_EVENT_AO,
+            element=orm.StaticSelectElement(placeholder="Select an AO"),
+            dispatch_action=True,
+        ),
+        orm.InputBlock(
+            label="Location",
+            action=actions.CALENDAR_ADD_SERIES_LOCATION,
+            element=orm.StaticSelectElement(placeholder="Select the location"),
+        ),
+        orm.InputBlock(
+            label="Event Type",
+            action=actions.CALENDAR_ADD_SERIES_TYPE,
+            element=orm.StaticSelectElement(placeholder="Select the event type"),
+            optional=False,
+        ),
+        orm.InputBlock(
+            label="Date",
+            action=actions.CALENDAR_ADD_SERIES_START_DATE,
+            element=orm.DatepickerElement(placeholder="Enter the start date"),
+            optional=False,
+        ),
+        orm.InputBlock(
+            label="Start Time",
+            action=actions.CALENDAR_ADD_SERIES_START_TIME,
+            element=orm.TimepickerElement(placeholder="Enter the start time"),
+            optional=False,
+        ),
+        orm.InputBlock(
+            label="End Time",
+            action=actions.CALENDAR_ADD_SERIES_END_TIME,
+            element=orm.TimepickerElement(placeholder="Enter the end time"),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="If no end time is provided, the event will be defaulted to be one hour long."
             )
         ),
     ]

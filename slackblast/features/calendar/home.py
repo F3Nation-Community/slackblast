@@ -23,6 +23,10 @@ def build_home_form(body: dict, client: WebClient, logger: Logger, context: dict
                     placeholder="Filter Event Types",
                     action=actions.CALENDAR_HOME_EVENT_TYPE_FILTER,
                 ),
+                orm.DatepickerElement(
+                    action=actions.CALENDAR_HOME_DATE_FILTER,
+                    placeholder="Start Search Date",
+                ),
                 orm.CheckboxInputElement(
                     action=actions.CALENDAR_HOME_Q_FILTER,
                     options=orm.as_selector_options(names=["Show only open Q slots"], values=["yes"]),
@@ -53,10 +57,6 @@ def build_home_form(body: dict, client: WebClient, logger: Logger, context: dict
     # action_elements = []
     for event in events:
         if event[0].start_date != active_date:
-            # if action_elements:
-            #     blocks.append(orm.ActionsBlock(elements=action_elements))
-            # action_elements = []
-
             active_date = event[0].start_date
             blocks.append(orm.SectionBlock(label=f":calendar: *{active_date.strftime('%A, %B %d')}*"))
         blocks.append(
@@ -65,19 +65,13 @@ def build_home_form(body: dict, client: WebClient, logger: Logger, context: dict
                 element=orm.OverflowElement(
                     action=f"{actions.CALENDAR_HOME_EVENT}_{event[0].id}",
                     options=orm.as_selector_options(
-                        names=["View Details", "Take Q", "HC"], values=["view", "take", "HC"]
+                        # TODO: make dynamic if you've already taken a Q, HC'd, etc
+                        names=["View Details", "Take Q", "HC", "Edit"],
+                        values=["view", "take", "hc", "edit"],
                     ),
                 ),
             )
         )
-        # action_elements.append(
-        #     orm.ButtonElement(  # this is kind of fugly... what else could we use?
-        #         label=f"{event[0].name} @ {str(event[0].start_time).zfill(4)} Q: None",
-        #         action=f"{actions.CALENDAR_HOME_EVENT}_{event[0].id}",
-        #         value=str(event[0].id),
-        #     )
-        # )
-    # blocks.append(orm.ActionsBlock(elements=action_elements))
 
     form = orm.BlockView(blocks=blocks)
     print(json.dumps(form.as_form_field(), indent=4))

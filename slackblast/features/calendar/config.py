@@ -40,7 +40,7 @@ CALENDAR_CONFIG_FORM = orm.BlockView(
                     value="add",
                 ),
                 orm.ButtonElement(
-                    label="Edit or Delete Locations",
+                    label="Edit or Deactivate Locations",
                     action=actions.CALENDAR_EDIT_LOCATION,
                     value="edit",
                 ),
@@ -55,7 +55,7 @@ CALENDAR_CONFIG_FORM = orm.BlockView(
                     value="add",
                 ),
                 orm.ButtonElement(
-                    label="Edit or Delete AOs",
+                    label="Edit or Deactivate AOs",
                     action=actions.CALENDAR_EDIT_AO,
                     value="edit",
                 ),
@@ -70,7 +70,7 @@ CALENDAR_CONFIG_FORM = orm.BlockView(
                     value="add",
                 ),
                 orm.ButtonElement(
-                    label="Edit or Delete Series",
+                    label="Edit or Deactivate Series",
                     action=actions.CALENDAR_EDIT_SERIES,
                     value="edit",
                 ),
@@ -85,7 +85,7 @@ CALENDAR_CONFIG_FORM = orm.BlockView(
                     value="add",
                 ),
                 orm.ButtonElement(
-                    label="Edit or Delete Single Events",
+                    label="Edit or Deactivate Single Events",
                     action=actions.CALENDAR_EDIT_SINGLE_EVENT,
                     value="edit",
                 ),
