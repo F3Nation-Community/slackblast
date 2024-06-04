@@ -12,6 +12,15 @@ from utilities.helper_functions import safe_convert, safe_get, time_int_to_str, 
 from utilities.slack import actions, orm
 
 
+def manage_series(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    action = safe_get(body, "actions", 0, "selected_option", "value")
+
+    if action == "add":
+        build_series_add_form(body, client, logger, context, region_record)
+    elif action == "edit":
+        build_series_list_form(body, client, logger, context, region_record)
+
+
 def build_series_add_form(
     body: dict,
     client: WebClient,
@@ -21,9 +30,7 @@ def build_series_add_form(
     edit_event: Event | None = None,
 ):
     parent_metadata = {"series_id": edit_event.id} if edit_event else {}
-    if (
-        safe_get(body, "actions", 0, "action_id")[: len(actions.CALENDAR_ADD_SERIES)] == actions.CALENDAR_ADD_SERIES
-    ) or (safe_get(body, "actions", 0, "action_id") == actions.CALENDAR_ADD_SERIES_AO):
+    if safe_get(body, "actions", 0, "action_id") in (actions.CALENDAR_MANAGE_SERIES, actions.CALENDAR_ADD_SERIES_AO):
         title_text = "Add a Series"
         form = copy.deepcopy(SERIES_FORM)
         parent_metadata.update({"is_series": "True"})
@@ -281,7 +288,7 @@ def build_series_list_form(
     region_record: Region,
     update_view_id=None,
 ):
-    if safe_get(body, "actions", 0, "action_id") == actions.CALENDAR_EDIT_SERIES:
+    if safe_get(body, "actions", 0, "action_id") == actions.CALENDAR_MANAGE_SERIES:
         is_series = True
         title_text = "Delete or Edit a Series"
         confirm_text = "Are you sure you want to edit / delete this series? This cannot be undone. Also, editing or deleting a series will also edit or delete all future events associated with the series."  # noqa

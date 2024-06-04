@@ -10,6 +10,15 @@ from utilities.helper_functions import safe_convert, safe_get
 from utilities.slack import actions, orm
 
 
+def manage_locations(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    action = safe_get(body, "actions", 0, "selected_option", "value")
+
+    if action == "add":
+        build_location_add_form(body, client, logger, context, region_record)
+    elif action == "edit":
+        build_location_list_form(body, client, logger, context, region_record)
+
+
 def build_location_add_form(
     body: dict,
     client: WebClient,

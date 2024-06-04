@@ -21,75 +21,54 @@ def build_calendar_config_form(body: dict, client: WebClient, logger: Logger, co
 
 CALENDAR_CONFIG_FORM = orm.BlockView(
     blocks=[
-        orm.SectionBlock(label=":gear: General Calendar Settings"),
         orm.ActionsBlock(
             elements=[
                 orm.ButtonElement(
-                    label="Edit Calendar Settings",
+                    label=":gear: General Calendar Settings",
                     action=actions.CALENDAR_CONFIG_GENERAL,
                     value="edit",
                 )
             ],
         ),
-        orm.SectionBlock(label=":round_pushpin: Manage Locations"),
-        orm.ActionsBlock(
-            elements=[
-                orm.ButtonElement(
-                    label="Add Location",
-                    action=actions.CALENDAR_ADD_LOCATION,
-                    value="add",
+        orm.SectionBlock(
+            label=":round_pushpin: Manage Locations",
+            action=actions.CALENDAR_MANAGE_LOCATIONS,
+            element=orm.OverflowElement(
+                options=orm.as_selector_options(
+                    names=["Add Location", "Edit or Deactivate Locations"],
+                    values=["add", "edit"],
                 ),
-                orm.ButtonElement(
-                    label="Edit or Deactivate Locations",
-                    action=actions.CALENDAR_EDIT_LOCATION,
-                    value="edit",
-                ),
-            ],
+            ),
         ),
-        orm.SectionBlock(label=":world_map: Manage AOs"),
-        orm.ActionsBlock(
-            elements=[
-                orm.ButtonElement(
-                    label="Add AO",
-                    action=actions.CALENDAR_ADD_AO,
-                    value="add",
+        orm.SectionBlock(
+            label=":world_map: Manage AOs",
+            action=actions.CALENDAR_MANAGE_AOS,
+            element=orm.OverflowElement(
+                options=orm.as_selector_options(
+                    names=["Add AO", "Edit or Deactivate AOs"],
+                    values=["add", "edit"],
                 ),
-                orm.ButtonElement(
-                    label="Edit or Deactivate AOs",
-                    action=actions.CALENDAR_EDIT_AO,
-                    value="edit",
-                ),
-            ],
+            ),
         ),
-        orm.SectionBlock(label=":spiral_calendar_pad: Manage Series"),
-        orm.ActionsBlock(
-            elements=[
-                orm.ButtonElement(
-                    label="Add Series",
-                    action=actions.CALENDAR_ADD_SERIES,
-                    value="add",
+        orm.SectionBlock(
+            label=":spiral_calendar_pad: Manage Series",
+            action=actions.CALENDAR_MANAGE_SERIES,
+            element=orm.OverflowElement(
+                options=orm.as_selector_options(
+                    names=["Add Series", "Edit or Deactivate Series"],
+                    values=["add", "edit"],
                 ),
-                orm.ButtonElement(
-                    label="Edit or Deactivate Series",
-                    action=actions.CALENDAR_EDIT_SERIES,
-                    value="edit",
-                ),
-            ],
+            ),
         ),
-        orm.SectionBlock(label=":date: Manage Single Events"),
-        orm.ActionsBlock(
-            elements=[
-                orm.ButtonElement(
-                    label="Add Single Event",
-                    action=actions.CALENDAR_ADD_SINGLE_EVENT,
-                    value="add",
+        orm.SectionBlock(
+            label=":date: Manage Single Events",
+            action=actions.CALENDAR_MANAGE_EVENTS,
+            element=orm.OverflowElement(
+                options=orm.as_selector_options(
+                    names=["Add Single Event", "Edit or Deactivate Single Events"],
+                    values=["add", "edit"],
                 ),
-                orm.ButtonElement(
-                    label="Edit or Deactivate Single Events",
-                    action=actions.CALENDAR_EDIT_SINGLE_EVENT,
-                    value="edit",
-                ),
-            ],
+            ),
         ),
     ]
 )

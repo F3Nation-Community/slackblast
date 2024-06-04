@@ -171,6 +171,10 @@ CALENDAR_HOME_EVENT_TYPE_FILTER = "calendar-home-event-type-filter"
 CALENDAR_HOME_Q_FILTER = "calendar-home-q-filter"
 CALENDAR_ADD_EVENT_AO = "calendar-add-event-ao"
 CALENDAR_HOME_DATE_FILTER = "calendar-home-date-filter"
+CALENDAR_MANAGE_LOCATIONS = "calendar-manage-locations"
+CALENDAR_MANAGE_AOS = "calendar-manage-aos"
+CALENDAR_MANAGE_SERIES = "calendar-manage-series"
+CALENDAR_MANAGE_EVENTS = "calendar-manage-events"
 
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,
