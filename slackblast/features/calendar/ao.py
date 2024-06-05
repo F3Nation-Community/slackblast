@@ -29,6 +29,8 @@ def build_ao_add_form(
     context: dict,
     region_record: Region,
     edit_ao: Org = None,
+    update_view_id: str = None,
+    update_metadata: dict = None,
 ):
     form = copy.deepcopy(AO_FORM)
 
@@ -76,14 +78,23 @@ def build_ao_add_form(
     else:
         title_text = "Add an AO"
 
-    form.post_modal(
-        client=client,
-        trigger_id=safe_get(body, "trigger_id"),
-        title_text=title_text,
-        callback_id=actions.ADD_AO_CALLBACK_ID,
-        new_or_add="add",
-        parent_metadata={"ao_id": edit_ao.id} if edit_ao else {},
-    )
+    if update_view_id:
+        form.set_initial_values(update_metadata)
+        form.update_modal(
+            client=client,
+            view_id=update_view_id,
+            title_text=title_text,
+            callback_id=actions.ADD_AO_CALLBACK_ID,
+        )
+    else:
+        form.post_modal(
+            client=client,
+            trigger_id=safe_get(body, "trigger_id"),
+            title_text=title_text,
+            callback_id=actions.ADD_AO_CALLBACK_ID,
+            new_or_add="add",
+            parent_metadata={"ao_id": edit_ao.id} if edit_ao else {},
+        )
 
 
 def handle_ao_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
@@ -198,6 +209,15 @@ AO_FORM = orm.BlockView(
             label="Default Location",
             action=actions.CALENDAR_ADD_AO_LOCATION,
             element=orm.StaticSelectElement(placeholder="Select a location"),
+        ),
+        orm.ActionsBlock(
+            elements=[
+                orm.ButtonElement(
+                    label="Add Location",
+                    action=actions.CALENDAR_ADD_AO_NEW_LOCATION,
+                    value="add",
+                )
+            ],
         ),
         orm.InputBlock(
             label="Default Event Type",

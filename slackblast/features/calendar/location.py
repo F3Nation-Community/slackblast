@@ -4,6 +4,7 @@ from logging import Logger
 
 from slack_sdk.web import WebClient
 
+from features.calendar import ao
 from utilities.database import DbManager
 from utilities.database.orm import Location, Region
 from utilities.helper_functions import safe_convert, safe_get
@@ -28,6 +29,7 @@ def build_location_add_form(
     edit_location: Location = None,
 ):
     form = copy.deepcopy(LOCATION_FORM)
+    action_id = safe_get(body, "actions", 0, "action_id")
 
     if edit_location:
         form.set_initial_values(
@@ -46,13 +48,24 @@ def build_location_add_form(
     else:
         title_text = "Add a Location"
 
+    parent_metadata = (
+        {"update_view_id": safe_get(body, "view", "id")} if action_id == actions.CALENDAR_ADD_AO_NEW_LOCATION else {}
+    )
+    parent_metadata = {}
+    if action_id == actions.CALENDAR_ADD_AO_NEW_LOCATION:
+        parent_metadata["update_view_id"] = safe_get(body, "view", "id")
+        form_data = ao.AO_FORM.get_selected_values(body)
+        parent_metadata.update(form_data)
+    if edit_location:
+        parent_metadata["location_id"] = edit_location.id
+
     form.post_modal(
         client=client,
         trigger_id=safe_get(body, "trigger_id"),
         title_text=title_text,
         callback_id=actions.ADD_LOCATION_CALLBACK_ID,
         new_or_add="add",
-        parent_metadata={"location_id": edit_location.id} if edit_location else {},
+        parent_metadata=parent_metadata,
     )
 
 
@@ -85,6 +98,24 @@ def handle_location_add(body: dict, client: WebClient, logger: Logger, context: 
         DbManager.update_record(Location, metadata["location_id"], fields=update_dict)
     else:
         location = DbManager.create_record(location)
+
+    if safe_get(metadata, "update_view_id"):
+        update_metadata = {
+            actions.CALENDAR_ADD_AO_NAME: safe_get(metadata, actions.CALENDAR_ADD_AO_NAME),
+            actions.CALENDAR_ADD_AO_DESCRIPTION: safe_get(metadata, actions.CALENDAR_ADD_AO_DESCRIPTION),
+            actions.CALENDAR_ADD_AO_CHANNEL: safe_get(metadata, actions.CALENDAR_ADD_AO_CHANNEL),
+            actions.CALENDAR_ADD_AO_LOCATION: str(location.id),
+            actions.CALENDAR_ADD_AO_TYPE: safe_get(metadata, actions.CALENDAR_ADD_AO_TYPE),
+        }
+        ao.build_ao_add_form(
+            body,
+            client,
+            logger,
+            context,
+            region_record,
+            update_view_id=metadata["update_view_id"],
+            update_metadata=update_metadata,
+        )
 
 
 def build_location_list_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):

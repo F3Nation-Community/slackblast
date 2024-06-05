@@ -175,6 +175,7 @@ CALENDAR_MANAGE_LOCATIONS = "calendar-manage-locations"
 CALENDAR_MANAGE_AOS = "calendar-manage-aos"
 CALENDAR_MANAGE_SERIES = "calendar-manage-series"
 CALENDAR_MANAGE_EVENTS = "calendar-manage-events"
+CALENDAR_ADD_AO_NEW_LOCATION = "calendar-add-ao-new-location"
 
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,
