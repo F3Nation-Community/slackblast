@@ -21,10 +21,13 @@ from utilities.database.orm import (
     PaxminerRegion,
     PaxminerUser,
     Region,
+    SlackUser,
+    UserNew,
 )
 from utilities.slack import actions
 
 REGION_RECORDS: Dict[str, Region] = {}
+SLACK_USERS: Dict[str, str] = {}
 
 
 def get_oauth_flow():
@@ -317,6 +320,58 @@ def replace_slack_user_ids(text: str, client, logger, region_record: Region = No
     for old_value, new_value in zip(slack_user_ids, slack_user_names):
         text = text.replace(old_value, new_value, 1)
     return text
+
+
+def get_user_id(slack_user_id: str, region_record: Region, client: WebClient, logger: Logger) -> int:
+    if not SLACK_USERS:
+        update_local_slack_users()
+
+    user_id = safe_get(SLACK_USERS, slack_user_id)
+    if not user_id:
+        try:
+            # check to see if this user's email is already in the db
+            user_info = client.users_info(user=slack_user_id)
+            email = safe_get(user_info, "user", "profile", "email")
+            user_name = safe_get(user_info, "user", "profile", "real_name") or safe_get(
+                user_info, "user", "profile", "display_name"
+            )
+            user_record = safe_get(DbManager.find_records(UserNew, filters=[UserNew.email == email]), 0)
+
+            # If not, create a new user record
+            if not user_record:
+                user_record = DbManager.create_record(
+                    UserNew(
+                        email=email,
+                        slack_id=slack_user_id,
+                        f3_name=user_name,
+                        home_region_id=region_record.org_id,
+                    )
+                )
+
+            # Create a new slack user record
+            DbManager.create_record(
+                SlackUser(
+                    user_id=user_record.id,
+                    slack_id=slack_user_id,
+                    email=email,
+                    user_name=user_name,
+                )
+            )
+
+            # Update SLACK_USERS with the new id
+            SLACK_USERS[slack_user_id] = user_record.id
+            return user_record.id
+        except Exception as e:
+            raise e
+    else:
+        return user_id
+
+
+def update_local_slack_users() -> None:
+    print("Updating local slack users...")
+    slack_users: List[SlackUser] = DbManager.find_records(SlackUser, filters=[True])
+    global SLACK_USERS
+    SLACK_USERS = {slack_user.slack_id: slack_user.user_id for slack_user in slack_users}
 
 
 def get_region_record(team_id: str, body, context, client, logger) -> Region:

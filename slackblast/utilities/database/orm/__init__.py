@@ -302,7 +302,7 @@ class AttendanceNew(BaseClass, GetDBClass):
 
     id: Mapped[intpk]
     event_id: Mapped[int] = mapped_column(Integer, ForeignKey("events.id"))
-    user_id: Mapped[Optional[int]]
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("user.id"))
     attendance_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("attendance_types.id"))
     is_planned: Mapped[bool]
     meta: Mapped[Optional[dict[str, Any]]]
@@ -367,3 +367,28 @@ class EventType_x_Org(BaseClass, GetDBClass):
 
     def get_id():
         return EventType_x_Org.id
+
+
+class UserNew(BaseClass, GetDBClass):
+    __tablename__ = "user"  # todo: change table name to users
+
+    id: Mapped[intpk]
+    f3_name: Mapped[str100]
+    email: Mapped[str100]
+    home_region_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
+
+    def get_id():
+        return User.id
+
+
+class SlackUser(BaseClass, GetDBClass):
+    __tablename__ = "slack_users"
+
+    id: Mapped[intpk]
+    slack_id: Mapped[str100]
+    user_name: Mapped[str100]
+    email: Mapped[str100]
+    user_id: Mapped[str100] = mapped_column(String(100), ForeignKey("user.user_id"))
+
+    def get_id():
+        return SlackUser.id
