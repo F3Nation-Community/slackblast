@@ -30,7 +30,7 @@ def get_engine(echo=False, schema=None) -> Engine:
     return create_engine(db_url, echo=echo, poolclass=pool.NullPool)
 
 
-def get_session(echo=False, schema=None):
+def get_session(echo=True, schema=None):
     if GLOBAL_SESSION:
         return GLOBAL_SESSION
 

@@ -332,8 +332,8 @@ def get_user_id(slack_user_id: str, region_record: Region, client: WebClient, lo
             # check to see if this user's email is already in the db
             user_info = client.users_info(user=slack_user_id)
             email = safe_get(user_info, "user", "profile", "email")
-            user_name = safe_get(user_info, "user", "profile", "real_name") or safe_get(
-                user_info, "user", "profile", "display_name"
+            user_name = safe_get(user_info, "user", "profile", "display_name") or safe_get(
+                user_info, "user", "profile", "real_name"
             )
             user_record = safe_get(DbManager.find_records(UserNew, filters=[UserNew.email == email]), 0)
 
@@ -342,7 +342,6 @@ def get_user_id(slack_user_id: str, region_record: Region, client: WebClient, lo
                 user_record = DbManager.create_record(
                     UserNew(
                         email=email,
-                        slack_id=slack_user_id,
                         f3_name=user_name,
                         home_region_id=region_record.org_id,
                     )

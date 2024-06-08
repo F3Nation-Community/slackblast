@@ -38,6 +38,8 @@ def create_tables():
             orm.EventType_x_Org,
             orm.AttendanceType,
             orm.AttendanceNew,
+            orm.UserNew,
+            orm.SlackUser,
         ],
         "f3devregion": [
             orm.Backblast,

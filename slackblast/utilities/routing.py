@@ -75,6 +75,7 @@ ACTION_MAPPER = {
     actions.CALENDAR_MANAGE_SERIES: (series.manage_series, False),
     actions.CALENDAR_MANAGE_EVENTS: (series.manage_series, False),
     actions.CALENDAR_ADD_AO_NEW_LOCATION: (location.build_location_add_form, False),
+    actions.CALENDAR_HOME_EVENT: (home.handle_home_event, False),
 }
 
 VIEW_CLOSED_MAPPER = {
