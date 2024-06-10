@@ -76,6 +76,10 @@ ACTION_MAPPER = {
     actions.CALENDAR_MANAGE_EVENTS: (series.manage_series, False),
     actions.CALENDAR_ADD_AO_NEW_LOCATION: (location.build_location_add_form, False),
     actions.CALENDAR_HOME_EVENT: (home.handle_home_event, False),
+    actions.CALENDAR_HOME_AO_FILTER: (home.build_home_form, False),
+    actions.CALENDAR_HOME_Q_FILTER: (home.build_home_form, False),
+    actions.CALENDAR_HOME_DATE_FILTER: (home.build_home_form, False),
+    actions.CALENDAR_HOME_EVENT_TYPE_FILTER: (home.build_home_form, False),
 }
 
 VIEW_CLOSED_MAPPER = {

@@ -248,6 +248,47 @@ class StaticSelectElement(BaseElement):
 
 
 @dataclass
+class MultiStaticSelectElement(BaseElement):
+    initial_value: List[str] = None
+    options: List[SelectorOption] = None
+    confirm: ConfirmObject = None
+    action: str = None
+
+    def as_form_field(self, action: str = None):
+        if not self.options:
+            self.options = as_selector_options(["Default"])
+
+        option_elements = [self.__make_option(o) for o in self.options]
+        j = {"type": "multi_static_select", "options": option_elements, "action_id": action or self.action}
+        if self.placeholder:
+            j.update(self.make_placeholder_field())
+
+        initial_option = None
+        if self.initial_value:
+            j["initial_options"] = []
+            for value in self.initial_value:
+                initial_option = next((x for x in option_elements if x["value"] == value), None)
+                if initial_option:
+                    j["initial_options"].append(initial_option)
+
+        if self.confirm:
+            j["confirm"] = self.confirm.as_form_field()
+        return j
+
+    def get_selected_value(self, input_data, action):
+        return [o["value"] for o in safe_get(input_data, action, action, "selected_options") or []]
+
+    def __make_option(self, option: SelectorOption):
+        j = {
+            "text": {"type": "plain_text", "text": option.name, "emoji": True},
+            "value": option.value,
+        }
+        if option.description:
+            j["description"] = {"type": "plain_text", "text": option.description, "emoji": True}
+        return j
+
+
+@dataclass
 class RadioButtonsElement(BaseElement):
     initial_value: str = None
     options: List[SelectorOption] = None
@@ -671,6 +712,9 @@ class BlockView:
                 selected_values[block.action] = block.get_selected_value(values)
             elif isinstance(block, ContextBlock) and block.action:
                 selected_values[block.action] = block.get_selected_value(view_blocks, block.action)
+            elif isinstance(block, ActionsBlock):  # TODO: fix this, doesn't really work yet
+                for element in block.elements:
+                    selected_values[element.action] = block.get_selected_value(values, element.action)
 
         return selected_values
 

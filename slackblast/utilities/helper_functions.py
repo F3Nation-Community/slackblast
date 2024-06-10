@@ -602,7 +602,7 @@ def plain_text_to_rich_block(text: str) -> Dict[str, Any]:
     }
 
 
-def safe_convert(value: str | None, conversion, args=None) -> Any | None:
+def safe_convert(value: str | None, conversion, args: list = None) -> Any | None:
     args = args or []
     try:
         return conversion(value, *args)
