@@ -2,6 +2,7 @@ import datetime
 from logging import Logger
 
 from slack_sdk.web import WebClient
+from sqlalchemy import or_
 
 from utilities.database import DbManager
 from utilities.database.orm import AttendanceNew, Event, EventType, EventType_x_Org, Org, Region
@@ -27,7 +28,7 @@ def build_home_form(
         orm.InputBlock(
             label="Filter AOs",
             action=actions.CALENDAR_HOME_AO_FILTER,
-            element=orm.StaticSelectElement(
+            element=orm.MultiStaticSelectElement(
                 placeholder="Filter AOs",
                 options=orm.as_selector_options(
                     names=[ao.name for ao in ao_records],
@@ -39,7 +40,7 @@ def build_home_form(
         orm.InputBlock(
             label="Filter Event Types",
             action=actions.CALENDAR_HOME_EVENT_TYPE_FILTER,
-            element=orm.StaticSelectElement(
+            element=orm.MultiStaticSelectElement(
                 placeholder="Filter Event Types",
                 options=orm.as_selector_options(
                     names=[event_type.name for event_type in event_type_records],
@@ -106,26 +107,25 @@ def build_home_form(
         )
         or datetime.datetime.now()
     )
-    print(start_date)
-    filter_org_id = (
-        safe_convert(safe_get(existing_filter_data, actions.CALENDAR_HOME_AO_FILTER), int) or region_record.org_id
-    )
+
+    if safe_get(existing_filter_data, actions.CALENDAR_HOME_AO_FILTER):
+        filter_org_ids = [int(x) for x in safe_get(existing_filter_data, actions.CALENDAR_HOME_AO_FILTER)]
+    else:
+        filter_org_ids = [region_record.org_id]
 
     filter = [
-        (Event.org_id == filter_org_id) or (Org.parent_id == filter_org_id),
+        or_(Event.org_id.in_(filter_org_ids), Org.parent_id.in_(filter_org_ids)),
         ~Event.is_series,
         Event.start_date > start_date,
     ]
 
     if safe_get(existing_filter_data, actions.CALENDAR_HOME_EVENT_TYPE_FILTER):
-        filter.append(
-            Event.event_type_id
-            == safe_convert(safe_get(existing_filter_data, actions.CALENDAR_HOME_EVENT_TYPE_FILTER), int)
-        )
+        event_type_ids = [int(x) for x in safe_get(existing_filter_data, actions.CALENDAR_HOME_EVENT_TYPE_FILTER)]
+        filter.append(Event.event_type_id.in_(event_type_ids))
 
     open_q_only = safe_get(existing_filter_data, actions.CALENDAR_HOME_Q_FILTER) == ["yes"]
-
     # Run the query
+    # TODO: implement pagination / dynamic limit
     events: list[CalendarHomeQuery] = home_schedule_query(user_id, filter, limit=45, open_q_only=open_q_only)
 
     # Build the event list
@@ -161,6 +161,7 @@ def build_home_form(
         )
         block_count += 1
 
+    # TODO: add "next page" button
     form = orm.BlockView(blocks=blocks)
     form.set_initial_values(existing_filter_data)
     form.update_modal(
