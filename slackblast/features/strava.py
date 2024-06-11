@@ -86,6 +86,14 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
             user_record = user_records[0]
             strava_recent_activities = get_strava_activities(user_record)
 
+            logger.info(f"recent activities found: {strava_recent_activities}")
+            if len(strava_recent_activities) == 0:
+                strava_blocks = [
+                    slack_orm.SectionBlock(
+                        label="No recent activities found. Please log an activity on Strava first.",
+                    ).as_form_field(),
+                ]
+
             button_elements = []
             for activity in strava_recent_activities:
                 date = datetime.strptime(activity["start_date_local"], "%Y-%m-%dT%H:%M:%SZ")
