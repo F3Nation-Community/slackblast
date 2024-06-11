@@ -91,7 +91,7 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
                 strava_blocks = [
                     slack_orm.SectionBlock(
                         label="No recent activities found. Please log an activity on Strava first.",
-                    ).as_form_field(),
+                    ),
                 ]
 
             button_elements = []
