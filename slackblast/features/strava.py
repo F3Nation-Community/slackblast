@@ -44,6 +44,36 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
         or (user_id in (backblast_meta[actions.BACKBLAST_OP] or []))
     )
 
+    redirect_stage = "" if constants.LOCAL_DEVELOPMENT else "Prod/"
+    oauth = OAuth2Session(
+        client_id=os.environ[constants.STRAVA_CLIENT_ID],
+        redirect_uri=f"https://{lambda_function_host}/{redirect_stage}exchange_token",
+        scope=["read,activity:read,activity:write"],
+        state=f"{team_id}-{user_id}",
+    )
+    authorization_url, state = oauth.authorization_url("https://www.strava.com/oauth/authorize")
+    auth_blocks = [
+        slack_orm.ImageBlock(
+            image_url="https://slackblast-images.s3.amazonaws.com/btn_strava_connectwith_orange.png",
+            alt_text="Connect with Strava",
+        ),
+        slack_orm.ActionsBlock(
+            elements=[
+                slack_orm.ButtonElement(
+                    label="Connect",
+                    action=actions.STRAVA_CONNECT_BUTTON,
+                    url=authorization_url,
+                )
+            ]
+        ),
+        slack_orm.ContextBlock(
+            element=slack_orm.ContextElement(
+                initial_value="Opens in a new window",
+            ),
+            action="context",
+        ),
+    ]
+
     if allow_strava:
         update_view_id = safe_get(body, actions.LOADING_ID)
         user_records: List[User] = DbManager.find_records(
@@ -52,39 +82,20 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
 
         if len(user_records) == 0:
             title_text = "Connect Strava"
-            redirect_stage = "" if constants.LOCAL_DEVELOPMENT else "Prod/"
-            oauth = OAuth2Session(
-                client_id=os.environ[constants.STRAVA_CLIENT_ID],
-                redirect_uri=f"https://{lambda_function_host}/{redirect_stage}exchange_token",
-                scope=["read,activity:read,activity:write"],
-                state=f"{team_id}-{user_id}",
-            )
-            authorization_url, state = oauth.authorization_url("https://www.strava.com/oauth/authorize")
-            strava_blocks = [
-                slack_orm.ImageBlock(
-                    image_url="https://slackblast-images.s3.amazonaws.com/btn_strava_connectwith_orange.png",
-                    alt_text="Connect with Strava",
-                ),
-                slack_orm.ActionsBlock(
-                    elements=[
-                        slack_orm.ButtonElement(
-                            label="Connect",
-                            action=actions.STRAVA_CONNECT_BUTTON,
-                            url=authorization_url,
-                        )
-                    ]
-                ),
-                slack_orm.ContextBlock(
-                    element=slack_orm.ContextElement(
-                        initial_value="Opens in a new window",
-                    ),
-                    action="context",
-                ),
-            ]
+            strava_blocks = auth_blocks
         else:
             title_text = "Choose Activity"
             user_record = user_records[0]
             strava_recent_activities = get_strava_activities(user_record)
+
+            logger.info(f"recent activities found: {strava_recent_activities}")
+            if len(strava_recent_activities) == 0:
+                strava_blocks = [
+                    slack_orm.SectionBlock(
+                        label="No recent activities found. Please log an activity on Strava first. If you have logged activities, it's possible that your access token may be expired. Please use the button below to reconnect to Strava.",  # noqa
+                    ),
+                    *auth_blocks,
+                ]
 
             button_elements = []
             for activity in strava_recent_activities:
