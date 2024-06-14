@@ -176,6 +176,14 @@ CALENDAR_MANAGE_AOS = "calendar-manage-aos"
 CALENDAR_MANAGE_SERIES = "calendar-manage-series"
 CALENDAR_MANAGE_EVENTS = "calendar-manage-events"
 CALENDAR_ADD_AO_NEW_LOCATION = "calendar-add-ao-new-location"
+EVENT_PREBLAST_TAKE_Q = "event-preblast-take-q"
+EVENT_PREBLAST_HC = "event-preblast-hc"
+EVENT_PREBLAST_UN_HC = "event-preblast-un-hc"
+EVENT_PREBLAST_TITLE = "event-preblast-title"
+EVENT_PREBLAST_LOCATION = "event-preblast-location"
+EVENT_PREBLAST_MOLESKINE_EDIT = "event-preblast-moleskine-edit"
+EVENT_PREBLAST_CALLBACK_ID = "event-preblast-id"
+EVENT_PREBLAST_SEND_OPTIONS = "event-preblast-send-options"
 
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,

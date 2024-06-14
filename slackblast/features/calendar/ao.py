@@ -223,11 +223,7 @@ AO_FORM = orm.BlockView(
             label="Default Event Type",
             action=actions.CALENDAR_ADD_AO_TYPE,
             element=orm.StaticSelectElement(placeholder="Select an event type"),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="These options can be changed later for specific series or events."
-            )
+            hint="These options can be changed later for specific series or events.",
         ),
         orm.InputBlock(
             label="AO Logo",

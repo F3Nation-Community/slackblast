@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import case, func, select
+from sqlalchemy import and_, case, func, select
 
 from utilities.database import get_session
 from utilities.database.orm import AttendanceNew, Event, Org, UserNew
@@ -32,7 +32,7 @@ def home_schedule_query(
             func.max(case((AttendanceNew.user_id == user_id, 1), else_=0)).label("user_attending"),
             func.max(
                 case(
-                    (AttendanceNew.user_id == user_id and AttendanceNew.attendance_type_id.in_([2, 3]), 1),
+                    (and_(AttendanceNew.user_id == user_id, AttendanceNew.attendance_type_id.in_([2, 3])), 1),
                     else_=0,
                 )
             ).label("user_q"),
@@ -42,6 +42,7 @@ def home_schedule_query(
         .group_by(AttendanceNew.event_id)
         .alias()
     )
+    print(subquery)
 
     if open_q_only:
         filters.append(subquery.c.planned_qs == None)  # noqa: E711

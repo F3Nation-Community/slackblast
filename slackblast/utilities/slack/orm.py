@@ -51,6 +51,7 @@ class InputBlock(BaseBlock):
     optional: bool = True
     element: BaseElement = None
     dispatch_action: bool = False
+    hint: str = None
 
     def get_selected_value(self, input_data):
         return self.element.get_selected_value(input_data, self.action)
@@ -65,6 +66,8 @@ class InputBlock(BaseBlock):
         block.update({"element": self.element.as_form_field(action=self.action)})
         if self.dispatch_action:
             block.update({"dispatch_action": True})
+        if self.hint:
+            block.update({"hint": {"type": "plain_text", "text": self.hint, "emoji": True}})
         return block
 
 

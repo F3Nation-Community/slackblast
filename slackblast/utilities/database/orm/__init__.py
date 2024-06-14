@@ -152,7 +152,7 @@ class PaxminerUser(BaseClass, GetDBClass):
     user_name: Mapped[str45]
     real_name: Mapped[str45]
     phone: Mapped[Optional[str45]]
-    email: Mapped[Optional[str45]]
+    email: Mapped[Optional[str255]]
     start_date: Mapped[Optional[date]]
     app: Mapped[tinyint0]
     json: Mapped[Optional[dict[str, Any]]]
@@ -252,6 +252,8 @@ class Event(BaseClass, GetDBClass):
     fng_count: Mapped[Optional[int]]
     preblast: Mapped[Optional[longtext]]
     backblast: Mapped[Optional[longtext]]
+    preblast_rich: Mapped[Optional[dict[str, Any]]]
+    backblast_rich: Mapped[Optional[dict[str, Any]]]
     meta: Mapped[Optional[dict[str, Any]]]
 
     def get_id():
@@ -302,8 +304,9 @@ class UserNew(BaseClass, GetDBClass):
 
     id: Mapped[intpk]
     f3_name: Mapped[str100]
-    email: Mapped[str100]
+    email: Mapped[str255]
     home_region_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
+    slack_id: Mapped[Optional[str45]]
 
     def get_id():
         return User.id
@@ -315,7 +318,7 @@ class SlackUser(BaseClass, GetDBClass):
     id: Mapped[intpk]
     slack_id: Mapped[str100]
     user_name: Mapped[str100]
-    email: Mapped[str100]
+    email: Mapped[str255]
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
 
     def get_id():
@@ -359,7 +362,7 @@ class Org(BaseClass, GetDBClass):
     is_active: Mapped[bool]
     logo: Mapped[Optional[blob]]
     website: Mapped[Optional[str100]]
-    email: Mapped[Optional[str100]]
+    email: Mapped[Optional[str255]]
     twitter: Mapped[Optional[str100]]
     facebook: Mapped[Optional[str100]]
     instagram: Mapped[Optional[str100]]

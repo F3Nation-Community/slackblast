@@ -83,11 +83,7 @@ BACKBLAST_FORM = orm.BlockView(
             action=actions.BACKBLAST_COUNT,
             optional=True,
             element=orm.PlainTextInputElement(placeholder="Total PAX count including FNGs"),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="If left blank, this will be calculated automatically from the fields above.",
-            ),
+            hint="If left blank, this will be calculated automatically from the fields above.",
         ),
         orm.InputBlock(
             label="The Moleskine",
@@ -265,14 +261,9 @@ CONFIG_EMAIL_FORM = orm.BlockView(
             action=actions.CONFIG_EMAIL_PASSWORD,
             optional=False,
             element=orm.PlainTextInputElement(initial_value="example_pwd_123"),
-        ),
-        orm.ContextBlock(
-            action=actions.CONFIG_PASSWORD_CONTEXT,
-            element=orm.ContextElement(
-                initial_value="If using gmail, you must use an App Password (https://support.google.com/accounts/answer"
-                "/185833). Your password will be stored encrypted - however, it is STRONGLY recommended that you use "
-                "a non-personal email address and password for this purpose, as security cannot be guaranteed.",
-            ),
+            hint="If using gmail, you must use an App Password (https://support.google.com/accounts/answer/185833)."
+            "Your password will be stored encrypted - however, it is STRONGLY recommended that you use a non-personal"
+            "email address and password for this purpose, as security cannot be guaranteed.",
         ),
         orm.InputBlock(
             label="Email To Address",
@@ -288,13 +279,7 @@ CONFIG_EMAIL_FORM = orm.BlockView(
                 initial_value="no",
                 options=orm.as_selector_options(names=["Yes", "No"], values=["yes", "no"]),
             ),
-        ),
-        orm.ContextBlock(
-            action=actions.CONFIG_POSTIE_CONTEXT,
-            element=orm.ContextElement(
-                initial_value="This will put the AO name as a category for the post, and will put PAX names at the end"
-                "as tags.",
-            ),
+            hint="This will put the AO name as a category for the post, and will put PAX names at the end as tags.",
         ),
     ]
 )
@@ -394,11 +379,7 @@ WELCOME_MESSAGE_CONFIG_FORM = orm.BlockView(
             action=actions.WELCOME_CHANNEL,
             optional=False,
             element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="If enabled, this is the channel where welcome messages will be posted.",
-            ),
+            hint="If enabled, this is the channel where welcome messages will be posted.",
         ),
     ]
 )
@@ -499,11 +480,7 @@ ACHIEVEMENT_FORM = orm.BlockView(
             action=actions.ACHIEVEMENT_SELECT,
             optional=False,
             element=orm.StaticSelectElement(placeholder="Select the achievement..."),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="Don't see the achievement you're looking for? Talk to your Weasel Shaker / Tech Q about getting it added!",  # noqa: E501
-            ),
+            hint="If you don't see the achievement you're looking for, talk to your Weasel Shaker / Tech Q about getting it added!",  # noqa: E501
         ),
         orm.InputBlock(
             label="Select the PAX",
@@ -516,11 +493,7 @@ ACHIEVEMENT_FORM = orm.BlockView(
             action=actions.ACHIEVEMENT_DATE,
             optional=False,
             element=orm.DatepickerElement(placeholder="Select the date..."),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="Please use a date in the period the achievement was earned, as some achievements can be earned for several periods.",  # noqa: E501
-            ),
+            hint="Please use a date in the period the achievement was earned, as some achievements can be earned for several periods.",  # noqa: E501
         ),
     ]
 )
@@ -548,11 +521,7 @@ WEASELBOT_CONFIG_FORM = orm.BlockView(
             action=actions.WEASELBOT_KOTTER_CHANNEL,
             optional=True,
             element=orm.ConversationsSelectElement(placeholder="Select the user or channel..."),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="Please note that Weaselbot will need to be manually added to private channels if selected.",  # noqa: E501
-            ),
+            hint="Please note that Weaselbot will need to be manually added to private channels if selected.",
         ),
         orm.InputBlock(
             label="How many weeks of no posting should put a PAX on the Kotter Report?",

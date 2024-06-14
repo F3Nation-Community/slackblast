@@ -380,9 +380,7 @@ SERIES_FORM = orm.BlockView(
             label="Series Name",
             action=actions.CALENDAR_ADD_SERIES_NAME,
             element=orm.PlainTextInputElement(placeholder="Enter the series name"),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(initial_value="If left blank, will default to the AO name + event type.")
+            hint="If left blank, will default to the AO name + event type.",
         ),
         orm.InputBlock(
             label="Description",
@@ -399,9 +397,7 @@ SERIES_FORM = orm.BlockView(
             element=orm.CheckboxInputElement(
                 options=orm.as_selector_options(names=["Yes"], values=["True"]),
             ),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(initial_value="Primarily used for 2nd F events, convergences, etc.")
+            hint="Primarily used for 2nd F events, convergences, etc.",
         ),
         orm.InputBlock(
             label="AO",
@@ -430,11 +426,7 @@ SERIES_FORM = orm.BlockView(
             label="End Date",
             action=actions.CALENDAR_ADD_SERIES_END_DATE,
             element=orm.DatepickerElement(placeholder="Enter the end date"),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="If no end date is provided, the series will continue indefinitely."
-            )
+            hint="If no end date is provided, the series will continue indefinitely.",
         ),
         orm.InputBlock(
             label="Start Time",
@@ -446,11 +438,7 @@ SERIES_FORM = orm.BlockView(
             label="End Time",
             action=actions.CALENDAR_ADD_SERIES_END_TIME,
             element=orm.TimepickerElement(placeholder="Enter the end time"),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="If no end time is provided, the event will be defaulted to be one hour long."
-            )
+            hint="If no end time is provided, the event will be defaulted to be one hour long.",
         ),
         orm.InputBlock(
             label="Day(s) of the Week",
@@ -479,11 +467,7 @@ SERIES_FORM = orm.BlockView(
                 is_decimal_allowed=False,
             ),
             optional=True,
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="For example, Interval=2 and Frequency=Weekly would mean every other week. If left blank, the interval will assumed to be 1."  # noqa
-            )
+            hint="For example, Interval=2 and Frequency=Weekly would mean every other week. If left blank, the interval will assumed to be 1.",  # noqa
         ),
         orm.InputBlock(
             label="Index within the interval",
@@ -493,11 +477,7 @@ SERIES_FORM = orm.BlockView(
                 is_decimal_allowed=False,
             ),
             optional=True,
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="For example, Index=2 and Frequency=Monthly would mean the second week of the month. If left blank, the index will assumed to be 1."  # noqa
-            )
+            hint="For example, Index=2 and Frequency=Monthly would mean the second week of the month. If left blank, the index will assumed to be 1.",  # noqa
         ),
     ]
 )
@@ -508,9 +488,7 @@ EVENT_FORM = orm.BlockView(
             label="Event Name",
             action=actions.CALENDAR_ADD_SERIES_NAME,
             element=orm.PlainTextInputElement(placeholder="Enter the event name"),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(initial_value="If left blank, will default to the AO name + event type.")
+            hint="If left blank, will default to the AO name + event type.",
         ),
         orm.InputBlock(
             label="Highlight on Special Events Page?",
@@ -518,9 +496,7 @@ EVENT_FORM = orm.BlockView(
             element=orm.CheckboxInputElement(
                 options=orm.as_selector_options(names=["Yes"], values=["True"]),
             ),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(initial_value="Primarily used for 2nd F events, convergences, etc.")
+            hint="Primarily used for 2nd F events, convergences, etc.",
         ),
         orm.InputBlock(
             label="AO",
@@ -555,11 +531,7 @@ EVENT_FORM = orm.BlockView(
             label="End Time",
             action=actions.CALENDAR_ADD_SERIES_END_TIME,
             element=orm.TimepickerElement(placeholder="Enter the end time"),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="If no end time is provided, the event will be defaulted to be one hour long."
-            )
+            hint="If no end time is provided, the event will be defaulted to be one hour long.",
         ),
     ]
 )

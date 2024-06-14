@@ -170,11 +170,7 @@ LOCATION_FORM = orm.BlockView(
             action=actions.CALENDAR_ADD_LOCATION_NAME,
             element=orm.PlainTextInputElement(placeholder="ie Central Park - Main Entrance"),
             optional=False,
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="Use the actual name of the location, ie park name, etc. You will define the F3 AO name when you create AOs."  # noqa
-            ),
+            hint="Use the actual name of the location, ie park name, etc. You will define the F3 AO name when you create AOs.",  # noqa
         ),
         orm.InputBlock(
             label="Description / Address",
@@ -188,11 +184,7 @@ LOCATION_FORM = orm.BlockView(
             label="Google Lat/Long",
             action=actions.CALENDAR_ADD_LOCATION_GOOGLE,
             element=orm.PlainTextInputElement(placeholder="ie '34.0522, -118.2437'"),
-        ),
-        orm.ContextBlock(
-            element=orm.ContextElement(
-                initial_value="To get Google's Lat/Long, long press to create a pin, then bring up the context menu and select the coordinates to copy them."  # noqa
-            ),
+            hint="To get Google's Lat/Long, long press to create a pin, then bring up the context menu and select the coordinates to copy them.",  # noqa
         ),
     ]
 )

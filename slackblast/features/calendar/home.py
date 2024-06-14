@@ -4,6 +4,7 @@ from logging import Logger
 from slack_sdk.web import WebClient
 from sqlalchemy import or_
 
+from features.calendar.event_preblast import build_event_preblast_form
 from utilities.database import DbManager
 from utilities.database.orm import AttendanceNew, Event, EventType, EventType_x_Org, Org, Region
 from utilities.database.special_queries import CalendarHomeQuery, home_schedule_query
@@ -132,9 +133,12 @@ def build_home_form(
     active_date = datetime.date(2020, 1, 1)
     block_count = 1
     for event in events:
-        option_names = ["View Details"]
         if block_count > 90:
             break
+        if event.user_q:
+            option_names = ["Edit Preblast"]
+        else:
+            option_names = ["View Preblast"]
         if event.event.start_date != active_date:
             active_date = event.event.start_date
             blocks.append(orm.SectionBlock(label=f":calendar: *{active_date.strftime('%A, %B %d')}*"))
@@ -179,8 +183,8 @@ def handle_home_event(body: dict, client: WebClient, logger: Logger, context: di
     user_id = get_user_id(safe_get(body, "user", "id"), region_record, client, logger)
     view_id = safe_get(body, "view", "id")
 
-    if action == "View Details":
-        pass
+    if action in ["View Preblast", "Edit Preblast"]:
+        build_event_preblast_form(body, client, logger, context, region_record, event_id=event_id)
     elif action == "Take Q":
         DbManager.create_record(
             AttendanceNew(
