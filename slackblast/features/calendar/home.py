@@ -15,6 +15,9 @@ from utilities.slack import actions, orm
 def build_home_form(
     body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region, update_view_id: str = None
 ):
+    action_id = safe_get(body, "actions", 0, "action_id")
+    if action_id == actions.CALENDAR_HOME_DATE_FILTER and safe_get(body, "actions", 0, "selected_date"):
+        return
     slack_user_id = safe_get(body, "user", "id") or safe_get(body, "user_id")
     user_id = get_user_id(slack_user_id, region_record, client, logger)
 

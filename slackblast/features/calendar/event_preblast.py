@@ -26,7 +26,13 @@ class AttendanceExtended:
 
 
 def build_event_preblast_form(
-    body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region, event_id: int = None
+    body: dict,
+    client: WebClient,
+    logger: Logger,
+    context: dict,
+    region_record: Region,
+    event_id: int = None,
+    update_view_id: str = None,
 ):
     # event = DbManager.get_record(Event, event_id)
     with get_session() as session:
@@ -48,7 +54,7 @@ def build_event_preblast_form(
         attendance_records = [AttendanceExtended(*r) for r in query.all()]
 
     action_blocks = []
-    hc_list = " ".join([f"@{r.user.f3_name}>" for r in attendance_records])
+    hc_list = " ".join([f"@{r.user.f3_name}" for r in attendance_records])
     hc_list = hc_list if hc_list else "None"
     hc_count = len({r.user.id for r in attendance_records})
 
@@ -133,15 +139,26 @@ def build_event_preblast_form(
     metadata = {
         "event_id": event_id,
     }
-    form.post_modal(
-        client=client,
-        trigger_id=safe_get(body, "trigger_id"),
-        callback_id=actions.EVENT_PREBLAST_CALLBACK_ID,
-        title_text=title_text,
-        submit_button_text=submit_button_text,
-        new_or_add="add",
-        parent_metadata=metadata,
-    )
+
+    if update_view_id:
+        form.update_modal(
+            client=client,
+            view_id=update_view_id,
+            title_text=title_text,
+            submit_button_text=submit_button_text,
+            parent_metadata=metadata,
+            callback_id=actions.EVENT_PREBLAST_CALLBACK_ID,
+        )
+    else:
+        form.post_modal(
+            client=client,
+            trigger_id=safe_get(body, "trigger_id"),
+            callback_id=actions.EVENT_PREBLAST_CALLBACK_ID,
+            title_text=title_text,
+            submit_button_text=submit_button_text,
+            new_or_add="add",
+            parent_metadata=metadata,
+        )
 
 
 def handle_event_preblast_edit(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
@@ -167,6 +184,7 @@ def handle_event_preblast_hc(body: dict, client: WebClient, logger: Logger, cont
     metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
     event_id = safe_get(metadata, "event_id")
     user_id = get_user_id(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger)
+    view_id = safe_get(body, "view", "id")
     DbManager.create_record(
         AttendanceNew(
             event_id=event_id,
@@ -175,7 +193,7 @@ def handle_event_preblast_hc(body: dict, client: WebClient, logger: Logger, cont
             is_planned=True,
         )
     )
-    # build_event_preblast_form(body, client, logger, context, region_record, event_id=event_id)
+    build_event_preblast_form(body, client, logger, context, region_record, event_id=event_id, update_view_id=view_id)
 
 
 DEFAULT_PREBLAST = {

@@ -42,7 +42,6 @@ def home_schedule_query(
         .group_by(AttendanceNew.event_id)
         .alias()
     )
-    print(subquery)
 
     if open_q_only:
         filters.append(subquery.c.planned_qs == None)  # noqa: E711
