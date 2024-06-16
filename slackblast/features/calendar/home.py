@@ -16,7 +16,7 @@ def build_home_form(
     body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region, update_view_id: str = None
 ):
     action_id = safe_get(body, "actions", 0, "action_id")
-    if action_id == actions.CALENDAR_HOME_DATE_FILTER and safe_get(body, "actions", 0, "selected_date"):
+    if action_id == actions.CALENDAR_HOME_DATE_FILTER and not safe_get(body, "actions", 0, "selected_date"):
         return
     slack_user_id = safe_get(body, "user", "id") or safe_get(body, "user_id")
     user_id = get_user_id(slack_user_id, region_record, client, logger)
@@ -62,10 +62,13 @@ def build_home_form(
             dispatch_action=True,
         ),
         orm.InputBlock(
-            label="Show only open Q slots",
+            label="Other options",
             action=actions.CALENDAR_HOME_Q_FILTER,
             element=orm.CheckboxInputElement(
-                options=orm.as_selector_options(names=["Show only open Q slots"], values=["yes"]),
+                options=orm.as_selector_options(
+                    names=["Show only open Q slots", "Show only my events", "Include events from nearby regions"],
+                    values=[actions.FILTER_OPEN_Q, actions.FILTER_MY_EVENTS, actions.FILTER_NEARBY_REGIONS],
+                ),
             ),
             dispatch_action=True,
         ),
@@ -127,10 +130,13 @@ def build_home_form(
         event_type_ids = [int(x) for x in safe_get(existing_filter_data, actions.CALENDAR_HOME_EVENT_TYPE_FILTER)]
         filter.append(Event.event_type_id.in_(event_type_ids))
 
-    open_q_only = safe_get(existing_filter_data, actions.CALENDAR_HOME_Q_FILTER) == ["yes"]
+    open_q_only = actions.FILTER_OPEN_Q in (safe_get(existing_filter_data, actions.CALENDAR_HOME_Q_FILTER) or [])
     # Run the query
     # TODO: implement pagination / dynamic limit
-    events: list[CalendarHomeQuery] = home_schedule_query(user_id, filter, limit=45, open_q_only=open_q_only)
+    events: list[CalendarHomeQuery] = home_schedule_query(user_id, filter, limit=5, open_q_only=open_q_only)
+
+    if actions.FILTER_MY_EVENTS in (safe_get(existing_filter_data, actions.CALENDAR_HOME_Q_FILTER) or []):
+        events = [x for x in events if x.user_attending]
 
     # Build the event list
     active_date = datetime.date(2020, 1, 1)

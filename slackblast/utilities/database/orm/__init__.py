@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Any, Optional
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table
-from sqlalchemy.dialects.mysql import BLOB, DATE, JSON, LONGTEXT, TEXT, TINYINT
+from sqlalchemy.dialects.mysql import BLOB, DATE, DECIMAL, JSON, LONGTEXT, TEXT, TINYINT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, registry
 from typing_extensions import Annotated
 
@@ -25,6 +25,7 @@ dt_update = Annotated[datetime, mapped_column(DateTime, default=datetime.utcnow,
 str45pk = Annotated[str, mapped_column(String(45), primary_key=True)]
 datepk = Annotated[date, mapped_column(DATE, primary_key=True)]
 blob = Annotated[bytes, BLOB]
+dec16_6 = Annotated[float, mapped_column(DECIMAL(16, 6))]
 
 
 class BaseClass(DeclarativeBase):
@@ -254,6 +255,7 @@ class Event(BaseClass, GetDBClass):
     backblast: Mapped[Optional[longtext]]
     preblast_rich: Mapped[Optional[dict[str, Any]]]
     backblast_rich: Mapped[Optional[dict[str, Any]]]
+    preblast_ts: Mapped[Optional[dec16_6]]
     meta: Mapped[Optional[dict[str, Any]]]
 
     def get_id():
@@ -306,7 +308,6 @@ class UserNew(BaseClass, GetDBClass):
     f3_name: Mapped[str100]
     email: Mapped[str255]
     home_region_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
-    slack_id: Mapped[Optional[str45]]
 
     def get_id():
         return User.id

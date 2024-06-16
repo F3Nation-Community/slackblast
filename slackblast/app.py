@@ -22,7 +22,7 @@ from utilities.helper_functions import (
 from utilities.routing import MAIN_MAPPER
 from utilities.slack.actions import LOADING_ID
 
-SlackRequestHandler.clear_all_log_handlers()
+# SlackRequestHandler.clear_all_log_handlers()
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 if LOCAL_DEVELOPMENT:

@@ -184,6 +184,13 @@ EVENT_PREBLAST_LOCATION = "event-preblast-location"
 EVENT_PREBLAST_MOLESKINE_EDIT = "event-preblast-moleskine-edit"
 EVENT_PREBLAST_CALLBACK_ID = "event-preblast-id"
 EVENT_PREBLAST_SEND_OPTIONS = "event-preblast-send-options"
+EVENT_PREBLAST_REMOVE_Q = "event-preblast-remove-q"
+FILTER_OPEN_Q = "filter-open-q"
+FILTER_MY_EVENTS = "filter-my-events"
+FILTER_NEARBY_REGIONS = "filter-nearby-regions"
+EVENT_PREBLAST_COQS = "event-preblast-coqs"
+EVENT_PREBLAST_EDIT = "event-preblast-edit"
+EVENT_PREBLAST_HC_UN_HC = "event-preblast-hc-un-hc"
 
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,
