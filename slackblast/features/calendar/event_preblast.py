@@ -185,6 +185,7 @@ def handle_event_preblast_edit(body: dict, client: WebClient, logger: Logger, co
                 ]
             ),
         ]
+        blocks = [b.as_form_field() for b in blocks]
         res = client.chat_postMessage(
             channel=preblast_info.event_extended.org.slack_id,
             blocks=blocks,
@@ -209,14 +210,16 @@ def build_preblast_info(
     event_record, attendance_records = event_preblast_query(event_id)
 
     action_blocks = []
-    hc_list = " ".join([f"@{r.user.f3_name}" for r in attendance_records])
+    hc_list = " ".join([f"<@{r.slack_user.slack_id}>" for r in attendance_records])
     hc_list = hc_list if hc_list else "None"
     hc_count = len({r.user.id for r in attendance_records})
 
     user_id = get_user_id(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger)
     user_is_q = any(r.user.id == user_id for r in attendance_records if r.attendance.attendance_type_id in [2, 3])
 
-    q_list = " ".join([f"@{r.user.f3_name}>" for r in attendance_records if r.attendance.attendance_type_id in [2, 3]])
+    q_list = " ".join(
+        [f"<@{r.slack_user.slack_id}>" for r in attendance_records if r.attendance.attendance_type_id in [2, 3]]
+    )
     if not q_list:
         q_list = "Open!"
         action_blocks.append(
@@ -253,10 +256,18 @@ def build_preblast_info(
             )
         )
 
+    location = ""
+    if event_record.org.slack_id:
+        location += f"<#{event_record.org.slack_id}> - "
+    if event_record.location.lat and event_record.location.lon:
+        location += f"<https://www.google.com/maps/search/?api=1&query={event_record.location.lat},{event_record.location.lon}|{event_record.location.name}>"
+    else:
+        location += event_record.location.name
+
     event_details = f"*Preblast: {event_record.event.name}*"
     event_details += f"\n*Date:* {event_record.event.start_date.strftime('%A, %B %d')}"
     event_details += f"\n*Start Time:* {time_int_to_str(event_record.event.start_time)}"
-    event_details += f"\n*Location:* {event_record.location.name}"
+    event_details += f"\n*Where:* {location}"
     event_details += f"\n*Event Type:* {event_record.event_type.name}"
     event_details += f"\n*Q:* {q_list}"
     event_details += f"\n*HC Count:* {hc_count}"
