@@ -1,5 +1,5 @@
 from features import backblast, config, custom_fields, preblast, strava, weaselbot, welcome
-from features.calendar import ao, event_preblast, home, location, series
+from features.calendar import ao, event_preblast, event_type, home, location, series
 from features.calendar import config as calendar_config
 from utilities import announcements, builders
 from utilities.slack import actions
@@ -42,6 +42,7 @@ VIEW_MAPPER = {
     actions.ADD_AO_CALLBACK_ID: (ao.handle_ao_add, False),
     actions.ADD_SERIES_CALLBACK_ID: (series.handle_series_add, False),
     actions.EVENT_PREBLAST_CALLBACK_ID: (event_preblast.handle_event_preblast_edit, False),
+    actions.CALENDAR_ADD_EVENT_TYPE_CALLBACK_ID: (event_type.handle_event_type_add, False),
 }
 
 ACTION_MAPPER = {
@@ -75,6 +76,7 @@ ACTION_MAPPER = {
     actions.CALENDAR_MANAGE_AOS: (ao.manage_aos, False),
     actions.CALENDAR_MANAGE_SERIES: (series.manage_series, False),
     actions.CALENDAR_MANAGE_EVENTS: (series.manage_series, False),
+    actions.CALENDAR_MANAGE_EVENT_TYPES: (event_type.build_event_type_form, False),
     actions.CALENDAR_ADD_AO_NEW_LOCATION: (location.build_location_add_form, False),
     actions.CALENDAR_HOME_EVENT: (home.handle_home_event, False),
     actions.CALENDAR_HOME_AO_FILTER: (home.build_home_form, False),

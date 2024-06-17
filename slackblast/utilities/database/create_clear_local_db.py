@@ -131,9 +131,19 @@ def initialize_tables():
     ]
 
     event_category_list = [
-        orm.EventCategory(id=1, name="1st F - Core Workout"),
-        orm.EventCategory(id=2, name="2nd F - Fellowship"),
-        orm.EventCategory(id=3, name="3rd F - Faith"),
+        orm.EventCategory(
+            id=1, name="1st F - Core Workout", description="The core F3 activity - must meet all 5 core principles."
+        ),
+        orm.EventCategory(
+            id=1, name="1st F - Pre Workout", description="Pre-workout activities (pre-rucks, pre-runs, etc)."
+        ),
+        orm.EventCategory(
+            id=1,
+            name="1st F - Off the books",
+            description="Fitness activities that didn't meet all 5 core principles (unscheduled, open to all men, etc).",  # noqa: E501
+        ),
+        orm.EventCategory(id=2, name="2nd F - Fellowship", description="General category for 2nd F events."),
+        orm.EventCategory(id=3, name="3rd F - Faith", desription="General category for 3rd F events."),
     ]
 
     event_type_list = [

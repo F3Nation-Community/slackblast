@@ -191,6 +191,11 @@ FILTER_NEARBY_REGIONS = "filter-nearby-regions"
 EVENT_PREBLAST_COQS = "event-preblast-coqs"
 EVENT_PREBLAST_EDIT = "event-preblast-edit"
 EVENT_PREBLAST_HC_UN_HC = "event-preblast-hc-un-hc"
+CALENDAR_ADD_EVENT_TYPE_SELECT = "calendar-add-event-type-select"
+CALENDAR_ADD_EVENT_TYPE_NEW = "calendar-add-event-type-new"
+CALENDAR_ADD_EVENT_TYPE_CATEGORY = "calendar-add-event-type-category"
+CALENDAR_ADD_EVENT_TYPE_CALLBACK_ID = "calendar-add-event-type-id"
+CALENDAR_MANAGE_EVENT_TYPES = "calendar-manage-event-types"
 
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,

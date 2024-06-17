@@ -70,5 +70,15 @@ CALENDAR_CONFIG_FORM = orm.BlockView(
                 ),
             ),
         ),
+        orm.SectionBlock(
+            label=":runner: Manage Event Types",
+            action=actions.CALENDAR_MANAGE_EVENT_TYPES,
+            element=orm.OverflowElement(
+                options=orm.as_selector_options(
+                    names=["Add Event Type"],  # , "Edit or Deactivate Event Types"],
+                    values=["add"],  # , "edit"],
+                ),
+            ),
+        ),
     ]
 )
