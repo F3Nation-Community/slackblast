@@ -70,6 +70,7 @@ def build_event_preblast_form(
 ):
     preblast_info = build_preblast_info(body, client, logger, context, region_record, event_id)
     record = preblast_info.event_extended
+    view_id = safe_get(body, "view", "id")
 
     if safe_get(body, "actions", 0, "selected_option", "value") == "Edit Preblast" or preblast_info.user_is_q:
         form = deepcopy(EVENT_PREBLAST_FORM)
@@ -100,7 +101,7 @@ def build_event_preblast_form(
         title_text = "Edit Event Preblast"
         submit_button_text = "Update"
         # TODO: take out the send block if AO not associated with a channel
-        if not record.org.slack_id:
+        if not record.org.slack_id or not view_id or preblast_info.event_extended.event.preblast_ts:
             form.blocks = form.blocks[:-1]
         else:
             form.blocks[-1].label = f"When would you like to send the preblast to <#{record.org.slack_id}>?"
@@ -116,6 +117,7 @@ def build_event_preblast_form(
 
     metadata = {
         "event_id": event_id,
+        "preblast_ts": str(preblast_info.event_extended.event.preblast_ts),
     }
 
     if update_view_id:
@@ -128,13 +130,19 @@ def build_event_preblast_form(
             callback_id=actions.EVENT_PREBLAST_CALLBACK_ID,
         )
     else:
+        if view_id:
+            new_or_add = "add"
+            callback_id = actions.EVENT_PREBLAST_CALLBACK_ID
+        else:
+            new_or_add = "new"
+            callback_id = actions.EVENT_PREBLAST_POST_CALLBACK_ID
         form.post_modal(
             client=client,
             trigger_id=safe_get(body, "trigger_id"),
-            callback_id=actions.EVENT_PREBLAST_CALLBACK_ID,
+            callback_id=callback_id,
             title_text=title_text,
             submit_button_text=submit_button_text,
-            new_or_add="add",
+            new_or_add=new_or_add,
             parent_metadata=metadata,
         )
 
@@ -143,6 +151,7 @@ def handle_event_preblast_edit(body: dict, client: WebClient, logger: Logger, co
     form_data = EVENT_PREBLAST_FORM.get_selected_values(body)
     metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
     event_id = safe_get(metadata, "event_id")
+    callback_id = safe_get(body, "view", "callback_id")
     update_fields = {
         Event.name: form_data[actions.EVENT_PREBLAST_TITLE],
         Event.location_id: form_data[actions.EVENT_PREBLAST_LOCATION],
@@ -151,47 +160,62 @@ def handle_event_preblast_edit(body: dict, client: WebClient, logger: Logger, co
     DbManager.update_record(Event, event_id, update_fields)
 
     coq_list = safe_get(form_data, actions.EVENT_PREBLAST_COQS) or []
-    print(coq_list)
     user_ids = [get_user_id(slack_id, region_record, client, logger) for slack_id in coq_list]
     # better way to upsert / on conflict do nothing?
-    DbManager.delete_records(
-        cls=AttendanceNew,
-        filters=[
-            AttendanceNew.event_id == event_id,
-            AttendanceNew.attendance_type_id == 3,
-            AttendanceNew.is_planned,
-            AttendanceNew.user_id.in_(user_ids),
-        ],
-    )
-    new_records = [
-        AttendanceNew(
-            event_id=event_id,
-            user_id=user_id,
-            attendance_type_id=3,
-            is_planned=True,
+    if user_ids:
+        DbManager.delete_records(
+            cls=AttendanceNew,
+            filters=[
+                AttendanceNew.event_id == event_id,
+                AttendanceNew.attendance_type_id == 3,
+                AttendanceNew.is_planned,
+                AttendanceNew.user_id.in_(user_ids),
+            ],
         )
-        for user_id in user_ids
-    ]
-    DbManager.create_records(new_records)
+        new_records = [
+            AttendanceNew(
+                event_id=event_id,
+                user_id=user_id,
+                attendance_type_id=3,
+                is_planned=True,
+            )
+            for user_id in user_ids
+        ]
+        DbManager.create_records(new_records)
 
-    if form_data[actions.EVENT_PREBLAST_SEND_OPTIONS] == "Send now":
+    if (
+        form_data[actions.EVENT_PREBLAST_SEND_OPTIONS] == "Send now"
+        or callback_id == actions.EVENT_PREBLAST_POST_CALLBACK_ID
+        or safe_get(metadata, "preblast_ts")
+    ):
         preblast_info = build_preblast_info(body, client, logger, context, region_record, event_id)
         blocks = [
             *preblast_info.preblast_blocks,
-            orm.ActionsBlock(
-                elements=[
-                    orm.ButtonElement(label="Edit Preblast", action=actions.EVENT_PREBLAST_EDIT),
-                    orm.ButtonElement(label="HC/Un-HC", action=actions.EVENT_PREBLAST_HC_UN_HC),
-                ]
-            ),
+            orm.ActionsBlock(elements=PREBLAST_MESSAGE_ACTION_ELEMENTS),
         ]
         blocks = [b.as_form_field() for b in blocks]
-        res = client.chat_postMessage(
-            channel=preblast_info.event_extended.org.slack_id,
-            blocks=blocks,
-            text="Event Preblast",
-        )
-        DbManager.update_record(Event, event_id, {Event.preblast_ts: float(res["ts"])})
+        metadata = {
+            "event_id": event_id,
+            "attendees": [r.user.id for r in preblast_info.attendance_records],
+            "qs": [r.user.id for r in preblast_info.attendance_records if r.attendance.attendance_type_id in [2, 3]],
+        }
+        if preblast_info.event_extended.event.preblast_ts or safe_get(metadata, "preblast_ts"):
+            client.chat_update(
+                channel=preblast_info.event_extended.org.slack_id,
+                ts=safe_get(metadata, "preblast_ts") or str(preblast_info.event_extended.event.preblast_ts),
+                blocks=blocks,
+                text="Event Preblast",
+                metadata={"event_type": "preblast", "event_payload": metadata},
+            )
+        else:
+            res = client.chat_postMessage(
+                channel=preblast_info.event_extended.org.slack_id,
+                blocks=blocks,
+                text="Event Preblast",
+                metadata={"event_type": "preblast", "event_payload": metadata},
+                unfurl_links=False,
+            )
+            DbManager.update_record(Event, event_id, {Event.preblast_ts: float(res["ts"])})
 
     elif form_data[actions.EVENT_PREBLAST_SEND_OPTIONS] == "Schedule 24 hours before event":
         pass  # schedule preblast
@@ -288,50 +312,103 @@ def build_preblast_info(
 
 def handle_event_preblast_action(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     action_id = safe_get(body, "actions", 0, "action_id")
-    metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
+    metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}") or safe_get(
+        body, "message", "metadata", "event_payload"
+    )
     event_id = safe_get(metadata, "event_id")
-    user_id = get_user_id(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger)
+    slack_user_id = safe_get(body, "user", "id") or safe_get(body, "user_id")
+    user_id = get_user_id(slack_user_id, region_record, client, logger)
     view_id = safe_get(body, "view", "id")
 
-    if action_id == actions.EVENT_PREBLAST_HC:
-        DbManager.create_record(
-            AttendanceNew(
-                event_id=event_id,
-                user_id=user_id,
-                attendance_type_id=1,
-                is_planned=True,
+    if view_id:
+        if action_id == actions.EVENT_PREBLAST_HC:
+            DbManager.create_record(
+                AttendanceNew(
+                    event_id=event_id,
+                    user_id=user_id,
+                    attendance_type_id=1,
+                    is_planned=True,
+                )
             )
-        )
-    elif action_id == actions.EVENT_PREBLAST_UN_HC:
-        DbManager.delete_records(
-            cls=AttendanceNew,
-            filters=[
-                AttendanceNew.event_id == event_id,
-                AttendanceNew.user_id == user_id,
-                AttendanceNew.attendance_type_id == 1,
-                AttendanceNew.is_planned,
-            ],
-        )
-    elif action_id == actions.EVENT_PREBLAST_TAKE_Q:
-        DbManager.create_record(
-            AttendanceNew(
-                event_id=event_id,
-                user_id=user_id,
-                attendance_type_id=2,
-                is_planned=True,
+        elif action_id == actions.EVENT_PREBLAST_UN_HC:
+            DbManager.delete_records(
+                cls=AttendanceNew,
+                filters=[
+                    AttendanceNew.event_id == event_id,
+                    AttendanceNew.user_id == user_id,
+                    AttendanceNew.attendance_type_id == 1,
+                    AttendanceNew.is_planned,
+                ],
             )
+        elif action_id == actions.EVENT_PREBLAST_TAKE_Q:
+            DbManager.create_record(
+                AttendanceNew(
+                    event_id=event_id,
+                    user_id=user_id,
+                    attendance_type_id=2,
+                    is_planned=True,
+                )
+            )
+        elif action_id == actions.EVENT_PREBLAST_REMOVE_Q:
+            DbManager.delete_records(
+                cls=AttendanceNew,
+                filters=[
+                    AttendanceNew.event_id == event_id,
+                    AttendanceNew.user_id == user_id,
+                    AttendanceNew.attendance_type_id.in_([2, 3]),
+                    AttendanceNew.is_planned,
+                ],
+            )
+        build_event_preblast_form(
+            body, client, logger, context, region_record, event_id=event_id, update_view_id=view_id
         )
-    elif action_id == actions.EVENT_PREBLAST_REMOVE_Q:
-        DbManager.delete_records(
-            cls=AttendanceNew,
-            filters=[
-                AttendanceNew.event_id == event_id,
-                AttendanceNew.user_id == user_id,
-                AttendanceNew.attendance_type_id.in_([2, 3]),
-                AttendanceNew.is_planned,
-            ],
-        )
-    build_event_preblast_form(body, client, logger, context, region_record, event_id=event_id, update_view_id=view_id)
+    else:
+        if action_id == actions.EVENT_PREBLAST_HC_UN_HC:
+            already_hcd = user_id in metadata["attendees"]
+            if already_hcd:
+                DbManager.delete_records(
+                    cls=AttendanceNew,
+                    filters=[
+                        AttendanceNew.event_id == event_id,
+                        AttendanceNew.user_id == user_id,
+                        AttendanceNew.attendance_type_id == 1,
+                        AttendanceNew.is_planned,
+                    ],
+                )
+            else:
+                DbManager.create_record(
+                    AttendanceNew(
+                        event_id=event_id,
+                        user_id=user_id,
+                        attendance_type_id=1,
+                        is_planned=True,
+                    )
+                )
+            preblast_info = build_preblast_info(body, client, logger, context, region_record, event_id)
+            metadata = {
+                "event_id": event_id,
+                "attendees": [r.user.id for r in preblast_info.attendance_records],
+                "qs": [
+                    r.user.id for r in preblast_info.attendance_records if r.attendance.attendance_type_id in [2, 3]
+                ],
+            }
+            blocks = [*preblast_info.preblast_blocks, orm.ActionsBlock(elements=PREBLAST_MESSAGE_ACTION_ELEMENTS)]
+            client.chat_update(
+                channel=preblast_info.event_extended.org.slack_id,
+                ts=body["message"]["ts"],
+                blocks=[b.as_form_field() for b in blocks],
+                text="Preblast",
+                metadata={"event_type": "preblast", "event_payload": metadata},
+            )
+        elif action_id == actions.EVENT_PREBLAST_EDIT:
+            if user_id in metadata["qs"]:
+                build_event_preblast_form(body, client, logger, context, region_record, event_id=event_id)
+            else:
+                client.chat_postEphemeral(
+                    channel=body["channel"]["id"],
+                    user=slack_user_id,
+                    text=":warning: Only Qs can edit the preblast! :warning:",
+                )
 
 
 DEFAULT_PREBLAST = {
@@ -380,3 +457,8 @@ EVENT_PREBLAST_FORM = orm.BlockView(
         ),
     ]
 )
+
+PREBLAST_MESSAGE_ACTION_ELEMENTS = [
+    orm.ButtonElement(label=":hc: HC/Un-HC", action=actions.EVENT_PREBLAST_HC_UN_HC),
+    orm.ButtonElement(label=":pencil: Edit Preblast", action=actions.EVENT_PREBLAST_EDIT),
+]

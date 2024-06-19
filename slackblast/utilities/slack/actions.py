@@ -196,6 +196,7 @@ CALENDAR_ADD_EVENT_TYPE_NEW = "calendar-add-event-type-new"
 CALENDAR_ADD_EVENT_TYPE_CATEGORY = "calendar-add-event-type-category"
 CALENDAR_ADD_EVENT_TYPE_CALLBACK_ID = "calendar-add-event-type-id"
 CALENDAR_MANAGE_EVENT_TYPES = "calendar-manage-event-types"
+EVENT_PREBLAST_POST_CALLBACK_ID = "event-preblast-post-id"
 
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,

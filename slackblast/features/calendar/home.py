@@ -158,11 +158,15 @@ def build_home_form(
         else:
             label += " / Q: Open!"
             option_names.append("Take Q")
+        if event.user_q:
+            label += " :muscle:"
         if event.user_attending:
-            label += " / :white_check_mark: You HC'd!"
+            label += " :white_check_mark:"
             option_names.append("Un-HC")
         else:
             option_names.append("HC")
+        if event.event.preblast_rich:
+            label += " :pencil:"
         blocks.append(
             orm.SectionBlock(
                 label=label,

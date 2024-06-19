@@ -43,6 +43,7 @@ VIEW_MAPPER = {
     actions.ADD_SERIES_CALLBACK_ID: (series.handle_series_add, False),
     actions.EVENT_PREBLAST_CALLBACK_ID: (event_preblast.handle_event_preblast_edit, False),
     actions.CALENDAR_ADD_EVENT_TYPE_CALLBACK_ID: (event_type.handle_event_type_add, False),
+    actions.EVENT_PREBLAST_POST_CALLBACK_ID: (event_preblast.handle_event_preblast_edit, False),
 }
 
 ACTION_MAPPER = {
@@ -87,6 +88,8 @@ ACTION_MAPPER = {
     actions.EVENT_PREBLAST_UN_HC: (event_preblast.handle_event_preblast_action, False),
     actions.EVENT_PREBLAST_TAKE_Q: (event_preblast.handle_event_preblast_action, False),
     actions.EVENT_PREBLAST_REMOVE_Q: (event_preblast.handle_event_preblast_action, False),
+    actions.EVENT_PREBLAST_HC_UN_HC: (event_preblast.handle_event_preblast_action, False),
+    actions.EVENT_PREBLAST_EDIT: (event_preblast.handle_event_preblast_action, False),
 }
 
 VIEW_CLOSED_MAPPER = {
