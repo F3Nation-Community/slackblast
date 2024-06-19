@@ -3,13 +3,14 @@ from dataclasses import dataclass
 from sqlalchemy import and_, case, func, select
 
 from utilities.database import get_session
-from utilities.database.orm import AttendanceNew, Event, Org, UserNew
+from utilities.database.orm import AttendanceNew, Event, EventType, Org, UserNew
 
 
 @dataclass
 class CalendarHomeQuery:
     event: Event
     org: Org
+    event_type: EventType
     planned_qs: str = None
     user_attending: int = None
     user_q: int = None
@@ -48,8 +49,9 @@ def home_schedule_query(
 
     # Create the main query
     query = (
-        session.query(Event, Org, subquery.c.planned_qs, subquery.c.user_attending, subquery.c.user_q)
+        session.query(Event, Org, EventType, subquery.c.planned_qs, subquery.c.user_attending, subquery.c.user_q)
         .join(Org, Org.id == Event.org_id)
+        .join(EventType, EventType.id == Event.event_type_id)
         .outerjoin(subquery, subquery.c.event_id == Event.id)
         .filter(*filters)
         .order_by(Event.start_date, Org.name, Event.start_time)
