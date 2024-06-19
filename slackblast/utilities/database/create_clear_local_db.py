@@ -143,7 +143,7 @@ def initialize_tables():
             description="Fitness activities that didn't meet all 5 core principles (unscheduled, open to all men, etc).",  # noqa: E501
         ),
         orm.EventCategory(id=2, name="2nd F - Fellowship", description="General category for 2nd F events."),
-        orm.EventCategory(id=3, name="3rd F - Faith", desription="General category for 3rd F events."),
+        orm.EventCategory(id=3, name="3rd F - Faith", description="General category for 3rd F events."),
     ]
 
     event_type_list = [
