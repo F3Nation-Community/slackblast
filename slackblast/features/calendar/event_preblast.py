@@ -71,8 +71,9 @@ def build_event_preblast_form(
     preblast_info = build_preblast_info(body, client, logger, context, region_record, event_id)
     record = preblast_info.event_extended
     view_id = safe_get(body, "view", "id")
+    action_value = safe_get(body, "actions", 0, "value") or safe_get(body, "actions", 0, "selected_option", "value")
 
-    if safe_get(body, "actions", 0, "selected_option", "value") == "Edit Preblast" or preblast_info.user_is_q:
+    if action_value == "Edit Preblast":  # or preblast_info.user_is_q:
         form = deepcopy(EVENT_PREBLAST_FORM)
 
         location_records: list[Location] = DbManager.find_records(Location, [Location.org_id == region_record.org_id])
@@ -110,6 +111,12 @@ def build_event_preblast_form(
             *preblast_info.preblast_blocks,
             orm.ActionsBlock(elements=preblast_info.action_blocks),
         ]
+        if preblast_info.event_extended.event.preblast_ts:
+            blocks.append(
+                orm.SectionBlock(
+                    label=f"\n*This preblast has been posted, <slack://channel?team={body["team"]["id"]}&id={preblast_info.event_extended.org.slack_id}&ts={preblast_info.event_extended.event.preblast_ts}|check it out in the channel>*"  # noqa
+                )
+            )  # noqa
 
         form = orm.BlockView(blocks=blocks)
         title_text = "Event Preblast"
@@ -358,6 +365,20 @@ def handle_event_preblast_action(body: dict, client: WebClient, logger: Logger, 
                     AttendanceNew.attendance_type_id.in_([2, 3]),
                     AttendanceNew.is_planned,
                 ],
+            )
+        if metadata.get("preblast_ts"):
+            preblast_info = build_preblast_info(body, client, logger, context, region_record, event_id)
+            blocks = [
+                *preblast_info.preblast_blocks,
+                orm.ActionsBlock(elements=PREBLAST_MESSAGE_ACTION_ELEMENTS),
+            ]
+            blocks = [b.as_form_field() for b in blocks]
+            client.chat_update(
+                channel=preblast_info.event_extended.org.slack_id,
+                ts=metadata["preblast_ts"],
+                blocks=blocks,
+                text="Event Preblast",
+                metadata={"event_type": "preblast", "event_payload": metadata},
             )
         build_event_preblast_form(
             body, client, logger, context, region_record, event_id=event_id, update_view_id=view_id

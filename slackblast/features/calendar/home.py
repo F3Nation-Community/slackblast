@@ -4,7 +4,11 @@ from logging import Logger
 from slack_sdk.web import WebClient
 from sqlalchemy import or_
 
-from features.calendar.event_preblast import build_event_preblast_form
+from features.calendar.event_preblast import (
+    PREBLAST_MESSAGE_ACTION_ELEMENTS,
+    build_event_preblast_form,
+    build_preblast_info,
+)
 from utilities.database import DbManager
 from utilities.database.orm import AttendanceNew, Event, EventType, EventType_x_Org, Org, Region
 from utilities.database.special_queries import CalendarHomeQuery, home_schedule_query
@@ -145,7 +149,7 @@ def build_home_form(
         if block_count > 90:
             break
         if event.user_q:
-            option_names = ["Edit Preblast"]
+            option_names = ["View Preblast", "Edit Preblast"]
         else:
             option_names = ["View Preblast"]
         if event.event.start_date != active_date:
@@ -196,6 +200,7 @@ def handle_home_event(body: dict, client: WebClient, logger: Logger, context: di
     action = safe_get(body, "actions", 0, "selected_option", "value")
     user_id = get_user_id(safe_get(body, "user", "id"), region_record, client, logger)
     view_id = safe_get(body, "view", "id")
+    update_post = False
 
     if action in ["View Preblast", "Edit Preblast"]:
         build_event_preblast_form(body, client, logger, context, region_record, event_id=event_id)
@@ -209,6 +214,7 @@ def handle_home_event(body: dict, client: WebClient, logger: Logger, context: di
             )
         )
         # TODO: build the q / preblast form
+        update_post = True
         build_home_form(body, client, logger, context, region_record, update_view_id=view_id)
     elif action == "HC":
         DbManager.create_record(
@@ -219,6 +225,7 @@ def handle_home_event(body: dict, client: WebClient, logger: Logger, context: di
                 is_planned=True,
             )
         )
+        update_post = True
         build_home_form(body, client, logger, context, region_record, update_view_id=view_id)
     elif action == "Un-HC":
         DbManager.delete_records(
@@ -231,5 +238,29 @@ def handle_home_event(body: dict, client: WebClient, logger: Logger, context: di
             ],
         )
         build_home_form(body, client, logger, context, region_record, update_view_id=view_id)
+
+    if update_post:
+        preblast_info = build_preblast_info(body, client, logger, context, region_record, event_id)
+        if preblast_info.event_extended.event.preblast_ts:
+            blocks = [
+                *preblast_info.preblast_blocks,
+                orm.ActionsBlock(elements=PREBLAST_MESSAGE_ACTION_ELEMENTS),
+            ]
+            blocks = [b.as_form_field() for b in blocks]
+            metadata = {
+                "event_id": event_id,
+                "attendees": [r.user.id for r in preblast_info.attendance_records],
+                "qs": [
+                    r.user.id for r in preblast_info.attendance_records if r.attendance.attendance_type_id in [2, 3]
+                ],  # noqa
+            }
+            client.chat_update(
+                channel=preblast_info.event_extended.org.slack_id,
+                ts=safe_get(metadata, "preblast_ts") or str(preblast_info.event_extended.event.preblast_ts),
+                blocks=blocks,
+                text="Event Preblast",
+                metadata={"event_type": "preblast", "event_payload": metadata},
+            )
+
     elif action == "edit":
         pass

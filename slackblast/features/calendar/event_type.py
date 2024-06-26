@@ -95,5 +95,12 @@ EVENT_TYPE_FORM = orm.BlockView(
             optional=True,
             hint="If entering a new event type, this is required for national aggregations (achievements, etc).",
         ),
+        orm.InputBlock(
+            label="Event type acronym",
+            element=orm.PlainTextInputElement(placeholder="Two letter acronym", max_length=2),
+            action=actions.CALENDAR_ADD_EVENT_TYPE_ACRONYM,
+            optional=True,
+            hint="This is used for the calendar view to save on space. Defaults to first two letters of event type name. Make sure it's unique!",  # noqa
+        ),
     ]
 )

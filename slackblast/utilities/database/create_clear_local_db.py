@@ -135,22 +135,22 @@ def initialize_tables():
             id=1, name="1st F - Core Workout", description="The core F3 activity - must meet all 5 core principles."
         ),
         orm.EventCategory(
-            id=1, name="1st F - Pre Workout", description="Pre-workout activities (pre-rucks, pre-runs, etc)."
+            id=2, name="1st F - Pre Workout", description="Pre-workout activities (pre-rucks, pre-runs, etc)."
         ),
         orm.EventCategory(
-            id=1,
+            id=3,
             name="1st F - Off the books",
             description="Fitness activities that didn't meet all 5 core principles (unscheduled, open to all men, etc).",  # noqa: E501
         ),
-        orm.EventCategory(id=2, name="2nd F - Fellowship", description="General category for 2nd F events."),
-        orm.EventCategory(id=3, name="3rd F - Faith", description="General category for 3rd F events."),
+        orm.EventCategory(id=4, name="2nd F - Fellowship", description="General category for 2nd F events."),
+        orm.EventCategory(id=5, name="3rd F - Faith", description="General category for 3rd F events."),
     ]
 
     event_type_list = [
-        orm.EventType(id=1, name="Bootcamp", category_id=1),
-        orm.EventType(id=2, name="Run", category_id=1),
-        orm.EventType(id=3, name="Ruck", category_id=1),
-        orm.EventType(id=4, name="QSource", category_id=3),
+        orm.EventType(id=1, name="Bootcamp", category_id=1, acronym="BC"),
+        orm.EventType(id=2, name="Run", category_id=1, acronym="RU"),
+        orm.EventType(id=3, name="Ruck", category_id=1, acronym="RK"),
+        orm.EventType(id=4, name="QSource", category_id=3, acronym="QS"),
     ]
 
     attendance_type_list = [

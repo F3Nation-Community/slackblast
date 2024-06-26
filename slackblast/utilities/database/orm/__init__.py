@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Any, Optional
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table, UniqueConstraint
 from sqlalchemy.dialects.mysql import BLOB, DATE, DECIMAL, JSON, LONGTEXT, TEXT, TINYINT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, registry
 from typing_extensions import Annotated
@@ -256,7 +256,10 @@ class Event(BaseClass, GetDBClass):
     preblast_rich: Mapped[Optional[dict[str, Any]]]
     backblast_rich: Mapped[Optional[dict[str, Any]]]
     preblast_ts: Mapped[Optional[dec16_6]]
+    backblast_ts: Mapped[Optional[dec16_6]]
     meta: Mapped[Optional[dict[str, Any]]]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return Event.id
@@ -269,6 +272,7 @@ class EventType(BaseClass, GetDBClass):
     name: Mapped[str100]
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_categories.id"))
     description: Mapped[Optional[longtext]]
+    acronym: Mapped[Optional[str30]]
 
     def get_id():
         return EventType.id
@@ -335,6 +339,10 @@ class AttendanceNew(BaseClass, GetDBClass):
     attendance_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("attendance_types.id"))
     is_planned: Mapped[bool]
     meta: Mapped[Optional[dict[str, Any]]]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
+
+    __table_args__ = (UniqueConstraint("event_id", "user_id", "attendance_type_id", "is_planned", name="event_user"),)
 
     def get_id():
         return AttendanceNew.id
