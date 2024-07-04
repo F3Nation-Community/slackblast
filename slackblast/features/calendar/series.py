@@ -7,7 +7,7 @@ from slack_sdk.web import WebClient
 
 from utilities import constants
 from utilities.database import DbManager
-from utilities.database.orm import Event, EventType, EventType_x_Org, Location, Org, Region
+from utilities.database.orm import Event, EventTag, EventTag_x_Org, EventType, EventType_x_Org, Location, Org, Region
 from utilities.helper_functions import safe_convert, safe_get, time_int_to_str, time_str_to_int
 from utilities.slack import actions, orm
 
@@ -45,6 +45,8 @@ def build_series_add_form(
         EventType, EventType_x_Org, [EventType_x_Org.org_id == region_record.org_id]
     )
     event_types = [x[0] for x in event_types]
+    event_tags = DbManager.find_join_records2(EventTag, EventTag_x_Org, [EventTag_x_Org.org_id == region_record.org_id])
+    event_tags = [x[0] for x in event_tags]
 
     form.set_options(
         {
@@ -63,6 +65,10 @@ def build_series_add_form(
             actions.CALENDAR_ADD_SERIES_TYPE: orm.as_selector_options(
                 names=[event_type.name for event_type in event_types],
                 values=[str(event_type.id) for event_type in event_types],
+            ),
+            actions.CALENDAR_ADD_SERIES_TAG: orm.as_selector_options(
+                names=[tag.name for tag in event_tags],
+                values=[str(tag.id) for tag in event_tags],
             ),
         }
     )
@@ -86,6 +92,8 @@ def build_series_add_form(
             actions.CALENDAR_ADD_SERIES_INTERVAL: edit_event.recurrence_interval,
             actions.CALENDAR_ADD_SERIES_INDEX: edit_event.index_within_interval,
         }
+        if edit_event.event_tag_id:
+            initial_values[actions.CALENDAR_ADD_SERIES_TAG] = str(edit_event.event_tag_id)
     else:
         initial_values = {
             actions.CALENDAR_ADD_SERIES_START_DATE: datetime.now().strftime("%Y-%m-%d"),
@@ -165,6 +173,7 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
     org_id = safe_convert(
         safe_get(form_data, actions.CALENDAR_ADD_SERIES_AO) or safe_get(form_data, actions.CALENDAR_ADD_EVENT_AO), int
     )
+    event_tag_id = safe_convert(safe_get(form_data, actions.CALENDAR_ADD_SERIES_TAG), int)
     recurrence_interval = safe_convert(safe_get(form_data, actions.CALENDAR_ADD_SERIES_INTERVAL), int)
     index_within_interval = safe_convert(safe_get(form_data, actions.CALENDAR_ADD_SERIES_INDEX), int)
 
@@ -186,6 +195,7 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
                 org_id=org_id,
                 location_id=location_id,
                 event_type_id=event_type_id,
+                event_tag_id=event_tag_id,
                 start_date=datetime.strptime(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_DATE), "%Y-%m-%d"),
                 start_time=time_str_to_int(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_TIME)),
                 end_time=end_time,
@@ -202,6 +212,7 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
                 org_id=org_id,
                 location_id=location_id,
                 event_type_id=event_type_id,
+                event_tag_id=event_tag_id,
                 start_date=datetime.strptime(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_DATE), "%Y-%m-%d"),
                 end_date=end_date,
                 start_time=time_str_to_int(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_TIME)),
@@ -263,6 +274,7 @@ def create_events(records: list[Event]):
                             org_id=series.org_id,
                             location_id=series.location_id,
                             event_type_id=series.event_type_id,
+                            event_tag_id=series.event_tag_id,
                             start_date=current_date,
                             end_date=current_date,
                             start_time=series.start_time,
@@ -417,6 +429,12 @@ SERIES_FORM = orm.BlockView(
             optional=False,
         ),
         orm.InputBlock(
+            label="Default Event Tag",
+            action=actions.CALENDAR_ADD_SERIES_TAG,
+            element=orm.StaticSelectElement(placeholder="Select the event tag"),
+            optional=True,
+        ),
+        orm.InputBlock(
             label="Start Date",
             action=actions.CALENDAR_ADD_SERIES_START_DATE,
             element=orm.DatepickerElement(placeholder="Enter the start date"),
@@ -514,6 +532,12 @@ EVENT_FORM = orm.BlockView(
             action=actions.CALENDAR_ADD_SERIES_TYPE,
             element=orm.StaticSelectElement(placeholder="Select the event type"),
             optional=False,
+        ),
+        orm.InputBlock(
+            label="Event Tag",
+            action=actions.CALENDAR_ADD_SERIES_TAG,
+            element=orm.StaticSelectElement(placeholder="Select the event tag"),
+            optional=True,
         ),
         orm.InputBlock(
             label="Date",

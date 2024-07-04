@@ -235,6 +235,7 @@ class Event(BaseClass, GetDBClass):
     org_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
     location_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("locations.id"))
     event_type_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("event_types.id"))
+    event_tag_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("event_tags.id"))
     series_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("events.id"))
     is_series: Mapped[bool]
     is_active: Mapped[bool]
@@ -404,3 +405,27 @@ class EventType_x_Org(BaseClass, GetDBClass):
 
     def get_id():
         return EventType_x_Org.id
+
+
+class EventTag(BaseClass, GetDBClass):
+    __tablename__ = "event_tags"
+
+    id: Mapped[intpk]
+    name: Mapped[str100]
+    description: Mapped[Optional[longtext]]
+    color: Mapped[Optional[str30]]
+
+    def get_id():
+        return EventTag.id
+
+
+class EventTag_x_Org(BaseClass, GetDBClass):
+    __tablename__ = "event_tags_x_org"
+
+    id: Mapped[intpk]
+    event_tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_tags.id"))
+    org_id: Mapped[int] = mapped_column(Integer, ForeignKey("orgs.id"))
+    color_override: Mapped[Optional[str30]]
+
+    def get_id():
+        return EventTag_x_Org.id

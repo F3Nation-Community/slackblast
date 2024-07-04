@@ -198,6 +198,11 @@ CALENDAR_ADD_EVENT_TYPE_CALLBACK_ID = "calendar-add-event-type-id"
 CALENDAR_MANAGE_EVENT_TYPES = "calendar-manage-event-types"
 EVENT_PREBLAST_POST_CALLBACK_ID = "event-preblast-post-id"
 CALENDAR_ADD_EVENT_TYPE_ACRONYM = "calendar-add-event-type-acronym"
+CALENDAR_MANAGE_EVENT_TAGS = "calendar-manage-event-tags"
+CALENDAR_ADD_EVENT_TAG_SELECT = "calendar-add-event-tag-select"
+CALENDAR_ADD_EVENT_TAG_NEW = "calendar-add-event-tag-new"
+CALENDAR_ADD_EVENT_TAG_COLOR = "calendar-add-event-tag-color"
+CALENDAR_ADD_SERIES_TAG = "calendar-add-series-tag"
 
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,

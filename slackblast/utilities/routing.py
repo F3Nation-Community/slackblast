@@ -1,5 +1,5 @@
 from features import backblast, config, custom_fields, preblast, strava, weaselbot, welcome
-from features.calendar import ao, event_preblast, event_type, home, location, series
+from features.calendar import ao, event_preblast, event_tag, event_type, home, location, series
 from features.calendar import config as calendar_config
 from utilities import announcements, builders
 from utilities.slack import actions
@@ -90,6 +90,7 @@ ACTION_MAPPER = {
     actions.EVENT_PREBLAST_REMOVE_Q: (event_preblast.handle_event_preblast_action, False),
     actions.EVENT_PREBLAST_HC_UN_HC: (event_preblast.handle_event_preblast_action, False),
     actions.EVENT_PREBLAST_EDIT: (event_preblast.handle_event_preblast_action, False),
+    actions.CALENDAR_MANAGE_EVENT_TAGS: (event_tag.build_event_tag_form, False),
 }
 
 VIEW_CLOSED_MAPPER = {

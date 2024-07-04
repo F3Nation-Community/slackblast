@@ -15,6 +15,7 @@ from utilities.database import DbManager
 from utilities.database.orm import (
     Attendance,
     Backblast,
+    EventTag_x_Org,
     EventType_x_Org,
     Org,
     PaxminerAO,
@@ -420,6 +421,15 @@ def get_region_record(team_id: str, body, context, client, logger) -> Region:
             for i in range(1, 5)
         ]
         DbManager.create_records(event_type_x_org_records)
+
+        event_tag_x_org_records = [
+            EventTag_x_Org(
+                org_id=org_record.id,
+                event_tag_id=i,
+            )
+            for i in range(1, 5)
+        ]
+        DbManager.create_records(event_tag_x_org_records)
 
     return region_record
 

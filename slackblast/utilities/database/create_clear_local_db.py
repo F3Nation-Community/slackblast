@@ -40,6 +40,8 @@ def create_tables():
             orm.AttendanceNew,
             orm.UserNew,
             orm.SlackUser,
+            orm.EventTag,
+            orm.EventTag_x_Org,
         ],
         "f3devregion": [
             orm.Backblast,
@@ -159,6 +161,13 @@ def initialize_tables():
         orm.AttendanceType(id=3, type="Co-Q"),
     ]
 
+    event_tag_list = [
+        orm.EventTag(id=1, name="Open", color="Green"),
+        orm.EventTag(id=2, name="VQ", color="Blue"),
+        orm.EventTag(id=3, name="Manniversary", color="Yellow"),
+        orm.EventTag(id=4, name="Convergence", color="Orange"),
+    ]
+
     session = get_session(schema="f3devregion")
     session.add_all(ao_list)
     session.add_all(user_list)
@@ -176,6 +185,7 @@ def initialize_tables():
     session.add_all(event_category_list)
     session.add_all(event_type_list)
     session.add_all(attendance_type_list)
+    session.add_all(event_tag_list)
     session.commit()
     session.close()
 
