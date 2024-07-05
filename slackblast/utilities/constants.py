@@ -150,3 +150,5 @@ ORG_TYPES = {
     "Area": 3,
     "Sector": 4,
 }
+
+S3_IMAGE_URL = "https://slackblast-images.s3.amazonaws.com/{image_name}"

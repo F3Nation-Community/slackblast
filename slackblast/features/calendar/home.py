@@ -9,6 +9,7 @@ from features.calendar.event_preblast import (
     build_event_preblast_form,
     build_preblast_info,
 )
+from utilities.constants import S3_IMAGE_URL
 from utilities.database import DbManager
 from utilities.database.orm import AttendanceNew, Event, EventType, EventType_x_Org, Org, Region
 from utilities.database.special_queries import CalendarHomeQuery, home_schedule_query
@@ -31,7 +32,15 @@ def build_home_form(
     )
     event_type_records = [x[0] for x in event_types]
 
+    org_record = DbManager.get_record(Org, region_record.org_id)
+    org_settings = org_record.slack_app_settings
+    this_week_url = S3_IMAGE_URL.format(image_name=safe_get(org_settings, "calendar_image_current") or "default.png")
+    next_week_url = S3_IMAGE_URL.format(image_name=safe_get(org_settings, "calendar_image_next") or "default.png")
+
     blocks = [
+        orm.ImageBlock(label="This week's schedule", alt_text="Current", image_url=this_week_url),
+        orm.ImageBlock(label="Next week's schedule", alt_text="Next", image_url=next_week_url),
+        orm.DividerBlock(),
         orm.SectionBlock(label="*Upcoming Schedule*"),
         orm.InputBlock(
             label="Filter AOs",

@@ -9,6 +9,7 @@ from slack_sdk.web import WebClient
 from utilities import constants
 from utilities.database import DbManager
 from utilities.database.orm import (
+    Org,
     PaxminerAO,
     PaxminerRegion,
     Region,
@@ -132,6 +133,9 @@ def handle_config_email_post(body: dict, client: WebClient, logger: Logger, cont
         id=context["team_id"],
         fields=fields,
     )
+    region = region_record._update(fields)
+    DbManager.update_record(cls=Org, id=region_record.org_id, fields={Org.slack_app_settings: region.to_json()})
+
     update_local_region_records()
     print(json.dumps({"event_type": "successful_config_update", "team_name": region_record.workspace_name}))
 
@@ -152,6 +156,9 @@ def handle_config_general_post(body: dict, client: WebClient, logger: Logger, co
         id=context["team_id"],
         fields=fields,
     )
+    region = region_record._update(fields)
+    DbManager.update_record(cls=Org, id=region_record.org_id, fields={Org.slack_app_settings: region.to_json()})
+
     update_local_region_records()
     print(json.dumps({"event_type": "successful_config_update", "team_name": region_record.workspace_name}))
 

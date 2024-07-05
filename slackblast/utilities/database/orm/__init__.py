@@ -51,10 +51,18 @@ class GetDBClass:
         return None
 
     def to_json(self):
-        return {c.key: self.get(c.key) for c in self.__table__.columns}
+        return {c.key: self.get(c.key) for c in self.__table__.columns if c.key not in ["created", "updated"]}
 
     def __repr__(self):
         return str(self.to_json())
+
+    def _update(self, fields):
+        for k, v in fields.items():
+            attr_name = str(k).split(".")[-1]
+            setattr(self, attr_name, v)
+            # if attr_name not in ["created", "updated"]:
+            #     setattr(self, attr_name, v)
+        return self
 
 
 class Region(BaseClass, GetDBClass):
