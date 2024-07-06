@@ -85,8 +85,8 @@ CALENDAR_CONFIG_FORM = orm.BlockView(
             action=actions.CALENDAR_MANAGE_EVENT_TAGS,
             element=orm.OverflowElement(
                 options=orm.as_selector_options(
-                    names=["Add Event Tag"],  # , "Edit or Deactivate Event Types"],
-                    values=["add"],  # , "edit"],
+                    names=["Add Event Tag", "Edit or Delete Event Tags"],
+                    values=["add", "edit"],
                 ),
             ),
         ),
