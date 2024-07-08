@@ -516,3 +516,14 @@ def plain_text_to_rich_block(text: str) -> Dict[str, Any]:
             }
         ],
     }
+
+
+def remove_keys_from_dict(d, keys_to_remove):
+    if isinstance(d, dict):
+        return {
+            key: remove_keys_from_dict(value, keys_to_remove) for key, value in d.items() if key not in keys_to_remove
+        }
+    elif isinstance(d, list):
+        return [remove_keys_from_dict(item, keys_to_remove) for item in d]
+    else:
+        return d
