@@ -24,25 +24,20 @@ from utilities.slack import actions, forms
 def build_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     user_info_dict = client.users_info(user=user_id)
+    update_view_id = safe_get(body, actions.LOADING_ID)
+
     if user_info_dict["user"]["is_admin"]:
         config_form = copy.deepcopy(forms.CONFIG_FORM)
-        update_view_id = safe_get(body, actions.LOADING_ID)
-        config_form.update_modal(
-            client=client,
-            view_id=update_view_id,
-            callback_id=actions.CONFIG_CALLBACK_ID,
-            title_text="Slackblast Settings",
-            submit_button_text="None",
-        )
     else:
         config_form = copy.deepcopy(forms.CONFIG_NO_PERMISSIONS_FORM)
-        config_form.update_modal(
-            client=client,
-            view_id=update_view_id,
-            callback_id=actions.CONFIG_CALLBACK_ID,
-            title_text="Slackblast Settings",
-            submit_button_text="None",
-        )
+
+    config_form.update_modal(
+        client=client,
+        view_id=update_view_id,
+        callback_id=actions.CONFIG_CALLBACK_ID,
+        title_text="Slackblast Settings",
+        submit_button_text="None",
+    )
 
 
 def build_config_email_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):

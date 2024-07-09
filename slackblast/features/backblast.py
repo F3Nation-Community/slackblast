@@ -23,6 +23,7 @@ from utilities.helper_functions import (
     get_user_names,
     parse_rich_block,
     plain_text_to_rich_block,
+    remove_keys_from_dict,
     replace_user_channel_ids,
     safe_get,
 )
@@ -114,6 +115,7 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
         )
         if not safe_get(initial_backblast_data, actions.BACKBLAST_MOLESKIN):
             moleskin_block = safe_get(body, "message", "blocks", 1)
+            moleskin_block = remove_keys_from_dict(moleskin_block, ["display_team_id", "display_url"])
             if moleskin_block.get("type") == "section":
                 initial_backblast_data[actions.BACKBLAST_MOLESKIN] = plain_text_to_rich_block(
                     moleskin_block["text"]["text"]
