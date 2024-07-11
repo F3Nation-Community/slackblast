@@ -6,8 +6,19 @@ from logging import Logger
 from slack_sdk.web import WebClient
 
 from utilities.database import DbManager, get_session
-from utilities.database.orm import AttendanceNew, Event, EventType, Location, Org, Region, SlackUser, UserNew
-from utilities.helper_functions import get_user_id, safe_get, time_int_to_str
+from utilities.database.orm import (
+    AttendanceNew,
+    Event,
+    EventTag,
+    EventTag_x_Org,
+    EventType,
+    Location,
+    Org,
+    Region,
+    SlackUser,
+    UserNew,
+)
+from utilities.helper_functions import get_user_id, safe_convert, safe_get, time_int_to_str
 from utilities.slack import actions, orm
 
 
@@ -17,6 +28,7 @@ class EventExtended:
     org: Org
     event_type: EventType
     location: Location
+    event_tag: EventTag
 
 
 @dataclass
@@ -38,11 +50,12 @@ class PreblastInfo:
 def event_preblast_query(event_id: int) -> tuple[EventExtended, list[AttendanceExtended]]:
     with get_session() as session:
         query = (
-            session.query(Event, Org, EventType, Location)
+            session.query(Event, Org, EventType, Location, EventTag)
             .select_from(Event)
             .join(Org, Org.id == Event.org_id)
             .join(EventType, EventType.id == Event.event_type_id)
             .join(Location, Location.id == Event.location_id)
+            .join(EventTag, EventTag.id == Event.event_tag_id, isouter=True)
             .filter(Event.id == event_id)
         )
         record = EventExtended(*query.one_or_none())
@@ -72,11 +85,15 @@ def build_event_preblast_form(
     record = preblast_info.event_extended
     view_id = safe_get(body, "view", "id")
     action_value = safe_get(body, "actions", 0, "value") or safe_get(body, "actions", 0, "selected_option", "value")
+    print(action_value)
 
     if action_value == "Edit Preblast":  # or preblast_info.user_is_q:
         form = deepcopy(EVENT_PREBLAST_FORM)
 
         location_records: list[Location] = DbManager.find_records(Location, [Location.org_id == region_record.org_id])
+        tag_records: list[tuple[EventTag, EventTag_x_Org]] = DbManager.find_join_records2(
+            EventTag, EventTag_x_Org, [EventTag_x_Org.org_id == region_record.org_id]
+        )
         # TODO: filter locations to AO?
         # TODO: show hardcoded details (date, time, etc.)
         form.set_options(
@@ -85,12 +102,17 @@ def build_event_preblast_form(
                     names=[location.name for location in location_records],
                     values=[str(location.id) for location in location_records],
                 ),
+                actions.EVENT_PREBLAST_TAG: orm.as_selector_options(
+                    names=[tag.name for tag, _ in tag_records if tag.name != "Open"],
+                    values=[str(tag.id) for tag, _ in tag_records if tag.name != "Open"],
+                ),
             }
         )
         initial_values = {
             actions.EVENT_PREBLAST_TITLE: record.event.name,
             actions.EVENT_PREBLAST_LOCATION: str(record.location.id),
             actions.EVENT_PREBLAST_MOLESKINE_EDIT: record.event.preblast_rich,
+            actions.EVENT_PREBLAST_TAG: safe_convert(getattr(record.event_tag, "id", None), str),
         }
         coq_list = [
             r.slack_user.slack_id for r in preblast_info.attendance_records if r.attendance.attendance_type_id == 3
@@ -163,6 +185,7 @@ def handle_event_preblast_edit(body: dict, client: WebClient, logger: Logger, co
         Event.name: form_data[actions.EVENT_PREBLAST_TITLE],
         Event.location_id: form_data[actions.EVENT_PREBLAST_LOCATION],
         Event.preblast_rich: form_data[actions.EVENT_PREBLAST_MOLESKINE_EDIT],
+        Event.event_tag_id: form_data[actions.EVENT_PREBLAST_TAG],
     }
     DbManager.update_record(Event, event_id, update_fields)
 
@@ -300,6 +323,8 @@ def build_preblast_info(
     event_details += f"\n*Start Time:* {time_int_to_str(event_record.event.start_time)}"
     event_details += f"\n*Where:* {location}"
     event_details += f"\n*Event Type:* {event_record.event_type.name}"
+    if event_record.event_tag:
+        event_details += f"\n*Event Tag:* {event_record.event_tag.name}"
     event_details += f"\n*Q:* {q_list}"
     event_details += f"\n*HC Count:* {hc_count}"
     event_details += f"\n*HCs:* {hc_list}"
@@ -461,6 +486,12 @@ EVENT_PREBLAST_FORM = orm.BlockView(
             optional=True,
         ),
         orm.InputBlock(
+            label="Event Tag",
+            action=actions.EVENT_PREBLAST_TAG,
+            element=orm.StaticSelectElement(placeholder="Select Event Tag"),
+            optional=True,
+        ),
+        orm.InputBlock(
             label="Preblast",
             action=actions.EVENT_PREBLAST_MOLESKINE_EDIT,
             element=orm.RichTextInputElement(placeholder="Give us an event preview!"),
@@ -481,5 +512,5 @@ EVENT_PREBLAST_FORM = orm.BlockView(
 
 PREBLAST_MESSAGE_ACTION_ELEMENTS = [
     orm.ButtonElement(label=":hc: HC/Un-HC", action=actions.EVENT_PREBLAST_HC_UN_HC),
-    orm.ButtonElement(label=":pencil: Edit Preblast", action=actions.EVENT_PREBLAST_EDIT),
+    orm.ButtonElement(label=":pencil: Edit Preblast", action=actions.EVENT_PREBLAST_EDIT, value="Edit Preblast"),
 ]

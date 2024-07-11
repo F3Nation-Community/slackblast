@@ -205,6 +205,7 @@ CALENDAR_ADD_EVENT_TAG_COLOR = "calendar-add-event-tag-color"
 CALENDAR_ADD_SERIES_TAG = "calendar-add-series-tag"
 EVENT_TAG_EDIT_DELETE = "event-tag-edit-delete"
 CALENDAR_ADD_EVENT_TAG_CALLBACK_ID = "calendar-add-event-tag-id"
+EVENT_PREBLAST_TAG = "event-preblast-tag"
 
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,
