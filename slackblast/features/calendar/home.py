@@ -4,8 +4,8 @@ from logging import Logger
 from slack_sdk.web import WebClient
 from sqlalchemy import or_
 
+from features.calendar import PREBLAST_MESSAGE_ACTION_ELEMENTS, series
 from features.calendar.event_preblast import (
-    PREBLAST_MESSAGE_ACTION_ELEMENTS,
     build_event_preblast_form,
     build_preblast_info,
 )
@@ -15,6 +15,17 @@ from utilities.database.orm import AttendanceNew, Event, EventType, EventType_x_
 from utilities.database.special_queries import CalendarHomeQuery, home_schedule_query
 from utilities.helper_functions import get_user_id, safe_convert, safe_get
 from utilities.slack import actions, orm
+
+
+def handle_event_preblast_select_button(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region
+):
+    action = safe_get(body, "actions", 0, "action_id")
+    view_id = safe_get(body, "view", "id")
+    if action == actions.EVENT_PREBLAST_NEW_BUTTON:
+        series.build_series_add_form(body, client, logger, context, region_record)
+    elif action == actions.OPEN_CALENDAR_BUTTON:
+        build_home_form(body, client, logger, context, region_record, update_view_id=view_id)
 
 
 def build_home_form(

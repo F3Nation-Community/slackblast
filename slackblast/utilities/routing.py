@@ -16,7 +16,8 @@ from utilities.slack import actions
 COMMAND_MAPPER = {
     "/backblast": (backblast.build_backblast_form, True),
     "/slackblast": (backblast.build_backblast_form, True),
-    "/preblast": (preblast.build_preblast_form, True),
+    # "/preblast": (preblast.build_preblast_form, True),
+    "/preblast": (event_preblast.build_event_preblast_select_form, True),
     "/config-welcome-message": (welcome.build_welcome_message_form, True),
     "/config-slackblast": (config.build_config_form, True),
     "/tag-achievement": (weaselbot.build_achievement_form, True),
@@ -93,6 +94,9 @@ ACTION_MAPPER = {
     actions.EVENT_PREBLAST_EDIT: (event_preblast.handle_event_preblast_action, False),
     actions.CALENDAR_MANAGE_EVENT_TAGS: (event_tag.manage_event_tags, False),
     actions.EVENT_TAG_EDIT_DELETE: (event_tag.handle_event_tag_edit_delete, False),
+    actions.EVENT_PREBLAST_SELECT: (event_preblast.handle_event_preblast_select, False),
+    actions.EVENT_PREBLAST_NEW_BUTTON: (home.handle_event_preblast_select_button, False),
+    actions.OPEN_CALENDAR_BUTTON: (home.handle_event_preblast_select_button, False),
 }
 
 VIEW_CLOSED_MAPPER = {

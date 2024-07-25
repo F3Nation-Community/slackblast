@@ -206,6 +206,10 @@ CALENDAR_ADD_SERIES_TAG = "calendar-add-series-tag"
 EVENT_TAG_EDIT_DELETE = "event-tag-edit-delete"
 CALENDAR_ADD_EVENT_TAG_CALLBACK_ID = "calendar-add-event-tag-id"
 EVENT_PREBLAST_TAG = "event-preblast-tag"
+EVENT_PREBLAST_SELECT = "event-preblast-select"
+EVENT_PREBLAST_SELECT_CALLBACK_ID = "event-preblast-select-id"
+EVENT_PREBLAST_NEW_BUTTON = "event-preblast-new"
+OPEN_CALENDAR_BUTTON = "open-calendar"
 
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,

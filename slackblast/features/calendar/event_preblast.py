@@ -1,10 +1,13 @@
+import datetime
 import json
 from copy import deepcopy
 from dataclasses import dataclass
 from logging import Logger
 
 from slack_sdk.web import WebClient
+from sqlalchemy import select
 
+from features.calendar import PREBLAST_MESSAGE_ACTION_ELEMENTS
 from utilities.database import DbManager, get_session
 from utilities.database.orm import (
     AttendanceNew,
@@ -72,6 +75,91 @@ def event_preblast_query(event_id: int) -> tuple[EventExtended, list[AttendanceE
     return record, attendance_records
 
 
+def build_event_preblast_select_form(
+    body: dict,
+    client: WebClient,
+    logger: Logger,
+    context: dict,
+    region_record: Region,
+):
+    user_id = get_user_id(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger)
+    with get_session() as session:
+        attendance_subquery = (
+            select(AttendanceNew.event_id.distinct().label("event_id"))
+            .filter(
+                AttendanceNew.user_id == user_id,
+                AttendanceNew.is_planned,
+                AttendanceNew.attendance_type_id.in_([2, 3]),
+            )
+            .alias()
+        )
+        event_records = (
+            session.query(Event, Org, EventType, Location, EventTag)
+            .select_from(Event)
+            .join(Org, Org.id == Event.org_id)
+            .join(EventType, EventType.id == Event.event_type_id)
+            .join(Location, Location.id == Event.location_id)
+            .join(EventTag, EventTag.id == Event.event_tag_id, isouter=True)
+            .join(attendance_subquery, attendance_subquery.c.event_id == Event.id)
+            .filter(
+                Event.start_date > datetime.date.today(),
+                Event.preblast_ts.is_(None),
+                Event.is_active,
+            )
+        ).all()
+        event_records = [EventExtended(*r) for r in event_records]
+
+    if event_records:
+        select_block = orm.InputBlock(
+            label="Select an upcoming Q",
+            action=actions.EVENT_PREBLAST_SELECT,
+            dispatch_action=True,
+            element=orm.StaticSelectElement(
+                placeholder="Select an event",
+                options=orm.as_selector_options(
+                    names=[f"{r.event.start_date} {r.org.name} {r.event_type.name}" for r in event_records],
+                    values=[str(r.event.id) for r in event_records],
+                ),
+            ),
+        )
+    else:
+        select_block = orm.SectionBlock(label="No upcoming events for you to send a preblast for!")
+
+    blocks = [
+        select_block,
+        orm.ActionsBlock(
+            elements=[
+                orm.ButtonElement(
+                    label=":heavy_plus_sign: New Unscheduled Event", action=actions.EVENT_PREBLAST_NEW_BUTTON
+                ),
+                orm.ButtonElement(label=":calendar: Open Calendar", action=actions.OPEN_CALENDAR_BUTTON),
+            ]
+        ),
+    ]
+    form = orm.BlockView(blocks=blocks)
+    form.update_modal(
+        client=client,
+        view_id=safe_get(body, actions.LOADING_ID),
+        callback_id=actions.EVENT_PREBLAST_SELECT_CALLBACK_ID,
+        title_text="Select Preblast",
+        submit_button_text="None",
+    )
+
+
+def handle_event_preblast_select(
+    body: dict,
+    client: WebClient,
+    logger: Logger,
+    context: dict,
+    region_record: Region,
+):
+    event_id = safe_get(body, "actions", 0, "selected_option", "value")
+    view_id = safe_get(body, "view", "id")
+    build_event_preblast_form(
+        body, client, logger, context, region_record, event_id=int(event_id), update_view_id=view_id
+    )
+
+
 def build_event_preblast_form(
     body: dict,
     client: WebClient,
@@ -85,9 +173,8 @@ def build_event_preblast_form(
     record = preblast_info.event_extended
     view_id = safe_get(body, "view", "id")
     action_value = safe_get(body, "actions", 0, "value") or safe_get(body, "actions", 0, "selected_option", "value")
-    print(action_value)
 
-    if action_value == "Edit Preblast":  # or preblast_info.user_is_q:
+    if action_value == "Edit Preblast" or preblast_info.user_is_q:
         form = deepcopy(EVENT_PREBLAST_FORM)
 
         location_records: list[Location] = DbManager.find_records(Location, [Location.org_id == region_record.org_id])
@@ -509,8 +596,3 @@ EVENT_PREBLAST_FORM = orm.BlockView(
         ),
     ]
 )
-
-PREBLAST_MESSAGE_ACTION_ELEMENTS = [
-    orm.ButtonElement(label=":hc: HC/Un-HC", action=actions.EVENT_PREBLAST_HC_UN_HC),
-    orm.ButtonElement(label=":pencil: Edit Preblast", action=actions.EVENT_PREBLAST_EDIT, value="Edit Preblast"),
-]
