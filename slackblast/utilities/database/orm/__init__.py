@@ -117,6 +117,7 @@ class Backblast(BaseClass, GetDBClass):
     coq_user_id: Mapped[Optional[str45]]
     pax_count: Mapped[Optional[int]]
     backblast: Mapped[Optional[longtext]]
+    backblast_parsed: Mapped[Optional[longtext]]
     fngs: Mapped[Optional[str45]]
     fng_count: Mapped[Optional[int]]
     json: Mapped[Optional[dict[str, Any]]]

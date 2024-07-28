@@ -566,6 +566,15 @@ COUNT: {count}
     res_link = client.chat_getPermalink(channel=chan or message_channel, message_ts=res["ts"])
 
     if region_record.paxminer_schema is not None:
+        backblast_parsed = f"""Backblast! {title}
+Date: {the_date}
+AO: {ao_name}
+Q: {q_name} {the_coqs_names}
+PAX: {pax_names}
+FNGs: {fngs_formatted}
+COUNT: {count}
+{moleskin_text_w_names}
+"""
         try:
             DbManager.create_record(
                 schema=region_record.paxminer_schema,
@@ -577,9 +586,8 @@ COUNT: {count}
                     q_user_id=the_q,
                     coq_user_id=the_coq[0] if the_coq else None,
                     pax_count=count,
-                    backblast=f"{post_msg}\n{moleskin_text}".replace(
-                        "*", ""
-                    ),  # here's where to replace with name versions
+                    backblast=f"{post_msg}\n{moleskin_text}".replace("*", ""),
+                    backblast_parsed=backblast_parsed,
                     fngs=fngs_formatted if fngs else "None listed",
                     fng_count=fng_count,
                     json=custom_fields,
