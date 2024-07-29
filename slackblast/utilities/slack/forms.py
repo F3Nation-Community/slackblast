@@ -92,12 +92,12 @@ BACKBLAST_FORM = orm.BlockView(
             element=orm.RichTextInputElement(),
         ),
         orm.DividerBlock(),
-        orm.InputBlock(
-            label="Choose where to post this",
-            action=actions.BACKBLAST_DESTINATION,
-            optional=False,
-            element=orm.StaticSelectElement(placeholder="Select a destination..."),
-        ),
+        # orm.InputBlock(
+        #     label="Choose where to post this",
+        #     action=actions.BACKBLAST_DESTINATION,
+        #     optional=False,
+        #     element=orm.StaticSelectElement(placeholder="Select a destination..."),
+        # ),
         orm.InputBlock(
             label="Email Backblast (to Wordpress, etc)",
             action=actions.BACKBLAST_EMAIL_SEND,

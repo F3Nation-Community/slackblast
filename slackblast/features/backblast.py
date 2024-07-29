@@ -22,7 +22,7 @@ from utilities.database.orm import (
     PaxminerUser,
     Region,
 )
-from utilities.database.special_queries import event_attendance_query
+from utilities.database.special_queries import event_attendance_query, event_preblast_query
 from utilities.helper_functions import (
     check_for_duplicate,
     get_channel_id,
@@ -34,6 +34,7 @@ from utilities.helper_functions import (
     plain_text_to_rich_block,
     remove_keys_from_dict,
     replace_user_channel_ids,
+    safe_convert,
     safe_get,
 )
 from utilities.slack import actions, forms
@@ -142,6 +143,11 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
     channel_name = safe_get(body, "channel_name") or safe_get(body, "channel", "name")
     trigger_id = safe_get(body, "trigger_id")
+    action_id = safe_get(body, "actions", 0, "action_id")
+    if action_id == actions.BACKBLAST_FILL_SELECT:
+        event_id = safe_convert(safe_get(body, "actions", 0, "selected_option", "value"), int)
+    else:
+        event_id = None
 
     for block in safe_get(body, "view", "blocks") or []:
         if not channel_id and block["block_id"] == actions.BACKBLAST_DESTINATION:
@@ -152,9 +158,10 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
         (safe_get(body, "command") in ["/backblast", "/slackblast"])
         or (safe_get(body, "actions", 0, "action_id") == actions.BACKBLAST_NEW_BUTTON)
         or (safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID)
+        or event_id
     ):
         backblast_method = "create"
-        update_view_id = safe_get(body, actions.LOADING_ID)
+        update_view_id = safe_get(body, "view", "id") or safe_get(body, actions.LOADING_ID)
         duplicate_check = False
         parent_metadata = {}
     else:
@@ -192,10 +199,26 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
             # initial_backblast_data[actions.BACKBLAST_MOLESKIN] = replace_slack_user_ids(
             #     initial_backblast_data[actions.BACKBLAST_MOLESKIN], client, logger, region_record
             # )
+    elif event_id:
+        event_record, attendance_records = event_preblast_query(event_id)
+        initial_backblast_data = {
+            actions.BACKBLAST_TITLE: event_record.event.name,
+            actions.BACKBLAST_DATE: event_record.event.start_date.strftime("%Y-%m-%d"),
+            actions.BACKBLAST_AO: event_record.org.slack_id,
+            actions.BACKBLAST_Q: safe_get(
+                [a.slack_user.slack_id for a in attendance_records if a.attendance.attendance_type_id == 2], 0
+            ),
+            actions.BACKBLAST_COQ: [
+                a.slack_user.user_id for a in attendance_records if a.attendance.attendance_type_id == 3
+            ],
+            actions.BACKBLAST_PAX: [a.slack_user.slack_id for a in attendance_records],
+        }
+        print(initial_backblast_data)
     else:
         initial_backblast_data = None
 
     backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
+    backblast_form.set_initial_values(initial_backblast_data)
 
     if backblast_method == "edit" or duplicate_check:
         og_ts = safe_get(body, "message", "ts") or safe_get(parent_metadata, "message_ts")
@@ -256,29 +279,30 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
         backblast_metadata = None
         callback_id = actions.BACKBLAST_CALLBACK_ID
 
-    if backblast_method == "create":
-        if (region_record.default_destination or "") == constants.CONFIG_DESTINATION_CURRENT["value"]:
-            default_destination_id = channel_id
-        elif (region_record.default_destination or "") == constants.CONFIG_DESTINATION_AO["value"]:
-            default_destination_id = "The_AO"
-        else:
-            default_destination_id = None
+    # if backblast_method == "create":
+    #     if (region_record.default_destination or "") == constants.CONFIG_DESTINATION_CURRENT["value"]:
+    #         default_destination_id = channel_id
+    #     elif (region_record.default_destination or "") == constants.CONFIG_DESTINATION_AO["value"]:
+    #         default_destination_id = "The_AO"
+    #     else:
+    #         default_destination_id = None
 
-        backblast_form.set_initial_values(
-            {
-                actions.BACKBLAST_Q: user_id,
-                actions.BACKBLAST_DATE: datetime.now(pytz.timezone("US/Central")).strftime("%Y-%m-%d"),
-                actions.BACKBLAST_DESTINATION: default_destination_id or "The_AO",
-                actions.BACKBLAST_MOLESKIN: region_record.backblast_moleskin_template
-                or constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE,
-            }
-        )
-        if channel_id:
-            backblast_form.set_initial_values({actions.BACKBLAST_AO: channel_id})
-    logger.debug(backblast_form.blocks)
-    logger.debug("backblast_form is {}".format(backblast_form.as_form_field()))
+    #     backblast_form.set_initial_values(
+    #         {
+    #             actions.BACKBLAST_Q: user_id,
+    #             actions.BACKBLAST_DATE: datetime.now(pytz.timezone("US/Central")).strftime("%Y-%m-%d"),
+    #             actions.BACKBLAST_DESTINATION: default_destination_id or "The_AO",
+    #             actions.BACKBLAST_MOLESKIN: region_record.backblast_moleskin_template
+    #             or constants.DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE,
+    #         }
+    #     )
+    #     if channel_id:
+    #         backblast_form.set_initial_values({actions.BACKBLAST_AO: channel_id})
+    # logger.debug(backblast_form.blocks)
+    # logger.debug("backblast_form is {}".format(backblast_form.as_form_field()))
 
     if duplicate_check or update_view_id:
+        print(backblast_form.blocks[12])
         backblast_form.update_modal(
             client=client,
             view_id=update_view_id,
