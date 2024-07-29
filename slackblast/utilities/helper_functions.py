@@ -389,12 +389,16 @@ def get_region_record(team_id: str, body, context, client, logger) -> Region:
             team_name = team_domain
 
         paxminer_schema = get_paxminer_schema(team_id, logger)
+        slack_app_settings = {
+            "bot_access_token": context["bot_token"],
+        }
 
         org_record = Org(
             org_type_id=2,
             name=team_name,
             is_active=True,
             slack_id=team_id,
+            slack_app_settings=slack_app_settings,
         )
         org_record: Org = DbManager.create_record(org_record)
 

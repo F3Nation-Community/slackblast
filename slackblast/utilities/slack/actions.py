@@ -211,6 +211,11 @@ EVENT_PREBLAST_SELECT_CALLBACK_ID = "event-preblast-select-id"
 EVENT_PREBLAST_NEW_BUTTON = "event-preblast-new"
 OPEN_CALENDAR_BUTTON = "open-calendar"
 
+MSG_EVENT_PREBLAST_TITLE = "event_preblast_title_dm"
+MSG_EVENT_PREBLAST_MOLESKINE = "event_preblast_moleskine_dm"
+MSG_EVENT_PREBLAST_SUBMIT = "event_preblast_submit_dm"
+MSG_EVENT_PREBLAST_BUTTON = "event_preblast_button_dm"
+
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,
     SERIES_EDIT_DELETE,

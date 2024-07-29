@@ -21,7 +21,7 @@ from utilities.database.orm import (
     SlackUser,
     UserNew,
 )
-from utilities.helper_functions import get_user_id, safe_convert, safe_get, time_int_to_str
+from utilities.helper_functions import get_user_id, get_user_names, safe_convert, safe_get, time_int_to_str
 from utilities.slack import actions, orm
 
 
@@ -268,6 +268,7 @@ def handle_event_preblast_edit(body: dict, client: WebClient, logger: Logger, co
     metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
     event_id = safe_get(metadata, "event_id")
     callback_id = safe_get(body, "view", "callback_id")
+    slack_user_id = safe_get(body, "user", "id") or safe_get(body, "user_id")
     update_fields = {
         Event.name: form_data[actions.EVENT_PREBLAST_TITLE],
         Event.location_id: form_data[actions.EVENT_PREBLAST_LOCATION],
@@ -316,6 +317,9 @@ def handle_event_preblast_edit(body: dict, client: WebClient, logger: Logger, co
             "attendees": [r.user.id for r in preblast_info.attendance_records],
             "qs": [r.user.id for r in preblast_info.attendance_records if r.attendance.attendance_type_id in [2, 3]],
         }
+        q_name, q_url = get_user_names([slack_user_id], logger, client, return_urls=True)
+        q_name = (q_name or [""])[0]
+        q_url = q_url[0]
         if preblast_info.event_extended.event.preblast_ts or safe_get(metadata, "preblast_ts"):
             client.chat_update(
                 channel=preblast_info.event_extended.org.slack_id,
@@ -323,6 +327,8 @@ def handle_event_preblast_edit(body: dict, client: WebClient, logger: Logger, co
                 blocks=blocks,
                 text="Event Preblast",
                 metadata={"event_type": "preblast", "event_payload": metadata},
+                username=f"{q_name} (via Slackblast)",
+                icon_url=q_url,
             )
         else:
             res = client.chat_postMessage(
@@ -331,6 +337,8 @@ def handle_event_preblast_edit(body: dict, client: WebClient, logger: Logger, co
                 text="Event Preblast",
                 metadata={"event_type": "preblast", "event_payload": metadata},
                 unfurl_links=False,
+                username=f"{q_name} (via Slackblast)",
+                icon_url=q_url,
             )
             DbManager.update_record(Event, event_id, {Event.preblast_ts: float(res["ts"])})
 
@@ -485,12 +493,18 @@ def handle_event_preblast_action(body: dict, client: WebClient, logger: Logger, 
                 orm.ActionsBlock(elements=PREBLAST_MESSAGE_ACTION_ELEMENTS),
             ]
             blocks = [b.as_form_field() for b in blocks]
+
+            q_name, q_url = get_user_names([slack_user_id], logger, client, return_urls=True)
+            q_name = (q_name or [""])[0]
+            q_url = q_url[0]
             client.chat_update(
                 channel=preblast_info.event_extended.org.slack_id,
                 ts=metadata["preblast_ts"],
                 blocks=blocks,
                 text="Event Preblast",
                 metadata={"event_type": "preblast", "event_payload": metadata},
+                username=f"{q_name} (via Slackblast)",
+                icon_url=q_url,
             )
         build_event_preblast_form(
             body, client, logger, context, region_record, event_id=event_id, update_view_id=view_id
@@ -526,12 +540,17 @@ def handle_event_preblast_action(body: dict, client: WebClient, logger: Logger, 
                 ],
             }
             blocks = [*preblast_info.preblast_blocks, orm.ActionsBlock(elements=PREBLAST_MESSAGE_ACTION_ELEMENTS)]
+            q_name, q_url = get_user_names([slack_user_id], logger, client, return_urls=True)
+            q_name = (q_name or [""])[0]
+            q_url = q_url[0]
             client.chat_update(
                 channel=preblast_info.event_extended.org.slack_id,
                 ts=body["message"]["ts"],
                 blocks=[b.as_form_field() for b in blocks],
                 text="Preblast",
                 metadata={"event_type": "preblast", "event_payload": metadata},
+                username=f"{q_name} (via Slackblast)",
+                icon_url=q_url,
             )
         elif action_id == actions.EVENT_PREBLAST_EDIT:
             if user_id in metadata["qs"]:
@@ -542,6 +561,9 @@ def handle_event_preblast_action(body: dict, client: WebClient, logger: Logger, 
                     user=slack_user_id,
                     text=":warning: Only Qs can edit the preblast! :warning:",
                 )
+        elif action_id == actions.MSG_EVENT_PREBLAST_BUTTON:
+            event_id = safe_convert(body["actions"][0]["value"], int)
+            build_event_preblast_form(body, client, logger, context, region_record, event_id=event_id)
 
 
 DEFAULT_PREBLAST = {

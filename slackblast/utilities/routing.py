@@ -97,6 +97,7 @@ ACTION_MAPPER = {
     actions.EVENT_PREBLAST_SELECT: (event_preblast.handle_event_preblast_select, False),
     actions.EVENT_PREBLAST_NEW_BUTTON: (home.handle_event_preblast_select_button, False),
     actions.OPEN_CALENDAR_BUTTON: (home.handle_event_preblast_select_button, False),
+    actions.MSG_EVENT_PREBLAST_BUTTON: (event_preblast.handle_event_preblast_action, False),
 }
 
 VIEW_CLOSED_MAPPER = {
