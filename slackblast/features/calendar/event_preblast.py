@@ -1,78 +1,23 @@
 import datetime
 import json
 from copy import deepcopy
-from dataclasses import dataclass
 from logging import Logger
 
 from slack_sdk.web import WebClient
-from sqlalchemy import select
 
 from features.calendar import PREBLAST_MESSAGE_ACTION_ELEMENTS
-from utilities.database import DbManager, get_session
+from utilities.database import DbManager
 from utilities.database.orm import (
     AttendanceNew,
     Event,
     EventTag,
     EventTag_x_Org,
-    EventType,
     Location,
-    Org,
     Region,
-    SlackUser,
-    UserNew,
 )
+from utilities.database.special_queries import PreblastInfo, event_attendance_query, event_preblast_query
 from utilities.helper_functions import get_user_id, get_user_names, safe_convert, safe_get, time_int_to_str
 from utilities.slack import actions, orm
-
-
-@dataclass
-class EventExtended:
-    event: Event
-    org: Org
-    event_type: EventType
-    location: Location
-    event_tag: EventTag
-
-
-@dataclass
-class AttendanceExtended:
-    attendance: AttendanceNew
-    user: UserNew
-    slack_user: SlackUser
-
-
-@dataclass
-class PreblastInfo:
-    event_extended: EventExtended
-    attendance_records: list[AttendanceExtended]
-    preblast_blocks: list[orm.BaseBlock]
-    action_blocks: list[orm.BaseElement]
-    user_is_q: bool = False
-
-
-def event_preblast_query(event_id: int) -> tuple[EventExtended, list[AttendanceExtended]]:
-    with get_session() as session:
-        query = (
-            session.query(Event, Org, EventType, Location, EventTag)
-            .select_from(Event)
-            .join(Org, Org.id == Event.org_id)
-            .join(EventType, EventType.id == Event.event_type_id)
-            .join(Location, Location.id == Event.location_id)
-            .join(EventTag, EventTag.id == Event.event_tag_id, isouter=True)
-            .filter(Event.id == event_id)
-        )
-        record = EventExtended(*query.one_or_none())
-
-        query = (
-            session.query(AttendanceNew, UserNew, SlackUser)
-            .select_from(AttendanceNew)
-            .join(UserNew)
-            .join(SlackUser)
-            .filter(AttendanceNew.event_id == event_id, AttendanceNew.is_planned)
-        )
-        attendance_records = [AttendanceExtended(*r) for r in query.all()]
-
-    return record, attendance_records
 
 
 def build_event_preblast_select_form(
@@ -83,31 +28,18 @@ def build_event_preblast_select_form(
     region_record: Region,
 ):
     user_id = get_user_id(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger)
-    with get_session() as session:
-        attendance_subquery = (
-            select(AttendanceNew.event_id.distinct().label("event_id"))
-            .filter(
-                AttendanceNew.user_id == user_id,
-                AttendanceNew.is_planned,
-                AttendanceNew.attendance_type_id.in_([2, 3]),
-            )
-            .alias()
-        )
-        event_records = (
-            session.query(Event, Org, EventType, Location, EventTag)
-            .select_from(Event)
-            .join(Org, Org.id == Event.org_id)
-            .join(EventType, EventType.id == Event.event_type_id)
-            .join(Location, Location.id == Event.location_id)
-            .join(EventTag, EventTag.id == Event.event_tag_id, isouter=True)
-            .join(attendance_subquery, attendance_subquery.c.event_id == Event.id)
-            .filter(
-                Event.start_date > datetime.date.today(),
-                Event.preblast_ts.is_(None),
-                Event.is_active,
-            )
-        ).all()
-        event_records = [EventExtended(*r) for r in event_records]
+    event_records = event_attendance_query(
+        attendance_filter=[
+            AttendanceNew.user_id == user_id,
+            AttendanceNew.is_planned,
+            AttendanceNew.attendance_type_id.in_([2, 3]),
+        ],
+        event_filter=[
+            Event.start_date > datetime.date.today(),
+            Event.preblast_ts.is_(None),
+            Event.is_active,
+        ],
+    )
 
     if event_records:
         select_block = orm.InputBlock(

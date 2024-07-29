@@ -20,6 +20,8 @@ BACKBLAST_NEW_BUTTON = "new-backblast"
 BACKBLAST_OP = "original_poster"
 BACKBLAST_STRAVA_BUTTON = "strava-button"
 BACKBLAST_FILE = "boyband_file"
+BACKBLAST_SELECT_CALLBACK_ID = "backblast-select-id"
+BACKBLAST_FILL_SELECT = "backblast-fill-select"
 
 PREBLAST_CALLBACK_ID = "preblast-id"
 PREBLAST_TITLE = "title"
@@ -223,4 +225,5 @@ ACTION_PREFIXES = [
     AO_EDIT_DELETE,
     CALENDAR_HOME_EVENT,
     EVENT_TAG_EDIT_DELETE,
+    BACKBLAST_FILL_SELECT,
 ]

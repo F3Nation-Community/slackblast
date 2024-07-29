@@ -1,7 +1,7 @@
 import copy
 import json
 import os
-from datetime import datetime
+from datetime import date, datetime
 from logging import Logger
 
 import boto3
@@ -14,12 +14,21 @@ from slack_sdk.web import WebClient
 
 from utilities import constants, sendmail
 from utilities.database import DbManager
-from utilities.database.orm import Attendance, Backblast, PaxminerUser, Region
+from utilities.database.orm import (
+    Attendance,
+    AttendanceNew,
+    Backblast,
+    Event,
+    PaxminerUser,
+    Region,
+)
+from utilities.database.special_queries import event_attendance_query
 from utilities.helper_functions import (
     check_for_duplicate,
     get_channel_id,
     get_channel_name,
     get_pax,
+    get_user_id,
     get_user_names,
     parse_rich_block,
     plain_text_to_rich_block,
@@ -55,6 +64,64 @@ def add_custom_field_blocks(form: slack_orm.BlockView, region_record: Region) ->
                     }
                 )
     return output_form
+
+
+def backblast_middleware(
+    body: dict,
+    client: WebClient,
+    logger: Logger,
+    context: dict,
+    region_record: Region,
+):
+    user_id = get_user_id(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger)
+    event_records = event_attendance_query(
+        attendance_filter=[
+            AttendanceNew.user_id == user_id,
+            AttendanceNew.is_planned,
+            AttendanceNew.attendance_type_id.in_([2, 3]),
+        ],
+        event_filter=[
+            Event.start_date < date.today(),
+            Event.backblast_ts.is_(None),
+            Event.is_active,
+        ],
+    )
+
+    if event_records:
+        select_block = slack_orm.InputBlock(
+            label="Select a past Q",
+            action=actions.BACKBLAST_FILL_SELECT,
+            dispatch_action=True,
+            element=slack_orm.StaticSelectElement(
+                placeholder="Select an event",
+                options=slack_orm.as_selector_options(
+                    names=[f"{r.event.start_date} {r.org.name} {r.event_type.name}" for r in event_records],
+                    values=[str(r.event.id) for r in event_records],
+                ),
+            ),
+        )
+    else:
+        select_block = slack_orm.SectionBlock(label="No past events for you to send a backblast for!")
+
+    blocks = [
+        select_block,
+        slack_orm.ActionsBlock(
+            elements=[
+                slack_orm.ButtonElement(
+                    label=":heavy_plus_sign: New Unscheduled Event", action=actions.BACKBLAST_NEW_BUTTON
+                ),
+                slack_orm.ButtonElement(label=":calendar: Open Calendar", action=actions.OPEN_CALENDAR_BUTTON),
+            ]
+        ),
+    ]
+    form = slack_orm.BlockView(blocks=blocks)
+    form.update_modal(
+        client=client,
+        view_id=safe_get(body, actions.LOADING_ID),
+        callback_id=actions.BACKBLAST_SELECT_CALLBACK_ID,
+        title_text="Select Backblast",
+        submit_button_text="None",
+    )
 
 
 def build_backblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):

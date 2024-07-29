@@ -14,8 +14,8 @@ from utilities.slack import actions
 # The boolean value indicates whether a loading modal should be triggered before running the function
 
 COMMAND_MAPPER = {
-    "/backblast": (backblast.build_backblast_form, True),
-    "/slackblast": (backblast.build_backblast_form, True),
+    "/backblast": (backblast.backblast_middleware, True),
+    "/slackblast": (backblast.backblast_middleware, True),
     # "/preblast": (preblast.build_preblast_form, True),
     "/preblast": (event_preblast.build_event_preblast_select_form, True),
     "/config-welcome-message": (welcome.build_welcome_message_form, True),
@@ -50,7 +50,7 @@ VIEW_MAPPER = {
 
 ACTION_MAPPER = {
     actions.BACKBLAST_EDIT_BUTTON: (backblast.handle_backblast_edit_button, True),
-    actions.BACKBLAST_NEW_BUTTON: (backblast.build_backblast_form, True),
+    actions.BACKBLAST_NEW_BUTTON: (backblast.backblast_middleware, True),
     actions.BACKBLAST_STRAVA_BUTTON: (strava.build_strava_form, True),
     actions.STRAVA_ACTIVITY_BUTTON: (strava.build_strava_modify_form, False),
     actions.BACKBLAST_AO: (backblast.build_backblast_form, False),
