@@ -13,7 +13,7 @@ from utilities.constants import S3_IMAGE_URL
 from utilities.database import DbManager
 from utilities.database.orm import AttendanceNew, Event, EventType, EventType_x_Org, Org, Region
 from utilities.database.special_queries import CalendarHomeQuery, home_schedule_query
-from utilities.helper_functions import get_user_id, safe_convert, safe_get
+from utilities.helper_functions import get_user, safe_convert, safe_get
 from utilities.slack import actions, orm
 
 
@@ -35,7 +35,7 @@ def build_home_form(
     if action_id == actions.CALENDAR_HOME_DATE_FILTER and not safe_get(body, "actions", 0, "selected_date"):
         return
     slack_user_id = safe_get(body, "user", "id") or safe_get(body, "user_id")
-    user_id = get_user_id(slack_user_id, region_record, client, logger)
+    user_id = get_user(slack_user_id, region_record, client, logger).id
 
     ao_records = DbManager.find_records(Org, filters=[Org.parent_id == region_record.org_id])
     event_types = DbManager.find_join_records2(
@@ -218,7 +218,7 @@ def build_home_form(
 def handle_home_event(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
     event_id = safe_convert(safe_get(body, "actions", 0, "action_id").split("_")[1], int)
     action = safe_get(body, "actions", 0, "selected_option", "value")
-    user_id = get_user_id(safe_get(body, "user", "id"), region_record, client, logger)
+    user_id = get_user(safe_get(body, "user", "id"), region_record, client, logger).id
     view_id = safe_get(body, "view", "id")
     update_post = False
 

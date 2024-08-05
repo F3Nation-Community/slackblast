@@ -335,6 +335,7 @@ class SlackUser(BaseClass, GetDBClass):
     user_name: Mapped[str100]
     email: Mapped[str255]
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
+    avatar_url: Mapped[Optional[str255]]
 
     def get_id():
         return SlackUser.id

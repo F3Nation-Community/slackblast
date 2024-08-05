@@ -5,6 +5,9 @@ from datetime import datetime
 from logging import Logger
 from typing import Any, Dict, List, Tuple
 
+import boto3
+import requests
+from PIL import Image
 from slack_bolt.adapter.aws_lambda.lambda_s3_oauth_flow import LambdaS3OAuthFlow
 from slack_bolt.oauth.oauth_settings import OAuthSettings
 from slack_sdk.web import WebClient
@@ -28,7 +31,7 @@ from utilities.database.orm import (
 from utilities.slack import actions
 
 REGION_RECORDS: Dict[str, Region] = {}
-SLACK_USERS: Dict[str, str] = {}
+SLACK_USERS: Dict[str, SlackUser] = {}
 
 
 def get_oauth_flow():
@@ -323,16 +326,17 @@ def replace_slack_user_ids(text: str, client, logger, region_record: Region = No
     return text
 
 
-def get_user_id(slack_user_id: str, region_record: Region, client: WebClient, logger: Logger) -> int:
+def get_user(slack_user_id: str, region_record: Region, client: WebClient, logger: Logger) -> SlackUser:
     if not SLACK_USERS:
         update_local_slack_users()
 
-    user_id = safe_get(SLACK_USERS, slack_user_id)
-    if not user_id:
+    user: SlackUser | None = safe_get(SLACK_USERS, slack_user_id)
+    if not user:
         try:
             # check to see if this user's email is already in the db
             user_info = client.users_info(user=slack_user_id)
             email = safe_get(user_info, "user", "profile", "email")
+            email = email or slack_user_id  # this means it's a bot
             user_name = safe_get(user_info, "user", "profile", "display_name") or safe_get(
                 user_info, "user", "profile", "real_name"
             )
@@ -349,7 +353,7 @@ def get_user_id(slack_user_id: str, region_record: Region, client: WebClient, lo
                 )
 
             # Create a new slack user record
-            DbManager.create_record(
+            slack_user_record = DbManager.create_record(
                 SlackUser(
                     user_id=user_record.id,
                     slack_id=slack_user_id,
@@ -359,19 +363,19 @@ def get_user_id(slack_user_id: str, region_record: Region, client: WebClient, lo
             )
 
             # Update SLACK_USERS with the new id
-            SLACK_USERS[slack_user_id] = user_record.id
-            return user_record.id
+            SLACK_USERS[slack_user_id] = slack_user_record
+            return slack_user_record
         except Exception as e:
             raise e
     else:
-        return user_id
+        return user
 
 
 def update_local_slack_users() -> None:
     print("Updating local slack users...")
     slack_users: List[SlackUser] = DbManager.find_records(SlackUser, filters=[True])
     global SLACK_USERS
-    SLACK_USERS = {slack_user.slack_id: slack_user.user_id for slack_user in slack_users}
+    SLACK_USERS = {slack_user.slack_id: slack_user for slack_user in slack_users}
 
 
 def get_region_record(team_id: str, body, context, client, logger) -> Region:
@@ -641,3 +645,79 @@ def time_int_to_str(time: int) -> str:
 
 def time_str_to_int(time: str) -> int:
     return int(time.replace(":", ""))
+
+
+def upload_files_to_s3(
+    files: List[Dict[str, str]], user_id: str, client: WebClient, logger: Logger
+) -> Tuple[List[str], List[Dict[str, Any]]]:
+    file_list = []
+    file_send_list = []
+    for file in files or []:
+        try:
+            r = requests.get(file["url_private_download"], headers={"Authorization": f"Bearer {client.token}"})
+            r.raise_for_status()
+
+            file_name = f"{file['id']}.{file['filetype']}"
+            file_path = f"/tmp/{file_name}"
+            file_mimetype = file["mimetype"]
+
+            with open(file_path, "wb") as f:
+                f.write(r.content)
+
+            if file["filetype"] == "heic":
+                heic_img = Image.open(file_path)
+                x, y = heic_img.size
+                coeff = min(constants.MAX_HEIC_SIZE / max(x, y), 1)
+                heic_img = heic_img.resize((int(x * coeff), int(y * coeff)))
+                heic_img.save(file_path.replace(".heic", ".png"), quality=95, optimize=True, format="PNG")
+                os.remove(file_path)
+
+                file_path = file_path.replace(".heic", ".png")
+                file_name = file_name.replace(".heic", ".png")
+                file_mimetype = "image/png"
+
+            # read first line of file to determine if it's an image
+            with open(file_path, "rb") as f:
+                try:
+                    first_line = f.readline().decode("utf-8")
+                except Exception as e:
+                    logger.info(f"Error reading photo as text: {e}")
+                    first_line = ""
+            if first_line[:9] == "<!DOCTYPE":
+                logger.debug(f"File {file_name} is not an image, skipping")
+                msg = "To enable boybands, you will need to reinstall Slackblast with some new permissions."
+                msg += " To to this, simply use this link: "
+                msg += "https://n1tbdh3ak9.execute-api.us-east-2.amazonaws.com/Prod/slack/install."
+                msg += " You can edit your backblast and upload a boyband once this is complete."
+                client.chat_postMessage(
+                    text=msg,
+                    channel=user_id,
+                )
+            else:
+                if constants.LOCAL_DEVELOPMENT:
+                    s3_client = boto3.client(
+                        "s3",
+                        aws_access_key_id=os.environ[constants.AWS_ACCESS_KEY_ID],
+                        aws_secret_access_key=os.environ[constants.AWS_SECRET_ACCESS_KEY],
+                    )
+                else:
+                    s3_client = boto3.client("s3")
+                with open(file_path, "rb") as f:
+                    s3_client.upload_fileobj(
+                        f, "slackblast-images", file_name, ExtraArgs={"ContentType": file_mimetype}
+                    )
+                file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_name}")
+                file_send_list.append(
+                    {
+                        "filepath": file_path,
+                        "meta": {
+                            "filename": file_name,
+                            "maintype": file_mimetype.split("/")[0],
+                            "subtype": file_mimetype.split("/")[1],
+                        },
+                    }
+                )
+        except Exception as e:
+            logger.error(f"Error uploading file: {e}")
+
+    return file_list, file_send_list

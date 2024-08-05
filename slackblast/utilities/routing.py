@@ -26,7 +26,7 @@ COMMAND_MAPPER = {
 }
 
 VIEW_MAPPER = {
-    actions.BACKBLAST_CALLBACK_ID: (backblast.handle_backblast_post, False),
+    actions.BACKBLAST_CALLBACK_ID: (backblast.handle_backblast_post_new, False),
     actions.BACKBLAST_EDIT_CALLBACK_ID: (backblast.handle_backblast_post, False),
     actions.PREBLAST_CALLBACK_ID: (preblast.handle_preblast_post, False),
     actions.PREBLAST_EDIT_CALLBACK_ID: (preblast.handle_preblast_post, False),
@@ -98,7 +98,8 @@ ACTION_MAPPER = {
     actions.EVENT_PREBLAST_NEW_BUTTON: (home.handle_event_preblast_select_button, False),
     actions.OPEN_CALENDAR_BUTTON: (home.handle_event_preblast_select_button, False),
     actions.MSG_EVENT_PREBLAST_BUTTON: (event_preblast.handle_event_preblast_action, False),
-    actions.BACKBLAST_FILL_SELECT: (backblast.build_backblast_form, False),
+    actions.BACKBLAST_FILL_SELECT: (backblast.build_backblast_form_new, False),
+    actions.BACKBLAST_NEW_BLANK_BUTTON: (backblast.build_backblast_form_new, False),
 }
 
 VIEW_CLOSED_MAPPER = {

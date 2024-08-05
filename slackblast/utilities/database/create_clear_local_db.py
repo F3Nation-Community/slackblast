@@ -85,7 +85,7 @@ def initialize_tables():
         for c in channels
     ]
 
-    user_list = [
+    paxminer_user_list = [
         orm.PaxminerUser(
             user_id=u["id"],
             user_name=u["profile"]["display_name"],
@@ -94,6 +94,28 @@ def initialize_tables():
             email=u["profile"].get("email"),
         )
         for u in users
+    ]
+
+    user_list = [
+        orm.UserNew(
+            id=i,
+            f3_name=u["profile"]["display_name"] or u["profile"]["real_name"],
+            email=u["profile"].get("email"),
+            home_region_id=1,
+        )
+        for i, u in enumerate(users)
+    ]
+
+    slack_user_list = [
+        orm.SlackUser(
+            id=i,
+            slack_id=u["id"],
+            user_name=u["profile"]["display_name"] or u["profile"]["real_name"],
+            email=u["profile"].get("email"),
+            user_id=i,
+            avatar_url=["profile"]["image_192"],
+        )
+        for i, u in enumerate(users)
     ]
 
     achievement_list = [
@@ -170,7 +192,9 @@ def initialize_tables():
 
     session = get_session(schema="f3devregion")
     session.add_all(ao_list)
+    session.add_all(paxminer_user_list)
     session.add_all(user_list)
+    session.add_all(slack_user_list)
     session.add_all(achievement_list)
     session.commit()
     session.close()

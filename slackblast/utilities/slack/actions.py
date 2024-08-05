@@ -22,6 +22,7 @@ BACKBLAST_STRAVA_BUTTON = "strava-button"
 BACKBLAST_FILE = "boyband_file"
 BACKBLAST_SELECT_CALLBACK_ID = "backblast-select-id"
 BACKBLAST_FILL_SELECT = "backblast-fill-select"
+BACKBLAST_NEW_BLANK_BUTTON = "new-blank-backblast"
 
 PREBLAST_CALLBACK_ID = "preblast-id"
 PREBLAST_TITLE = "title"

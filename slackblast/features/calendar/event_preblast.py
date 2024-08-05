@@ -16,7 +16,7 @@ from utilities.database.orm import (
     Region,
 )
 from utilities.database.special_queries import PreblastInfo, event_attendance_query, event_preblast_query
-from utilities.helper_functions import get_user_id, get_user_names, safe_convert, safe_get, time_int_to_str
+from utilities.helper_functions import get_user, get_user_names, safe_convert, safe_get, time_int_to_str
 from utilities.slack import actions, orm
 
 
@@ -27,7 +27,7 @@ def build_event_preblast_select_form(
     context: dict,
     region_record: Region,
 ):
-    user_id = get_user_id(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger)
+    user_id = get_user(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger).id
     event_records = event_attendance_query(
         attendance_filter=[
             AttendanceNew.user_id == user_id,
@@ -210,7 +210,7 @@ def handle_event_preblast_edit(body: dict, client: WebClient, logger: Logger, co
     DbManager.update_record(Event, event_id, update_fields)
 
     coq_list = safe_get(form_data, actions.EVENT_PREBLAST_COQS) or []
-    user_ids = [get_user_id(slack_id, region_record, client, logger) for slack_id in coq_list]
+    user_ids = [get_user(slack_id, region_record, client, logger).id for slack_id in coq_list]
     # better way to upsert / on conflict do nothing?
     if user_ids:
         DbManager.delete_records(
@@ -295,7 +295,7 @@ def build_preblast_info(
     hc_list = hc_list if hc_list else "None"
     hc_count = len({r.user.id for r in attendance_records})
 
-    user_id = get_user_id(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger)
+    user_id = get_user(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger).id
     user_is_q = any(r.user.id == user_id for r in attendance_records if r.attendance.attendance_type_id in [2, 3])
 
     q_list = " ".join(
@@ -376,7 +376,7 @@ def handle_event_preblast_action(body: dict, client: WebClient, logger: Logger, 
     )
     event_id = safe_get(metadata, "event_id")
     slack_user_id = safe_get(body, "user", "id") or safe_get(body, "user_id")
-    user_id = get_user_id(slack_user_id, region_record, client, logger)
+    user_id = get_user(slack_user_id, region_record, client, logger).id
     view_id = safe_get(body, "view", "id")
 
     if view_id:

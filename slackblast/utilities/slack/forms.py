@@ -45,13 +45,13 @@ BACKBLAST_FORM = orm.BlockView(
             element=orm.UsersSelectElement(placeholder="Select the Q..."),
             dispatch_action=True,
         ),
-        orm.ContextBlock(
-            action=actions.BACKBLAST_DUPLICATE_WARNING,
-            element=orm.ContextElement(
-                initial_value=":warning: :warning: *WARNING*: duplicate backblast detected in PAXMiner DB for this Q, "
-                "AO, and date; this backblast will not be saved as-is. Please modify one of these selections",
-            ),
-        ),
+        # orm.ContextBlock(
+        #     action=actions.BACKBLAST_DUPLICATE_WARNING,
+        #     element=orm.ContextElement(
+        #         initial_value=":warning: :warning: *WARNING*: duplicate backblast detected in PAXMiner DB for this Q, "
+        #         "AO, and date; this backblast will not be saved as-is. Please modify one of these selections",
+        #     ),
+        # ),
         orm.InputBlock(
             label="The CoQ(s), if any",
             action=actions.BACKBLAST_COQ,

@@ -4,13 +4,11 @@ import os
 from datetime import date, datetime
 from logging import Logger
 
-import boto3
 import pytz
-import requests
 from cryptography.fernet import Fernet
-from PIL import Image
 from pillow_heif import register_heif_opener
 from slack_sdk.web import WebClient
+from sqlalchemy import not_
 
 from utilities import constants, sendmail
 from utilities.database import DbManager
@@ -28,7 +26,7 @@ from utilities.helper_functions import (
     get_channel_id,
     get_channel_name,
     get_pax,
-    get_user_id,
+    get_user,
     get_user_names,
     parse_rich_block,
     plain_text_to_rich_block,
@@ -36,6 +34,7 @@ from utilities.helper_functions import (
     replace_user_channel_ids,
     safe_convert,
     safe_get,
+    upload_files_to_s3,
 )
 from utilities.slack import actions, forms
 from utilities.slack import orm as slack_orm
@@ -74,7 +73,8 @@ def backblast_middleware(
     context: dict,
     region_record: Region,
 ):
-    user_id = get_user_id(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger)
+    user = get_user(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger)
+    user_id = user.user_id
     event_records = event_attendance_query(
         attendance_filter=[
             AttendanceNew.user_id == user_id,
@@ -109,7 +109,7 @@ def backblast_middleware(
         slack_orm.ActionsBlock(
             elements=[
                 slack_orm.ButtonElement(
-                    label=":heavy_plus_sign: New Unscheduled Event", action=actions.BACKBLAST_NEW_BUTTON
+                    label=":heavy_plus_sign: New Unscheduled Event", action=actions.BACKBLAST_NEW_BLANK_BUTTON
                 ),
                 slack_orm.ButtonElement(label=":calendar: Open Calendar", action=actions.OPEN_CALENDAR_BUTTON),
             ]
@@ -123,6 +123,362 @@ def backblast_middleware(
         title_text="Select Backblast",
         submit_button_text="None",
     )
+
+
+def build_backblast_form_new(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    """
+    Args:
+        body (dict): Slack request body
+        client (WebClient): Slack WebClient object
+        logger (Logger): Logger object
+        context (dict): Slack request context
+        region_record (Region): Region record for the requesting region
+    """
+
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    trigger_id = safe_get(body, "trigger_id")
+    backblast_metadata = safe_get(body, "message", "metadata", "event_payload") or {}
+    action_id = safe_get(body, "actions", 0, "action_id")
+    if action_id == actions.BACKBLAST_FILL_SELECT:
+        event_id = safe_convert(safe_get(body, "actions", 0, "selected_option", "value"), int)
+    else:
+        event_id = safe_get(backblast_metadata, "event_id")
+
+    update_view_id = safe_get(body, actions.LOADING_ID) or safe_get(body, "view", "id")
+
+    if safe_get(backblast_metadata, actions.BACKBLAST_TITLE):
+        initial_backblast_data = backblast_metadata
+        moleskin_block = safe_get(body, "message", "blocks", 1)
+        moleskin_block = remove_keys_from_dict(moleskin_block, ["display_team_id", "display_url"])
+        initial_backblast_data[actions.BACKBLAST_MOLESKIN] = moleskin_block
+    elif event_id:
+        event_record, attendance_records = event_preblast_query(event_id)
+        initial_backblast_data = {
+            actions.BACKBLAST_TITLE: event_record.event.name,
+            actions.BACKBLAST_DATE: event_record.event.start_date.strftime("%Y-%m-%d"),
+            actions.BACKBLAST_AO: event_record.org.slack_id,
+            actions.BACKBLAST_Q: safe_get(
+                [a.slack_user.slack_id for a in attendance_records if a.attendance.attendance_type_id == 2], 0
+            ),
+            actions.BACKBLAST_COQ: [
+                a.slack_user.user_id for a in attendance_records if a.attendance.attendance_type_id == 3
+            ],
+            actions.BACKBLAST_PAX: [a.slack_user.slack_id for a in attendance_records],
+            actions.BACKBLAST_MOLESKIN: region_record.backblast_moleskin_template,
+        }
+        backblast_metadata["event_id"] = event_id
+    else:
+        initial_backblast_data = {
+            actions.BACKBLAST_Q: user_id,
+            actions.BACKBLAST_DATE: datetime.now(pytz.timezone("US/Central")).strftime("%Y-%m-%d"),
+            actions.BACKBLAST_MOLESKIN: region_record.backblast_moleskin_template,
+        }
+
+    backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
+    backblast_form.set_initial_values(initial_backblast_data)
+    backblast_form = add_custom_field_blocks(backblast_form, region_record)
+
+    if not (region_record.email_enabled & region_record.email_option_show):
+        backblast_form.delete_block(actions.BACKBLAST_EMAIL_SEND)
+    # backblast_metadata = None
+    callback_id = actions.BACKBLAST_CALLBACK_ID
+
+    if update_view_id:
+        backblast_form.update_modal(
+            client=client,
+            view_id=update_view_id,
+            callback_id=callback_id,
+            title_text="Backblast",
+            parent_metadata=backblast_metadata,
+        )
+    else:
+        backblast_form.post_modal(
+            client=client,
+            trigger_id=trigger_id,
+            callback_id=callback_id,
+            title_text="Backblast",
+            parent_metadata=backblast_metadata,
+        )
+
+
+def handle_backblast_post_new(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+    create_or_edit = "create" if safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID else "edit"
+
+    backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
+    backblast_form = add_custom_field_blocks(backblast_form, region_record)
+    backblast_data: dict = backblast_form.get_selected_values(body)
+    logger.debug(f"Backblast data: {backblast_data}")
+
+    title = safe_get(backblast_data, actions.BACKBLAST_TITLE)
+    the_date = safe_get(backblast_data, actions.BACKBLAST_DATE)
+    the_ao = safe_get(backblast_data, actions.BACKBLAST_AO)
+    the_q = safe_get(backblast_data, actions.BACKBLAST_Q)
+    the_coq = safe_get(backblast_data, actions.BACKBLAST_COQ)
+    pax = safe_get(backblast_data, actions.BACKBLAST_PAX)
+    non_slack_pax = safe_get(backblast_data, actions.BACKBLAST_NONSLACK_PAX)
+    fngs = safe_get(backblast_data, actions.BACKBLAST_FNGS)
+    count = safe_get(backblast_data, actions.BACKBLAST_COUNT)
+    moleskin = safe_get(backblast_data, actions.BACKBLAST_MOLESKIN)
+    email_send = safe_get(backblast_data, actions.BACKBLAST_EMAIL_SEND)
+    # ao = safe_get(backblast_data, actions.BACKBLAST_AO)
+    files = safe_get(backblast_data, actions.BACKBLAST_FILE) or []
+
+    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    file_list, file_send_list = upload_files_to_s3(files=files, user_id=user_id, logger=logger, client=client)
+    metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
+    event_id = safe_get(metadata, "event_id")
+
+    if create_or_edit == "edit":
+        message_metadata = json.loads(body["view"]["private_metadata"])
+        message_channel = safe_get(message_metadata, "channel_id")
+        message_ts = safe_get(message_metadata, "message_ts")
+        file_list = safe_get(message_metadata, "files") if not file_list else file_list
+    else:
+        message_channel = None
+        message_ts = None
+
+    all_pax = list(set([the_q] + (the_coq or []) + pax))
+    db_users = [get_user(p, region_record, client, logger) for p in all_pax]
+    auto_count = len(all_pax)
+    pax_names_list = [user.user_name for user in db_users]
+
+    pax_formatted = get_pax(pax)
+    pax_full_list = [pax_formatted]
+    fngs_formatted = fngs
+    fng_count = 0
+    if non_slack_pax:
+        pax_full_list.append(non_slack_pax)
+        pax_names_list.append(non_slack_pax)
+        auto_count += non_slack_pax.count(",") + 1
+    if fngs:
+        pax_full_list.append(fngs)
+        pax_names_list.append(fngs)
+        fng_count = fngs.count(",") + 1
+        fngs_formatted = str(fng_count) + " " + fngs
+        auto_count += fngs.count(",") + 1
+    pax_formatted = ", ".join(pax_full_list)
+    pax_names = ", ".join(pax_names_list)
+
+    if the_coq is None:
+        the_coqs_formatted = ""
+        the_coqs_names = ""
+    else:
+        the_coqs_formatted = get_pax(the_coq)
+        the_coqs_full_list = [the_coqs_formatted]
+        the_coqs_users = [get_user(c, region_record, client, logger) for c in the_coq]
+        the_coqs_names_list = [user.user_name for user in the_coqs_users]
+        the_coqs_formatted = ", " + ", ".join(the_coqs_full_list)
+        the_coqs_names = ", " + ", ".join(the_coqs_names_list)
+
+    ao_name = get_channel_name(the_ao, logger, client, region_record)
+    q_user = get_user(the_q, region_record, client, logger)
+    q_name = q_user.user_name
+    q_url = q_user.avatar_url
+    count = count or auto_count
+
+    post_msg = f"""*Backblast! {title}*
+*DATE*: {the_date}
+*AO*: <#{the_ao}>
+*Q*: <@{the_q}>{the_coqs_formatted}
+*PAX*: {pax_formatted}
+*FNGs*: {fngs_formatted}
+*COUNT*: {count}"""
+
+    custom_fields = {}
+    for field, value in backblast_data.items():
+        if (field[: len(actions.CUSTOM_FIELD_PREFIX)] == actions.CUSTOM_FIELD_PREFIX) and value:
+            post_msg += f"\n*{field[len(actions.CUSTOM_FIELD_PREFIX):]}*: {str(value)}"
+            custom_fields[field[len(actions.CUSTOM_FIELD_PREFIX) :]] = value
+
+    if file_list:
+        custom_fields["files"] = file_list
+
+    msg_block = slack_orm.SectionBlock(label=post_msg)
+
+    backblast_data.pop(actions.BACKBLAST_MOLESKIN, None)
+    backblast_data[actions.BACKBLAST_FILE] = file_list
+    backblast_data[actions.BACKBLAST_OP] = user_id
+    backblast_data["event_id"] = event_id
+
+    edit_block = slack_orm.ActionsBlock(
+        elements=[
+            slack_orm.ButtonElement(
+                label=":pencil: Edit this backblast",
+                action=actions.BACKBLAST_EDIT_BUTTON,
+                value=json.dumps(backblast_data),
+            ),
+            slack_orm.ButtonElement(
+                label=":heavy_plus_sign: New backblast",
+                action=actions.BACKBLAST_NEW_BUTTON,
+                value="new",
+            ),
+        ]
+    )
+
+    if region_record.strava_enabled:
+        edit_block.elements.append(
+            slack_orm.ButtonElement(
+                label=":runner: Connect to Strava",
+                action=actions.BACKBLAST_STRAVA_BUTTON,
+                value="strava",
+            )
+        )
+
+    blocks = [msg_block.as_form_field(), moleskin]
+    for file in file_list or []:
+        blocks.append(
+            slack_orm.ImageBlock(
+                alt_text=title,
+                image_url=file,
+            ).as_form_field()
+        )
+    blocks.append(edit_block.as_form_field())
+
+    moleskin_text = parse_rich_block(moleskin)
+    moleskin_text_w_names = replace_user_channel_ids(
+        moleskin_text, region_record, client, logger
+    )  # check this for efficiency
+
+    if create_or_edit == "create":
+        res = client.chat_postMessage(
+            channel=the_ao,  # TODO: make this dynamic
+            text=f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast",
+            username=f"{q_name} (via Slackblast)",
+            icon_url=q_url,
+            blocks=blocks,
+            metadata={"event_type": "backblast", "event_payload": backblast_data},
+        )
+        print(res)
+        print(json.dumps({"event_type": "successful_slack_post", "team_name": region_record.workspace_name}))
+        if (email_send and email_send == "yes") or (email_send is None and region_record.email_enabled == 1):
+            moleskin_msg = moleskin_text_w_names
+
+            if region_record.postie_format:
+                subject = f"[{ao_name}] {title}"
+                moleskin_msg += f"\n\nTags: {ao_name}, {pax_names}"
+            else:
+                subject = title
+
+            email_msg = f"""Date: {the_date}
+AO: {ao_name}
+Q: {q_name} {the_coqs_names}
+PAX: {pax_names}
+FNGs: {fngs_formatted}
+COUNT: {count}
+{moleskin_msg}
+            """
+
+            try:
+                # Decrypt password
+                fernet = Fernet(os.environ[constants.PASSWORD_ENCRYPT_KEY].encode())
+                email_password_decrypted = fernet.decrypt(region_record.email_password.encode()).decode()
+                sendmail.send(
+                    subject=subject,
+                    body=email_msg,
+                    email_server=region_record.email_server,
+                    email_server_port=region_record.email_server_port,
+                    email_user=region_record.email_user,
+                    email_password=email_password_decrypted,
+                    email_to=region_record.email_to,
+                    attachments=file_send_list,
+                )
+                logger.debug("\nEmail Sent! \n{}".format(email_msg))
+                print(
+                    json.dumps(
+                        {
+                            "event_type": "successful_email_sent",
+                            "team_name": region_record.workspace_name,
+                        }
+                    )
+                )
+            except Exception as sendmail_err:
+                logger.error("Error with sendmail: {}".format(sendmail_err))
+                logger.debug("\nEmail Sent! \n{}".format(email_msg))
+                print(json.dumps({"event_type": "failed_email", "team_name": region_record.workspace_name}))
+
+    elif create_or_edit == "edit":
+        res = client.chat_update(
+            channel=message_channel,
+            ts=message_ts,
+            text=f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast",
+            username=f"{q_name} (via Slackblast)",
+            icon_url=q_url,
+            blocks=blocks,
+            metadata={"event_type": "backblast", "event_payload": backblast_data},
+        )
+        logger.debug("\nBackblast updated in Slack! \n{}".format(post_msg))
+        print(json.dumps({"event_type": "successful_slack_edit", "team_name": region_record.workspace_name}))
+
+        if event_id:
+            DbManager.delete_records(
+                AttendanceNew,
+                filters=[
+                    AttendanceNew.event_id == event_id,
+                    not_(AttendanceNew.is_planned),
+                ],
+            )
+        logger.debug("\nBackblast deleted from database! \n{}".format(post_msg))
+        print(json.dumps({"event_type": "successful_db_delete", "team_name": region_record.workspace_name}))
+
+    # res_link = client.chat_getPermalink(channel=chan or message_channel, message_ts=res["ts"])
+
+    backblast_parsed = f"""Backblast! {title}
+Date: {the_date}
+AO: {ao_name}
+Q: {q_name} {the_coqs_names}
+PAX: {pax_names}
+FNGs: {fngs_formatted}
+COUNT: {count}
+{moleskin_text_w_names}
+"""
+    rich_blocks: list = res["message"]["blocks"]
+    rich_blocks.pop(-1)
+    db_fields = {
+        Event.start_date: the_date,
+        # org_id, event_type_id, location_id, event_tag_id
+        Event.backblast_ts: res["ts"],
+        Event.backblast: backblast_parsed,
+        Event.backblast_rich: res["message"]["blocks"],
+        Event.name: title,
+        Event.pax_count: count,
+        Event.fng_count: fng_count,
+        Event.meta: custom_fields,
+        # Event.is_active: True,
+        # Event.is_series: False,
+        # Event.highlight: False,  # TODO: add this to the form?
+    }
+    if event_id:
+        DbManager.update_record(Event, event_id, fields=db_fields)
+    else:
+        db_fields = {k.key: v for k, v in db_fields.items()}
+        event = DbManager.create_record(Event(**db_fields))
+        event_id = event.id
+
+    attendance_types = [2 if u.slack_id == the_q else 3 if u.slack_id in (the_coq or []) else 1 for u in db_users]
+    attendance_records = [
+        AttendanceNew(
+            event_id=event_id,
+            user_id=user.user_id,
+            attendance_type_id=attendance_type,
+            is_planned=False,
+        )
+        for user, attendance_type in zip(db_users, attendance_types)
+    ]
+    DbManager.create_records(attendance_records)
+    print(
+        json.dumps(
+            {
+                "event_type": "successful_db_insert",
+                "team_name": region_record.workspace_name,
+            }
+        )
+    )
+
+    for file in file_send_list:
+        try:
+            os.remove(file["filepath"])
+        except Exception as e:
+            logger.error(f"Error removing file: {e}")
 
 
 def build_backblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
@@ -155,8 +511,8 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
             channel_name = get_channel_name(channel_id, logger, client, region_record)
 
     if (
-        (safe_get(body, "command") in ["/backblast", "/slackblast"])
-        or (safe_get(body, "actions", 0, "action_id") == actions.BACKBLAST_NEW_BUTTON)
+        (safe_get(body, "command") in ["/backblast", "/slackblast"])  # won't happen anymore
+        or (safe_get(body, "actions", 0, "action_id") == actions.BACKBLAST_NEW_BUTTON)  # won't happen anymore
         or (safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID)
         or event_id
     ):
@@ -213,12 +569,13 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
             ],
             actions.BACKBLAST_PAX: [a.slack_user.slack_id for a in attendance_records],
         }
-        print(initial_backblast_data)
+        parent_metadata["event_id"] = event_id
     else:
         initial_backblast_data = None
 
     backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
     backblast_form.set_initial_values(initial_backblast_data)
+    backblast_form = add_custom_field_blocks(backblast_form, region_record)
 
     if backblast_method == "edit" or duplicate_check:
         og_ts = safe_get(body, "message", "ts") or safe_get(parent_metadata, "message_ts")
@@ -243,15 +600,13 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
         ao_id = channel_id
         ao_name = channel_name
 
-    backblast_form = add_custom_field_blocks(backblast_form, region_record)
-
     logger.debug("is_duplicate is {}".format(is_duplicate))
     logger.debug("backblast_form is {}".format(backblast_form.blocks))
     if not is_duplicate:
         backblast_form.delete_block(actions.BACKBLAST_DUPLICATE_WARNING)
 
-    if backblast_method == "edit" or duplicate_check:
-        backblast_form.set_initial_values(initial_backblast_data)
+    # if backblast_method == "edit" or duplicate_check:
+    #     backblast_form.set_initial_values(initial_backblast_data)
 
     if backblast_method == "edit":
         backblast_metadata = parent_metadata or {
@@ -302,7 +657,6 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
     # logger.debug("backblast_form is {}".format(backblast_form.as_form_field()))
 
     if duplicate_check or update_view_id:
-        print(backblast_form.blocks[12])
         backblast_form.update_modal(
             client=client,
             view_id=update_view_id,
@@ -344,78 +698,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     files = safe_get(backblast_data, actions.BACKBLAST_FILE) or []
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
-
-    file_list = []
-    file_send_list = []
-    for file in files or []:
-        try:
-            r = requests.get(file["url_private_download"], headers={"Authorization": f"Bearer {client.token}"})
-            r.raise_for_status()
-
-            file_name = f"{file['id']}.{file['filetype']}"
-            file_path = f"/tmp/{file_name}"
-            file_mimetype = file["mimetype"]
-
-            with open(file_path, "wb") as f:
-                f.write(r.content)
-
-            if file["filetype"] == "heic":
-                heic_img = Image.open(file_path)
-                x, y = heic_img.size
-                coeff = min(constants.MAX_HEIC_SIZE / max(x, y), 1)
-                heic_img = heic_img.resize((int(x * coeff), int(y * coeff)))
-                heic_img.save(file_path.replace(".heic", ".png"), quality=95, optimize=True, format="PNG")
-                os.remove(file_path)
-
-                file_path = file_path.replace(".heic", ".png")
-                file_name = file_name.replace(".heic", ".png")
-                file_mimetype = "image/png"
-
-            # read first line of file to determine if it's an image
-            with open(file_path, "rb") as f:
-                try:
-                    first_line = f.readline().decode("utf-8")
-                except Exception as e:
-                    logger.info(f"Error reading photo as text: {e}")
-                    first_line = ""
-            if first_line[:9] == "<!DOCTYPE":
-                logger.debug(f"File {file_name} is not an image, skipping")
-                msg = "To enable boybands, you will need to reinstall Slackblast with some new permissions."
-                msg += " To to this, simply use this link: "
-                msg += "https://n1tbdh3ak9.execute-api.us-east-2.amazonaws.com/Prod/slack/install."
-                msg += " You can edit your backblast and upload a boyband once this is complete."
-                client.chat_postMessage(
-                    text=msg,
-                    channel=user_id,
-                )
-            else:
-                if constants.LOCAL_DEVELOPMENT:
-                    s3_client = boto3.client(
-                        "s3",
-                        aws_access_key_id=os.environ[constants.AWS_ACCESS_KEY_ID],
-                        aws_secret_access_key=os.environ[constants.AWS_SECRET_ACCESS_KEY],
-                    )
-                else:
-                    s3_client = boto3.client("s3")
-                with open(file_path, "rb") as f:
-                    s3_client.upload_fileobj(
-                        f, "slackblast-images", file_name, ExtraArgs={"ContentType": file_mimetype}
-                    )
-                file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_name}")
-                file_send_list.append(
-                    {
-                        "filepath": file_path,
-                        "meta": {
-                            "filename": file_name,
-                            "maintype": file_mimetype.split("/")[0],
-                            "subtype": file_mimetype.split("/")[1],
-                        },
-                    }
-                )
-        except Exception as e:
-            logger.error(f"Error uploading file: {e}")
-
-    user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
+    file_list, file_send_list = upload_files_to_s3(files=files, user_id=user_id, logger=logger, client=client)
 
     user_records = None
     if region_record.paxminer_schema:
@@ -741,18 +1024,20 @@ def handle_backblast_edit_button(body: dict, client: WebClient, logger: Logger, 
         safe_get(body, "actions", 0, "value") or "{}"
     )
 
-    user_info_dict = client.users_info(user=user_id)
-    user_admin: bool = user_info_dict["user"]["is_admin"]
-    allow_edit: bool = (
-        (region_record.editing_locked == 0)
-        or user_admin
-        or (user_id == backblast_data[actions.BACKBLAST_Q])
-        or (user_id in backblast_data[actions.BACKBLAST_COQ] or [])
-        or (user_id in backblast_data[actions.BACKBLAST_OP])
-    )
+    if region_record.editing_locked == 1:
+        user_info_dict = client.users_info(user=user_id)
+        user_admin: bool = user_info_dict["user"]["is_admin"]
+        allow_edit: bool = (
+            user_admin
+            or (user_id == backblast_data[actions.BACKBLAST_Q])
+            or (user_id in backblast_data[actions.BACKBLAST_COQ] or [])
+            or (user_id in backblast_data[actions.BACKBLAST_OP])
+        )
+    else:
+        allow_edit = True
 
     if allow_edit:
-        build_backblast_form(
+        build_backblast_form_new(
             body=body,
             client=client,
             logger=logger,
