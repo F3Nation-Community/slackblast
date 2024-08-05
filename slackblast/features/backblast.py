@@ -181,7 +181,13 @@ def build_backblast_form_new(body: dict, client: WebClient, logger: Logger, cont
     if not (region_record.email_enabled & region_record.email_option_show):
         backblast_form.delete_block(actions.BACKBLAST_EMAIL_SEND)
     # backblast_metadata = None
-    callback_id = actions.BACKBLAST_CALLBACK_ID
+    if action_id == actions.BACKBLAST_EDIT_BUTTON:
+        callback_id = actions.BACKBLAST_EDIT_CALLBACK_ID
+        backblast_metadata["channel_id"] = safe_get(body, "container", "channel_id")
+        backblast_metadata["message_ts"] = safe_get(body, "container", "message_ts")
+        backblast_metadata["files"] = safe_get(backblast_metadata, actions.BACKBLAST_FILE) or []
+    else:
+        callback_id = actions.BACKBLAST_CALLBACK_ID
 
     if update_view_id:
         backblast_form.update_modal(
@@ -227,12 +233,18 @@ def handle_backblast_post_new(body: dict, client: WebClient, logger: Logger, con
     file_list, file_send_list = upload_files_to_s3(files=files, user_id=user_id, logger=logger, client=client)
     metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
     event_id = safe_get(metadata, "event_id")
+    if (
+        region_record.default_destination == constants.CONFIG_DESTINATION_SPECIFIED["value"]
+        and region_record.destination_channel
+    ):
+        destination_channel = region_record.destination_channel
+    else:
+        destination_channel = the_ao
 
     if create_or_edit == "edit":
-        message_metadata = json.loads(body["view"]["private_metadata"])
-        message_channel = safe_get(message_metadata, "channel_id")
-        message_ts = safe_get(message_metadata, "message_ts")
-        file_list = safe_get(message_metadata, "files") if not file_list else file_list
+        message_channel = safe_get(metadata, "channel_id")
+        message_ts = safe_get(metadata, "message_ts")
+        file_list = safe_get(metadata, "files") if not file_list else file_list
     else:
         message_channel = None
         message_ts = None
@@ -341,7 +353,7 @@ def handle_backblast_post_new(body: dict, client: WebClient, logger: Logger, con
 
     if create_or_edit == "create":
         res = client.chat_postMessage(
-            channel=the_ao,  # TODO: make this dynamic
+            channel=destination_channel,
             text=f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast",
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,

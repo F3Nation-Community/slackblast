@@ -26,6 +26,7 @@ SLACK_SCOPES = "ENV_SLACK_SCOPES"
 
 CONFIG_DESTINATION_AO = {"name": "The AO Channel", "value": "ao_channel"}
 CONFIG_DESTINATION_CURRENT = {"name": "Current Channel", "value": "current_channel"}
+CONFIG_DESTINATION_SPECIFIED = {"name": "Specified Channel:", "value": "specified_channel"}
 
 DEFAULT_BACKBLAST_MOLESKINE_TEMPLATE = {
     "type": "rich_text",

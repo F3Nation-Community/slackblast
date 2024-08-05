@@ -315,14 +315,23 @@ CONFIG_GENERAL_FORM = orm.BlockView(
                 options=orm.as_selector_options(
                     names=[
                         constants.CONFIG_DESTINATION_AO["name"],
-                        constants.CONFIG_DESTINATION_CURRENT["name"],
+                        # constants.CONFIG_DESTINATION_CURRENT["name"],
+                        constants.CONFIG_DESTINATION_SPECIFIED["name"],
                     ],
                     values=[
                         constants.CONFIG_DESTINATION_AO["value"],
-                        constants.CONFIG_DESTINATION_CURRENT["value"],
+                        # constants.CONFIG_DESTINATION_CURRENT["value"],
+                        constants.CONFIG_DESTINATION_SPECIFIED["value"],
                     ],
                 ),
             ),
+        ),
+        orm.InputBlock(
+            label="Specified Channel",
+            action=actions.CONFIG_DESTINATION_CHANNEL,
+            optional=True,
+            element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
+            hint="Only required if 'Specified Channel' is selected above.",
         ),
         orm.DividerBlock(),
         orm.InputBlock(

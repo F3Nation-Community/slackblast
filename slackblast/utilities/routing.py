@@ -27,7 +27,7 @@ COMMAND_MAPPER = {
 
 VIEW_MAPPER = {
     actions.BACKBLAST_CALLBACK_ID: (backblast.handle_backblast_post_new, False),
-    actions.BACKBLAST_EDIT_CALLBACK_ID: (backblast.handle_backblast_post, False),
+    actions.BACKBLAST_EDIT_CALLBACK_ID: (backblast.handle_backblast_post_new, False),
     actions.PREBLAST_CALLBACK_ID: (preblast.handle_preblast_post, False),
     actions.PREBLAST_EDIT_CALLBACK_ID: (preblast.handle_preblast_post, False),
     actions.WELCOME_MESSAGE_CONFIG_CALLBACK_ID: (welcome.handle_welcome_message_config_post, False),

@@ -82,6 +82,7 @@ class Region(BaseClass, GetDBClass):
     postie_format: Mapped[Optional[tinyint1]]
     editing_locked: Mapped[tinyint0]
     default_destination: Mapped[Optional[str]] = mapped_column(String(30), default="ao_channel")
+    destination_channel: Mapped[Optional[str100]]
     backblast_moleskin_template: Mapped[Optional[dict[str, Any]]]
     preblast_moleskin_template: Mapped[Optional[dict[str, Any]]]
     strava_enabled: Mapped[Optional[tinyint1]]

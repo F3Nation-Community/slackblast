@@ -340,6 +340,7 @@ def get_user(slack_user_id: str, region_record: Region, client: WebClient, logge
             user_name = safe_get(user_info, "user", "profile", "display_name") or safe_get(
                 user_info, "user", "profile", "real_name"
             )
+            avatar_url = safe_get(user_info, "user", "profile", "image_192")
             user_record = safe_get(DbManager.find_records(UserNew, filters=[UserNew.email == email]), 0)
 
             # If not, create a new user record
@@ -359,6 +360,7 @@ def get_user(slack_user_id: str, region_record: Region, client: WebClient, logge
                     slack_id=slack_user_id,
                     email=email,
                     user_name=user_name,
+                    avatar_url=avatar_url,
                 )
             )
 
