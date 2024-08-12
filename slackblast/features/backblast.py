@@ -352,9 +352,10 @@ def handle_backblast_post_new(body: dict, client: WebClient, logger: Logger, con
     )  # check this for efficiency
 
     if create_or_edit == "create":
+        text = (f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast")[:1500]
         res = client.chat_postMessage(
             channel=destination_channel,
-            text=f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast",
+            text=text,
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
             blocks=blocks,
@@ -408,10 +409,11 @@ COUNT: {count}
                 print(json.dumps({"event_type": "failed_email", "team_name": region_record.workspace_name}))
 
     elif create_or_edit == "edit":
+        text = (f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast")[:1500]
         res = client.chat_update(
             channel=message_channel,
             ts=message_ts,
-            text=f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast",
+            text=text,
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
             blocks=blocks,
