@@ -543,7 +543,7 @@ COUNT: {count}
         res = client.chat_update(
             channel=message_channel,
             ts=message_ts,
-            text=f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast",
+            text=text,
             username=f"{q_name} (via Slackblast)",
             icon_url=q_url,
             blocks=blocks,
