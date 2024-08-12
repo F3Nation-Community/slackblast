@@ -473,7 +473,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
 
     if create_or_edit == "create":
         if region_record.paxminer_schema is None:
-            text = (post_msg + "\n" + moleskin_text)[:3000]
+            text = (f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast")[:1500]
             res = client.chat_postMessage(
                 channel=chan,
                 text=text,
@@ -481,7 +481,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                 icon_url=q_url,
             )
         else:
-            text = (f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast")[:3000]
+            text = (f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast")[:1500]
             res = client.chat_postMessage(
                 channel=chan,
                 text=text,
