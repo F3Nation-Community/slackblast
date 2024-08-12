@@ -360,7 +360,6 @@ def handle_backblast_post_new(body: dict, client: WebClient, logger: Logger, con
             blocks=blocks,
             metadata={"event_type": "backblast", "event_payload": backblast_data},
         )
-        print(res)
         print(json.dumps({"event_type": "successful_slack_post", "team_name": region_record.workspace_name}))
         if (email_send and email_send == "yes") or (email_send is None and region_record.email_enabled == 1):
             moleskin_msg = moleskin_text_w_names
@@ -447,7 +446,6 @@ COUNT: {count}
     rich_blocks.pop(-1)
     db_fields = {
         Event.start_date: the_date,
-        # org_id, event_type_id, location_id, event_tag_id
         Event.backblast_ts: res["ts"],
         Event.backblast: backblast_parsed,
         Event.backblast_rich: res["message"]["blocks"],
@@ -455,9 +453,6 @@ COUNT: {count}
         Event.pax_count: count,
         Event.fng_count: fng_count,
         Event.meta: custom_fields,
-        # Event.is_active: True,
-        # Event.is_series: False,
-        # Event.highlight: False,  # TODO: add this to the form?
     }
     if event_id:
         DbManager.update_record(Event, event_id, fields=db_fields)

@@ -98,25 +98,27 @@ def initialize_tables():
 
     user_list = [
         orm.UserNew(
-            id=i,
+            id=i + 1,
             f3_name=u["profile"]["display_name"] or u["profile"]["real_name"],
-            email=u["profile"].get("email"),
-            home_region_id=1,
+            email=u["profile"].get("email") or u["id"],
+            # home_region_id=1,
         )
         for i, u in enumerate(users)
     ]
 
     slack_user_list = [
         orm.SlackUser(
-            id=i,
+            id=i + 1,
             slack_id=u["id"],
             user_name=u["profile"]["display_name"] or u["profile"]["real_name"],
-            email=u["profile"].get("email"),
-            user_id=i,
-            avatar_url=["profile"]["image_192"],
+            email=u["profile"].get("email") or u["id"],
+            user_id=i + 1,
+            avatar_url=u["profile"]["image_192"],
         )
         for i, u in enumerate(users)
     ]
+    for u in slack_user_list:
+        print(u)
 
     achievement_list = [
         orm.AchievementsList(
@@ -193,8 +195,6 @@ def initialize_tables():
     session = get_session(schema="f3devregion")
     session.add_all(ao_list)
     session.add_all(paxminer_user_list)
-    session.add_all(user_list)
-    session.add_all(slack_user_list)
     session.add_all(achievement_list)
     session.commit()
     session.close()
@@ -210,6 +210,9 @@ def initialize_tables():
     session.add_all(event_type_list)
     session.add_all(attendance_type_list)
     session.add_all(event_tag_list)
+    session.add_all(user_list)
+    session.commit()
+    session.add_all(slack_user_list)
     session.commit()
     session.close()
 
