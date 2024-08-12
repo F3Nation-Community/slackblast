@@ -473,7 +473,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
 
     if create_or_edit == "create":
         if region_record.paxminer_schema is None:
-            text = (f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast")[:1500]
+            text = (post_msg + "\n" + moleskin_text)[:1500]
             res = client.chat_postMessage(
                 channel=chan,
                 text=text,
@@ -539,6 +539,7 @@ COUNT: {count}
                 print(json.dumps({"event_type": "failed_email", "team_name": region_record.workspace_name}))
 
     elif create_or_edit == "edit":
+        text = (f"{moleskin_text_w_names}\n\nUse the 'New Backblast' button to create a new backblast")[:1500]
         res = client.chat_update(
             channel=message_channel,
             ts=message_ts,
