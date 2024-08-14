@@ -61,7 +61,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-artifact
-          path: './.aws-sam/build'
+          path: .aws-sam/build/
   
   sam-deploy-beta:
     # only run on push to qsignups-rewrite
