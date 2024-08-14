@@ -27,7 +27,7 @@ Parameters:
   SlackOauthScopes:
     Description: Auth token used to pass to the controller to get the commands
     Type: String
-    Default: "chat:write,chat:write.customize,chat:write.public,im:write,commands,team:read,users:read,channels:read,files:read,files:write"
+    Default: "channels:history,channels:read,chat:write,chat:write.customize,chat:write.public,commands,files:read,files:write,im:history,im:read,im:write,team:read,users:read,users:read.email,incoming-webhook,app_mentions:read,channels:join,users.profile:read,reactions:read,reactions:write"
   Stage:
     Description: Parameter for getting the deployment stage
     Type: String
@@ -73,6 +73,11 @@ Mappings:
       SlackStateS3Bucket: "slack-state-bucket"
       SlackInstallS3Bucket: "slack-installation-bucket"
       KeepWarmName: "SlackblastKeepWarmProd"
+    beta:
+      SlackClientID: "3146324200131.7576855197076"
+      SlackStateS3Bucket: "slack-state-bucket"
+      SlackInstallS3Bucket: "slack-installation-bucket"
+      KeepWarmName: "SlackblastKeepWarmBeta"
 
 Resources:
   SlackblastFunction:

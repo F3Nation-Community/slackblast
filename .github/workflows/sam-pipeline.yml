@@ -2,13 +2,15 @@ on:
   push:
     branches:
       - main
-      # - staging
+      - qsignups-rewrite
 jobs:
   sam-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
@@ -56,15 +58,17 @@ jobs:
 
       # Publish artifact (need to publish app?)
       - name: Publish artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifact
           path: './.aws-sam/build'
-
-  sam-deploy-test:
+  
+  sam-deploy-beta:
+    # only run on push to qsignups-rewrite
     runs-on: "ubuntu-latest"
-    environment: "test"
+    environment: "beta"
     needs: sam-build
+    if: github.ref == 'refs/heads/qsignups-rewrite'
     steps:
       - uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -73,7 +77,27 @@ jobs:
           aws-region: us-east-2
 
       - name: Download artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifact
+      
+      - run: sam deploy -t .aws-sam/build/template.yaml --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ vars.AWS_STACK_NAME }} --s3-bucket ${{ vars.AWS_S3_BUCKET }} --capabilities CAPABILITY_IAM --region us-east-2 --no-disable-rollback --force-upload --parameter-overrides "SlackClientSecret=${{ secrets.SLACK_CLIENT_SECRET }} SlackSigningSecret=${{ secrets.SLACK_SIGNING_SECRET }} Stage=${{ vars.STAGE_NAME }} DatabaseHost=${{ secrets.DATABASE_HOST }} DatabasePassword=${{ secrets.ADMIN_DATABASE_PASSWORD }} PasswordEncryptKey=${{ secrets.PASSWORD_ENCRYPT_KEY }} StravaClientID=${{ secrets.STRAVA_CLIENT_ID }} StravaClientSecret=${{ secrets.STRAVA_CLIENT_SECRET }}"
+    
+
+  sam-deploy-test:
+    runs-on: "ubuntu-latest"
+    environment: "test"
+    needs: sam-build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
         with:
           name: build-artifact
           path: './.aws-sam/build'
@@ -84,6 +108,7 @@ jobs:
     runs-on: "ubuntu-latest"
     environment: "prod"
     needs: [sam-build, sam-deploy-test]
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -92,7 +117,7 @@ jobs:
           aws-region: us-east-2
 
       - name: Download artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: build-artifact
           path: './.aws-sam/build'
@@ -100,3 +125,4 @@ jobs:
       - run: sam deploy -t .aws-sam/build/template.yaml --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ vars.AWS_STACK_NAME }} --s3-bucket ${{ vars.AWS_S3_BUCKET }} --capabilities CAPABILITY_IAM --region us-east-2 --no-disable-rollback --force-upload --parameter-overrides "SlackClientSecret=${{ secrets.SLACK_CLIENT_SECRET }} SlackSigningSecret=${{ secrets.SLACK_SIGNING_SECRET }} Stage=${{ vars.STAGE_NAME }} DatabaseHost=${{ secrets.DATABASE_HOST }} DatabasePassword=${{ secrets.ADMIN_DATABASE_PASSWORD }} PasswordEncryptKey=${{ secrets.PASSWORD_ENCRYPT_KEY }} StravaClientID=${{ secrets.STRAVA_CLIENT_ID }} StravaClientSecret=${{ secrets.STRAVA_CLIENT_SECRET }}"
 # # sam deploy
 #       - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name ${{ steps.STACK_NAME.outputs.value }} --s3-bucket qsignups-deploy --capabilities CAPABILITY_IAM --region us-east-2 --no-disable-rollback --force-upload --parameter-overrides "SlackClientSecret=${{ steps.ENV_SLACK_CLIENT_SECRET.outputs.value }} SlackSigningSecret=${{ steps.ENV_SLACK_SIGNING_SECRET.outputs.value }} Stage=${{ steps.STAGE.outputs.value }} DatabaseHost=${{ secrets.DATABASE_HOST }} DatabasePassword=${{ secrets.ADMIN_DATABASE_PASSWORD }} PasswordEncryptKey=${{ secrets.PASSWORD_ENCRYPT_KEY }}"
+
