@@ -3,6 +3,7 @@ import json
 import os
 from datetime import date, datetime
 from logging import Logger
+from typing import List, Tuple
 
 import pytz
 from cryptography.fernet import Fernet
@@ -17,6 +18,9 @@ from utilities.database.orm import (
     AttendanceNew,
     Backblast,
     Event,
+    EventType,
+    EventType_x_Org,
+    Org,
     PaxminerUser,
     Region,
 )
@@ -165,6 +169,7 @@ def build_backblast_form_new(body: dict, client: WebClient, logger: Logger, cont
             ],
             actions.BACKBLAST_PAX: [a.slack_user.slack_id for a in attendance_records],
             actions.BACKBLAST_MOLESKIN: region_record.backblast_moleskin_template,
+            actions.BACKBLAST_EVENT_TYPE: str(event_record.event.event_type_id),
         }
         backblast_metadata["event_id"] = event_id
     else:
@@ -174,7 +179,17 @@ def build_backblast_form_new(body: dict, client: WebClient, logger: Logger, cont
             actions.BACKBLAST_MOLESKIN: region_record.backblast_moleskin_template,
         }
 
+    event_type_records: List[Tuple[EventType, EventType_x_Org]] = DbManager.find_join_records2(
+        EventType,
+        EventType_x_Org,
+        filters=[EventType_x_Org.org_id == region_record.id],
+    )
+    event_type_options = slack_orm.as_selector_options(
+        [r[0].name for r in event_type_records], [str(r[0].id) for r in event_type_records]
+    )
+
     backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
+    backblast_form.set_options({actions.BACKBLAST_EVENT_TYPE: event_type_options})
     backblast_form.set_initial_values(initial_backblast_data)
     backblast_form = add_custom_field_blocks(backblast_form, region_record)
 
@@ -227,6 +242,7 @@ def handle_backblast_post_new(body: dict, client: WebClient, logger: Logger, con
     moleskin = safe_get(backblast_data, actions.BACKBLAST_MOLESKIN)
     email_send = safe_get(backblast_data, actions.BACKBLAST_EMAIL_SEND)
     # ao = safe_get(backblast_data, actions.BACKBLAST_AO)
+    event_type = safe_convert(safe_get(backblast_data, actions.BACKBLAST_EVENT_TYPE), int)
     files = safe_get(backblast_data, actions.BACKBLAST_FILE) or []
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
@@ -446,8 +462,13 @@ COUNT: {count}
 """
     rich_blocks: list = res["message"]["blocks"]
     rich_blocks.pop(-1)
+
+    ao_org_id = safe_get(DbManager.find_records(Org, [Org.slack_id == the_ao]), 0).id
+
     db_fields = {
         Event.start_date: the_date,
+        Event.org_id: ao_org_id,
+        Event.event_type_id: event_type,
         Event.backblast_ts: res["ts"],
         Event.backblast: backblast_parsed,
         Event.backblast_rich: res["message"]["blocks"],
@@ -455,6 +476,9 @@ COUNT: {count}
         Event.pax_count: count,
         Event.fng_count: fng_count,
         Event.meta: custom_fields,
+        Event.is_active: True,
+        Event.is_series: False,
+        Event.highlight: False,
     }
     if event_id:
         DbManager.update_record(Event, event_id, fields=db_fields)

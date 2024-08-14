@@ -29,21 +29,24 @@ BACKBLAST_FORM = orm.BlockView(
             action=actions.BACKBLAST_AO,
             optional=False,
             element=orm.ChannelsSelectElement(placeholder="Select the AO..."),
-            dispatch_action=True,
+        ),
+        orm.InputBlock(
+            label="Event Type",
+            action=actions.BACKBLAST_EVENT_TYPE,
+            optional=False,
+            element=orm.StaticSelectElement(placeholder="Select the event type..."),
         ),
         orm.InputBlock(
             label="Workout Date",
             action=actions.BACKBLAST_DATE,
             optional=False,
             element=orm.DatepickerElement(placeholder="Select the date..."),
-            dispatch_action=True,
         ),
         orm.InputBlock(
             label="The Q",
             action=actions.BACKBLAST_Q,
             optional=False,
             element=orm.UsersSelectElement(placeholder="Select the Q..."),
-            dispatch_action=True,
         ),
         # orm.ContextBlock(
         #     action=actions.BACKBLAST_DUPLICATE_WARNING,
