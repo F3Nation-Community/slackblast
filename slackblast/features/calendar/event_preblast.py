@@ -8,7 +8,7 @@ from slack_sdk.web import WebClient
 from features.calendar import PREBLAST_MESSAGE_ACTION_ELEMENTS
 from utilities.database import DbManager
 from utilities.database.orm import (
-    AttendanceNew,
+    Attendance,
     Event,
     EventTag,
     EventTag_x_Org,
@@ -30,9 +30,9 @@ def build_event_preblast_select_form(
     user_id = get_user(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger).id
     event_records = event_attendance_query(
         attendance_filter=[
-            AttendanceNew.user_id == user_id,
-            AttendanceNew.is_planned,
-            AttendanceNew.attendance_type_id.in_([2, 3]),
+            Attendance.user_id == user_id,
+            Attendance.is_planned,
+            Attendance.attendance_type_id.in_([2, 3]),
         ],
         event_filter=[
             Event.start_date > datetime.date.today(),
@@ -214,16 +214,16 @@ def handle_event_preblast_edit(body: dict, client: WebClient, logger: Logger, co
     # better way to upsert / on conflict do nothing?
     if user_ids:
         DbManager.delete_records(
-            cls=AttendanceNew,
+            cls=Attendance,
             filters=[
-                AttendanceNew.event_id == event_id,
-                AttendanceNew.attendance_type_id == 3,
-                AttendanceNew.is_planned,
-                AttendanceNew.user_id.in_(user_ids),
+                Attendance.event_id == event_id,
+                Attendance.attendance_type_id == 3,
+                Attendance.is_planned,
+                Attendance.user_id.in_(user_ids),
             ],
         )
         new_records = [
-            AttendanceNew(
+            Attendance(
                 event_id=event_id,
                 user_id=user_id,
                 attendance_type_id=3,
@@ -382,7 +382,7 @@ def handle_event_preblast_action(body: dict, client: WebClient, logger: Logger, 
     if view_id:
         if action_id == actions.EVENT_PREBLAST_HC:
             DbManager.create_record(
-                AttendanceNew(
+                Attendance(
                     event_id=event_id,
                     user_id=user_id,
                     attendance_type_id=1,
@@ -391,17 +391,17 @@ def handle_event_preblast_action(body: dict, client: WebClient, logger: Logger, 
             )
         elif action_id == actions.EVENT_PREBLAST_UN_HC:
             DbManager.delete_records(
-                cls=AttendanceNew,
+                cls=Attendance,
                 filters=[
-                    AttendanceNew.event_id == event_id,
-                    AttendanceNew.user_id == user_id,
-                    AttendanceNew.attendance_type_id == 1,
-                    AttendanceNew.is_planned,
+                    Attendance.event_id == event_id,
+                    Attendance.user_id == user_id,
+                    Attendance.attendance_type_id == 1,
+                    Attendance.is_planned,
                 ],
             )
         elif action_id == actions.EVENT_PREBLAST_TAKE_Q:
             DbManager.create_record(
-                AttendanceNew(
+                Attendance(
                     event_id=event_id,
                     user_id=user_id,
                     attendance_type_id=2,
@@ -410,12 +410,12 @@ def handle_event_preblast_action(body: dict, client: WebClient, logger: Logger, 
             )
         elif action_id == actions.EVENT_PREBLAST_REMOVE_Q:
             DbManager.delete_records(
-                cls=AttendanceNew,
+                cls=Attendance,
                 filters=[
-                    AttendanceNew.event_id == event_id,
-                    AttendanceNew.user_id == user_id,
-                    AttendanceNew.attendance_type_id.in_([2, 3]),
-                    AttendanceNew.is_planned,
+                    Attendance.event_id == event_id,
+                    Attendance.user_id == user_id,
+                    Attendance.attendance_type_id.in_([2, 3]),
+                    Attendance.is_planned,
                 ],
             )
         if metadata.get("preblast_ts"):
@@ -446,17 +446,17 @@ def handle_event_preblast_action(body: dict, client: WebClient, logger: Logger, 
             already_hcd = user_id in metadata["attendees"]
             if already_hcd:
                 DbManager.delete_records(
-                    cls=AttendanceNew,
+                    cls=Attendance,
                     filters=[
-                        AttendanceNew.event_id == event_id,
-                        AttendanceNew.user_id == user_id,
-                        AttendanceNew.attendance_type_id == 1,
-                        AttendanceNew.is_planned,
+                        Attendance.event_id == event_id,
+                        Attendance.user_id == user_id,
+                        Attendance.attendance_type_id == 1,
+                        Attendance.is_planned,
                     ],
                 )
             else:
                 DbManager.create_record(
-                    AttendanceNew(
+                    Attendance(
                         event_id=event_id,
                         user_id=user_id,
                         attendance_type_id=1,

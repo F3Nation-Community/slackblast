@@ -1,7 +1,7 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any, Optional
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.mysql import BLOB, DATE, DECIMAL, JSON, LONGTEXT, TEXT, TINYINT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, registry
 from typing_extensions import Annotated
@@ -20,8 +20,10 @@ tinyint1 = Annotated[int, mapped_column(TINYINT, default=1)]
 longtext = Annotated[str, LONGTEXT]
 text = Annotated[str, TEXT]
 json = Annotated[dict, JSON]
-dt_create = Annotated[datetime, mapped_column(DateTime, default=datetime.utcnow)]
-dt_update = Annotated[datetime, mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)]
+dt_create = Annotated[datetime, mapped_column(DateTime, default=datetime.now(timezone.utc))]
+dt_update = Annotated[
+    datetime, mapped_column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+]
 str45pk = Annotated[str, mapped_column(String(45), primary_key=True)]
 datepk = Annotated[date, mapped_column(DATE, primary_key=True)]
 blob = Annotated[bytes, BLOB]
@@ -71,7 +73,6 @@ class Region(BaseClass, GetDBClass):
     team_id: Mapped[str100]
     workspace_name: Mapped[Optional[str100]]
     bot_token: Mapped[Optional[str100]]
-    paxminer_schema: Mapped[Optional[str100]]
     email_enabled: Mapped[tinyint0]
     email_server: Mapped[Optional[str100]]
     email_server_port: Mapped[Optional[int]]
@@ -108,81 +109,20 @@ class Region(BaseClass, GetDBClass):
         return Region.team_id
 
 
-class Backblast(BaseClass, GetDBClass):
-    __tablename__ = "beatdowns"
-    timestamp: Mapped[Optional[str45]]
-    ts_edited: Mapped[Optional[str45]]
-    ao_id: Mapped[str45pk]
-    bd_date: Mapped[datepk]
-    q_user_id: Mapped[str45pk]
-    coq_user_id: Mapped[Optional[str45]]
-    pax_count: Mapped[Optional[int]]
-    backblast: Mapped[Optional[longtext]]
-    backblast_parsed: Mapped[Optional[longtext]]
-    fngs: Mapped[Optional[str45]]
-    fng_count: Mapped[Optional[int]]
-    json: Mapped[Optional[dict[str, Any]]]
+# class User(BaseClass, GetDBClass):
+#     __tablename__ = "slackblast_users"
+#     id: Mapped[intpk]
+#     team_id: Mapped[Optional[str100]]
+#     user_id: Mapped[Optional[str100]]
+#     strava_access_token: Mapped[Optional[str100]]
+#     strava_refresh_token: Mapped[Optional[str100]]
+#     strava_expires_at: Mapped[Optional[datetime]]
+#     strava_athlete_id: Mapped[Optional[int]]
+#     created: Mapped[dt_create]
+#     updated: Mapped[dt_update]
 
-    def get_id():
-        return Backblast.timestamp
-
-
-class Attendance(BaseClass, GetDBClass):
-    __tablename__ = "bd_attendance"
-    timestamp: Mapped[Optional[str45]]
-    ts_edited: Mapped[Optional[str45]]
-    user_id: Mapped[str45pk]
-    ao_id: Mapped[str45pk]
-    date: Mapped[datepk]
-    q_user_id: Mapped[str45pk]
-    json: Mapped[Optional[dict[str, Any]]]
-
-    def get_id():
-        return Attendance.timestamp
-
-
-class User(BaseClass, GetDBClass):
-    __tablename__ = "slackblast_users"
-    id: Mapped[intpk]
-    team_id: Mapped[Optional[str100]]
-    user_id: Mapped[Optional[str100]]
-    strava_access_token: Mapped[Optional[str100]]
-    strava_refresh_token: Mapped[Optional[str100]]
-    strava_expires_at: Mapped[Optional[datetime]]
-    strava_athlete_id: Mapped[Optional[int]]
-    created: Mapped[dt_create]
-    updated: Mapped[dt_update]
-
-    def get_id():
-        return User.id
-
-
-class PaxminerUser(BaseClass, GetDBClass):
-    __tablename__ = "users"
-    user_id: Mapped[str45pk]
-    user_name: Mapped[str45]
-    real_name: Mapped[str45]
-    phone: Mapped[Optional[str45]]
-    email: Mapped[Optional[str255]]
-    start_date: Mapped[Optional[date]]
-    app: Mapped[tinyint0]
-    json: Mapped[Optional[dict[str, Any]]]
-
-    def get_id():
-        return PaxminerUser.user_id
-
-
-class PaxminerAO(BaseClass, GetDBClass):
-    __tablename__ = "aos"
-    channel_id: Mapped[str45pk]
-    ao: Mapped[str45]
-    channel_created: Mapped[int]
-    archived: Mapped[tinyint]
-    backblast: Mapped[tinyint]
-    # site_q_user_id = Mapped[Optional[str]]
-
-    def get_id():
-        return PaxminerAO.channel_id
+#     def get_id():
+#         return User.id
 
 
 class AchievementsList(BaseClass, GetDBClass):
@@ -192,6 +132,8 @@ class AchievementsList(BaseClass, GetDBClass):
     description: Mapped[longtext]
     verb: Mapped[str255]
     code: Mapped[str255]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return AchievementsList.id
@@ -208,34 +150,6 @@ class AchievementsAwarded(BaseClass, GetDBClass):
 
     def get_id():
         return AchievementsAwarded.id
-
-
-paxminer_region = Table(
-    "regions",
-    BaseClass.metadata,
-    Column("region", String(45), primary_key=True),
-    Column("slack_token", String(90)),
-    Column("schema_name", String(45)),
-    Column("active", TINYINT),
-    Column("firstf_channel", String(45)),
-    Column("contact", String(45)),
-    Column("send_pax_charts", TINYINT),
-    Column("send_ao_leaderboard", TINYINT),
-    Column("send_q_charts", TINYINT),
-    Column("send_region_leaderboard", TINYINT),
-    Column("send_region_uniquepax_chart", TINYINT),
-    Column("send_region_stats", String(45), default="0"),
-    Column("send_mid_month_charts", String(45), default="0"),
-    Column("comments", TEXT),
-    schema="paxminer",
-)
-
-
-class PaxminerRegion(BaseClass, GetDBClass):
-    __table__ = paxminer_region
-
-    def get_id():
-        return PaxminerRegion.schema_name
 
 
 class Event(BaseClass, GetDBClass):
@@ -284,6 +198,8 @@ class EventType(BaseClass, GetDBClass):
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_categories.id"))
     description: Mapped[Optional[longtext]]
     acronym: Mapped[Optional[str30]]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return EventType.id
@@ -295,6 +211,8 @@ class EventCategory(BaseClass, GetDBClass):
     id: Mapped[intpk]
     name: Mapped[str100]
     description: Mapped[Optional[longtext]]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return EventCategory.id
@@ -311,18 +229,24 @@ class Location(BaseClass, GetDBClass):
     lat: Mapped[Optional[float]]
     lon: Mapped[Optional[float]]
     meta: Mapped[Optional[dict[str, Any]]]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return Location.id
 
 
-class UserNew(BaseClass, GetDBClass):
-    __tablename__ = "user"  # todo: change table name to users
+class User(BaseClass, GetDBClass):
+    __tablename__ = "users"
 
     id: Mapped[intpk]
     f3_name: Mapped[str100]
-    email: Mapped[str255]
+    email: Mapped[str255] = mapped_column(String(255), unique=True)
     home_region_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
+    avatar_url: Mapped[Optional[str255]]
+    meta: Mapped[Optional[dict[str, Any]]]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return User.id
@@ -335,19 +259,27 @@ class SlackUser(BaseClass, GetDBClass):
     slack_id: Mapped[str100]
     user_name: Mapped[str100]
     email: Mapped[str255]
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"))
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
     avatar_url: Mapped[Optional[str255]]
+    slack_team_id: Mapped[str100]
+    strava_access_token: Mapped[Optional[str100]]
+    strava_refresh_token: Mapped[Optional[str100]]
+    strava_expires_at: Mapped[Optional[datetime]]
+    strava_athlete_id: Mapped[Optional[int]]
+    meta: Mapped[Optional[dict[str, Any]]]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return SlackUser.id
 
 
-class AttendanceNew(BaseClass, GetDBClass):
+class Attendance(BaseClass, GetDBClass):
     __tablename__ = "attendance"
 
     id: Mapped[intpk]
     event_id: Mapped[int] = mapped_column(Integer, ForeignKey("events.id"))
-    user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("user.id"))
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"))
     attendance_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("attendance_types.id"))
     is_planned: Mapped[bool]
     meta: Mapped[Optional[dict[str, Any]]]
@@ -357,7 +289,7 @@ class AttendanceNew(BaseClass, GetDBClass):
     __table_args__ = (UniqueConstraint("event_id", "user_id", "attendance_type_id", "is_planned", name="event_user"),)
 
     def get_id():
-        return AttendanceNew.id
+        return Attendance.id
 
 
 class AttendanceType(BaseClass, GetDBClass):
@@ -366,6 +298,8 @@ class AttendanceType(BaseClass, GetDBClass):
     id: Mapped[intpk]
     type: Mapped[str100]
     description: Mapped[Optional[longtext]]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return AttendanceType.id
@@ -391,6 +325,8 @@ class Org(BaseClass, GetDBClass):
     slack_app_settings: Mapped[Optional[dict[str, Any]]]
     last_annual_review: Mapped[Optional[date]]
     meta: Mapped[Optional[dict[str, Any]]]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return Org.id
@@ -401,6 +337,8 @@ class OrgType(BaseClass, GetDBClass):
 
     id: Mapped[intpk]
     name: Mapped[str100]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return OrgType.id
@@ -413,6 +351,8 @@ class EventType_x_Org(BaseClass, GetDBClass):
     event_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_types.id"))
     org_id: Mapped[int] = mapped_column(Integer, ForeignKey("orgs.id"))
     is_default: Mapped[bool]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return EventType_x_Org.id
@@ -425,6 +365,8 @@ class EventTag(BaseClass, GetDBClass):
     name: Mapped[str100]
     description: Mapped[Optional[longtext]]
     color: Mapped[Optional[str30]]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return EventTag.id
@@ -437,6 +379,8 @@ class EventTag_x_Org(BaseClass, GetDBClass):
     event_tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_tags.id"))
     org_id: Mapped[int] = mapped_column(Integer, ForeignKey("orgs.id"))
     color_override: Mapped[Optional[str30]]
+    created: Mapped[dt_create]
+    updated: Mapped[dt_update]
 
     def get_id():
         return EventTag_x_Org.id

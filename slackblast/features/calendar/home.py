@@ -11,7 +11,7 @@ from features.calendar.event_preblast import (
 )
 from utilities.constants import S3_IMAGE_URL
 from utilities.database import DbManager
-from utilities.database.orm import AttendanceNew, Event, EventType, EventType_x_Org, Org, Region
+from utilities.database.orm import Attendance, Event, EventType, EventType_x_Org, Org, Region
 from utilities.database.special_queries import CalendarHomeQuery, home_schedule_query
 from utilities.helper_functions import get_user, safe_convert, safe_get
 from utilities.slack import actions, orm
@@ -226,7 +226,7 @@ def handle_home_event(body: dict, client: WebClient, logger: Logger, context: di
         build_event_preblast_form(body, client, logger, context, region_record, event_id=event_id)
     elif action == "Take Q":
         DbManager.create_record(
-            AttendanceNew(
+            Attendance(
                 event_id=event_id,
                 user_id=user_id,
                 attendance_type_id=2,
@@ -238,7 +238,7 @@ def handle_home_event(body: dict, client: WebClient, logger: Logger, context: di
         build_home_form(body, client, logger, context, region_record, update_view_id=view_id)
     elif action == "HC":
         DbManager.create_record(
-            AttendanceNew(
+            Attendance(
                 event_id=event_id,
                 user_id=user_id,
                 attendance_type_id=1,
@@ -249,12 +249,12 @@ def handle_home_event(body: dict, client: WebClient, logger: Logger, context: di
         build_home_form(body, client, logger, context, region_record, update_view_id=view_id)
     elif action == "Un-HC":
         DbManager.delete_records(
-            cls=AttendanceNew,
+            cls=Attendance,
             filters=[
-                AttendanceNew.event_id == event_id,
-                AttendanceNew.user_id == user_id,
-                AttendanceNew.attendance_type_id == 1,
-                AttendanceNew.is_planned,
+                Attendance.event_id == event_id,
+                Attendance.user_id == user_id,
+                Attendance.attendance_type_id == 1,
+                Attendance.is_planned,
             ],
         )
         build_home_form(body, client, logger, context, region_record, update_view_id=view_id)

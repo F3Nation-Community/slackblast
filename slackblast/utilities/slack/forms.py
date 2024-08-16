@@ -1,5 +1,4 @@
 from utilities import constants
-from utilities.database.orm import PaxminerRegion
 from utilities.slack import actions, orm
 
 BACKBLAST_FORM = orm.BlockView(
@@ -48,13 +47,6 @@ BACKBLAST_FORM = orm.BlockView(
             optional=False,
             element=orm.UsersSelectElement(placeholder="Select the Q..."),
         ),
-        # orm.ContextBlock(
-        #     action=actions.BACKBLAST_DUPLICATE_WARNING,
-        #     element=orm.ContextElement(
-        #         initial_value=":warning: :warning: *WARNING*: duplicate backblast detected in PAXMiner DB for this Q, "
-        #         "AO, and date; this backblast will not be saved as-is. Please modify one of these selections",
-        #     ),
-        # ),
         orm.InputBlock(
             label="The CoQ(s), if any",
             action=actions.BACKBLAST_COQ,
@@ -207,10 +199,6 @@ CONFIG_FORM = orm.BlockView(
                 # orm.ButtonElement(
                 #     label=":robot_face: Weaselbot Settings",
                 #     action=actions.CONFIG_WEASELBOT,
-                # ),
-                # orm.ButtonElement(
-                #     label=":pick: Paxminer Settings",
-                #     action=actions.CONFIG_PAXMINER,
                 # ),
                 orm.ButtonElement(
                     label=":date: Calendar Settings",
@@ -568,59 +556,6 @@ WEASELBOT_CONFIG_FORM = orm.BlockView(
     ]
 )
 
-PAXMINER_REPORT_DICT = {
-    "names": ["PAX Charts", "Q Charts", "AO Leaderboards", "Region Leaderboard", "Region Stats"],
-    "values": ["pax_charts", "q_charts", "ao_leaderboards", "region_leaderboard", "region_stats"],
-    "fields": [
-        "send_pax_charts",
-        "send_q_charts",
-        "send_ao_leaderboard",
-        "send_region_leaderboard",
-        "send_region_stats",
-    ],
-    "schema": [
-        PaxminerRegion.send_pax_charts,
-        PaxminerRegion.send_q_charts,
-        PaxminerRegion.send_ao_leaderboard,
-        PaxminerRegion.send_region_leaderboard,
-        PaxminerRegion.send_region_stats,
-    ],
-}
-
-CONFIG_PAXMINER_FORM = orm.BlockView(
-    blocks=[
-        orm.InputBlock(
-            label="1st F Channel (for reports)",
-            action=actions.CONFIG_PAXMINER_1STF_CHANNEL,
-            optional=False,
-            element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
-        ),
-        orm.InputBlock(
-            label="Which reports should be enabled?",
-            action=actions.CONFIG_PAXMINER_ENABLE_REPORTS,
-            element=orm.CheckboxInputElement(
-                options=orm.as_selector_options(
-                    names=PAXMINER_REPORT_DICT["names"],
-                    values=PAXMINER_REPORT_DICT["values"],
-                )
-            ),
-            optional=False,
-        ),
-        orm.InputBlock(
-            label="Which channels should be scraped by PAXMiner?",
-            action=actions.CONFIG_PAXMINER_SCRAPE_CHANNELS,
-            element=orm.MultiChannelsSelectElement(placeholder="Select some channels..."),
-        ),
-    ]
-)
-
-CONFIG_NO_PAXMINER_FORM = orm.BlockView(
-    blocks=[
-        orm.SectionBlock(
-            label="PAXMiner doesn't appear to be configured for this Slack workspace. Please follow <https://f3stlouis.com/paxminer-setup/|these instructions> to get started!",  # noqa: E501
-        )
-    ]
-)
 
 NO_WEASELBOT_CONFIG_FORM = orm.BlockView(
     blocks=[

@@ -6,7 +6,7 @@ from typing import List
 from slack_sdk import WebClient
 
 from utilities.database import DbManager
-from utilities.database.orm import PaxminerRegion, Region
+from utilities.database.orm import Region
 
 msg = "Hello, {region}! This is Moneyball, lead developer of the Slackblast app. I wanted to make you aware of updates "
 "to Slackblast over the last few months:\n\n"
@@ -30,8 +30,7 @@ msg += "\n~ :moneybag: :baseball:"
 def send(client: WebClient, body: dict, logger: Logger, context: dict, region_record: Region):
     if body.get("text") == "confirm":
         region_records: List[Region] = DbManager.find_records(Region, filters=[True])
-        paxminer_regions = DbManager.find_records(PaxminerRegion, filters=[True], schema="paxminer")
-        paxminer_dict = {region.schema_name: region.firstf_channel for region in paxminer_regions}
+        paxminer_dict = {}
 
         for region in region_records:
             if region.paxminer_schema:

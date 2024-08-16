@@ -6,8 +6,7 @@ from logging import Logger
 import pytz
 from slack_sdk.web import WebClient
 
-from utilities.database import DbManager
-from utilities.database.orm import PaxminerUser, Region
+from utilities.database.orm import Region
 from utilities.helper_functions import (
     get_user_names,
     remove_keys_from_dict,
@@ -92,10 +91,6 @@ def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context:
     moleskin = safe_get(preblast_data, actions.PREBLAST_MOLESKIN)
     destination = safe_get(preblast_data, actions.PREBLAST_DESTINATION)
 
-    user_records = None
-    if region_record.paxminer_schema:
-        user_records = DbManager.find_records(PaxminerUser, filters=[True], schema=region_record.paxminer_schema)
-
     chan = destination
     if chan == "The_AO":
         chan = the_ao
@@ -108,7 +103,7 @@ def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context:
         message_channel = chan
         message_ts = None
 
-    q_name, q_url = get_user_names([the_q], logger, client, return_urls=True, user_records=user_records)
+    q_name, q_url = get_user_names([the_q], logger, client, return_urls=True)
     q_name = (q_name or [""])[0]
     q_url = q_url[0]
 

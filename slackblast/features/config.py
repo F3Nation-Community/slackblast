@@ -10,8 +10,6 @@ from utilities import constants
 from utilities.database import DbManager
 from utilities.database.orm import (
     Org,
-    PaxminerAO,
-    PaxminerRegion,
     Region,
 )
 from utilities.helper_functions import (
@@ -157,97 +155,4 @@ def handle_config_general_post(body: dict, client: WebClient, logger: Logger, co
     DbManager.update_record(cls=Org, id=region_record.org_id, fields={Org.slack_app_settings: region.to_json()})
 
     update_local_region_records()
-    print(json.dumps({"event_type": "successful_config_update", "team_name": region_record.workspace_name}))
-
-
-def build_config_paxminer_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    if not region_record.paxminer_schema:
-        config_form = copy.deepcopy(forms.CONFIG_NO_PAXMINER_FORM)
-        config_form.post_modal(
-            client=client,
-            trigger_id=safe_get(body, "trigger_id"),
-            callback_id=actions.CONFIG_PAXMINER_CALLBACK_ID,
-            title_text="Paxminer Settings",
-            new_or_add="add",
-            submit_button_text="None",
-        )
-
-    else:
-        config_form = copy.deepcopy(forms.CONFIG_PAXMINER_FORM)
-
-        paxminer_record = DbManager.find_records(
-            PaxminerRegion,
-            filters=[PaxminerRegion.schema_name == region_record.paxminer_schema],
-            schema="paxminer",
-        )
-
-        ao_records = DbManager.find_records(
-            PaxminerAO,
-            filters=[True],
-            schema=region_record.paxminer_schema,
-        )
-
-        if paxminer_record:
-            report_options = []
-            for index in range(len(forms.PAXMINER_REPORT_DICT["values"])):
-                if getattr(paxminer_record[0], forms.PAXMINER_REPORT_DICT["fields"][index]) == 1:
-                    report_options.append(forms.PAXMINER_REPORT_DICT["values"][index])
-
-            ao_options = [ao.channel_id for ao in ao_records if ao.backblast == 1]
-
-            config_form.set_initial_values(
-                {
-                    actions.CONFIG_PAXMINER_1STF_CHANNEL: paxminer_record[0].firstf_channel,
-                    actions.CONFIG_PAXMINER_ENABLE_REPORTS: report_options,
-                    actions.CONFIG_PAXMINER_SCRAPE_CHANNELS: ao_options,
-                }
-            )
-
-        config_form.post_modal(
-            client=client,
-            trigger_id=safe_get(body, "trigger_id"),
-            callback_id=actions.CONFIG_PAXMINER_CALLBACK_ID,
-            title_text="Paxminer Settings",
-            new_or_add="add",
-        )
-
-
-def handle_config_paxminer_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
-    config_data = forms.CONFIG_PAXMINER_FORM.get_selected_values(body)
-
-    report_options = {}
-    for index in range(len(forms.PAXMINER_REPORT_DICT["values"])):
-        report_options[forms.PAXMINER_REPORT_DICT["schema"][index]] = (
-            1
-            if forms.PAXMINER_REPORT_DICT["values"][index]
-            in safe_get(config_data, actions.CONFIG_PAXMINER_ENABLE_REPORTS)
-            else 0
-        )
-
-    fields = {
-        PaxminerRegion.firstf_channel: safe_get(config_data, actions.CONFIG_PAXMINER_1STF_CHANNEL),
-        **report_options,
-    }
-
-    DbManager.update_record(
-        cls=PaxminerRegion,
-        id=region_record.paxminer_schema,
-        fields=fields,
-        schema="paxminer",
-    )
-
-    DbManager.update_records(
-        cls=PaxminerAO,
-        filters=[PaxminerAO.channel_id.not_in(safe_get(config_data, actions.CONFIG_PAXMINER_SCRAPE_CHANNELS))],
-        fields={PaxminerAO.backblast: 0},
-        schema=region_record.paxminer_schema,
-    )
-
-    DbManager.update_records(
-        cls=PaxminerAO,
-        filters=[PaxminerAO.channel_id.in_(safe_get(config_data, actions.CONFIG_PAXMINER_SCRAPE_CHANNELS))],
-        fields={PaxminerAO.backblast: 1},
-        schema=region_record.paxminer_schema,
-    )
-
     print(json.dumps({"event_type": "successful_config_update", "team_name": region_record.workspace_name}))

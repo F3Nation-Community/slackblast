@@ -8,12 +8,12 @@ from sqlalchemy.orm import aliased
 
 from utilities.database import get_session
 from utilities.database.orm import (
-    AttendanceNew,
+    Attendance,
     Event,
     EventType,
     Org,
     SlackUser,
-    UserNew,
+    User,
 )
 from utilities.slack import actions, orm
 
@@ -40,15 +40,15 @@ class PreblastList:
 
         firstq_subquery = (
             select(
-                AttendanceNew.event_id,
-                UserNew.f3_name.label("q_name"),
+                Attendance.event_id,
+                User.f3_name.label("q_name"),
                 SlackUser.slack_id,
-                func.row_number().over(partition_by=AttendanceNew.event_id, order_by=AttendanceNew.created).label("rn"),
+                func.row_number().over(partition_by=Attendance.event_id, order_by=Attendance.created).label("rn"),
             )
-            .select_from(AttendanceNew)
-            .join(UserNew, AttendanceNew.user_id == UserNew.id)
-            .join(SlackUser, UserNew.id == SlackUser.user_id)
-            .filter(AttendanceNew.attendance_type_id == 2)
+            .select_from(Attendance)
+            .join(User, Attendance.user_id == User.id)
+            .join(SlackUser, User.id == SlackUser.user_id)
+            .filter(Attendance.attendance_type_id == 2)
             .alias()
         )
 

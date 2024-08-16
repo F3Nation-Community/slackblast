@@ -4,7 +4,7 @@ from typing import Any, List
 from sqlalchemy import and_, case, func, select
 
 from utilities.database import get_session
-from utilities.database.orm import AttendanceNew, Event, EventTag, EventType, Location, Org, SlackUser, UserNew
+from utilities.database.orm import Attendance, Event, EventTag, EventType, Location, Org, SlackUser, User
 from utilities.slack import orm
 
 
@@ -28,21 +28,21 @@ def home_schedule_query(
     # Create the subquery
     subquery = (
         select(
-            AttendanceNew.event_id,
-            func.group_concat(case((AttendanceNew.attendance_type_id.in_([2, 3]), UserNew.f3_name), else_=None)).label(
+            Attendance.event_id,
+            func.group_concat(case((Attendance.attendance_type_id.in_([2, 3]), User.f3_name), else_=None)).label(
                 "planned_qs"
             ),
-            func.max(case((AttendanceNew.user_id == user_id, 1), else_=0)).label("user_attending"),
+            func.max(case((Attendance.user_id == user_id, 1), else_=0)).label("user_attending"),
             func.max(
                 case(
-                    (and_(AttendanceNew.user_id == user_id, AttendanceNew.attendance_type_id.in_([2, 3])), 1),
+                    (and_(Attendance.user_id == user_id, Attendance.attendance_type_id.in_([2, 3])), 1),
                     else_=0,
                 )
             ).label("user_q"),
         )
-        .select_from(AttendanceNew)
-        .join(UserNew, UserNew.id == AttendanceNew.user_id)
-        .group_by(AttendanceNew.event_id)
+        .select_from(Attendance)
+        .join(User, User.id == Attendance.user_id)
+        .group_by(Attendance.event_id)
         .alias()
     )
 
@@ -78,8 +78,8 @@ class EventExtended:
 
 @dataclass
 class AttendanceExtended:
-    attendance: AttendanceNew
-    user: UserNew
+    attendance: Attendance
+    user: User
     slack_user: SlackUser
 
 
@@ -106,11 +106,11 @@ def event_preblast_query(event_id: int) -> tuple[EventExtended, list[AttendanceE
         record = EventExtended(*query.one_or_none())
 
         query = (
-            session.query(AttendanceNew, UserNew, SlackUser)
-            .select_from(AttendanceNew)
-            .join(UserNew)
+            session.query(Attendance, User, SlackUser)
+            .select_from(Attendance)
+            .join(User)
             .join(SlackUser)
-            .filter(AttendanceNew.event_id == event_id, AttendanceNew.is_planned)
+            .filter(Attendance.event_id == event_id, Attendance.is_planned)
         )
         attendance_records = [AttendanceExtended(*r) for r in query.all()]
 
@@ -120,7 +120,7 @@ def event_preblast_query(event_id: int) -> tuple[EventExtended, list[AttendanceE
 def event_attendance_query(attendance_filter: List[Any] = None, event_filter: List[Any] = None) -> List[EventExtended]:
     with get_session() as session:
         attendance_subquery = (
-            select(AttendanceNew.event_id.distinct().label("event_id")).filter(*(attendance_filter or [])).alias()
+            select(Attendance.event_id.distinct().label("event_id")).filter(*(attendance_filter or [])).alias()
         )
         event_records = (
             session.query(Event, Org, EventType, Location, EventTag)

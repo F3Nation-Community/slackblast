@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import List, Tuple, TypeVar
 
 from sqlalchemy import and_, create_engine, pool
+from sqlalchemy.dialects.mysql import insert
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 
@@ -143,6 +144,30 @@ class DbManager:
             session.commit()
             close_session(session)
             return records  # noqa
+
+    def create_or_ignore(cls: T, records: List[BaseClass], schema=None):
+        session = get_session(schema=schema)
+        try:
+            for record in records:
+                stmt = insert(cls).values(record.__dict__).prefix_with("IGNORE")
+                session.execute(stmt)
+            session.flush()
+        finally:
+            session.commit()
+            close_session(session)
+
+    def upsert_records(cls, records, schema=None):
+        session = get_session(schema=schema)
+        try:
+            for record in records:
+                stmt = insert(cls).values(record.__dict__)
+                update_dict = {c.name: getattr(record, c.name) for c in cls.__table__.columns}
+                stmt = stmt.on_duplicate_key_update(**update_dict)
+                session.execute(stmt)
+            session.flush()
+        finally:
+            session.commit()
+            close_session(session)
 
     def delete_record(cls: T, id, schema=None):
         session = get_session(schema=schema)

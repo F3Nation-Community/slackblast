@@ -28,7 +28,6 @@ def create_tables():
     schema_table_map = {
         "slackblast": [
             orm.Region,
-            orm.User,
             orm.OrgType,
             orm.Org,
             orm.EventCategory,
@@ -37,21 +36,16 @@ def create_tables():
             orm.Event,
             orm.EventType_x_Org,
             orm.AttendanceType,
-            orm.AttendanceNew,
-            orm.UserNew,
+            orm.User,
+            orm.Attendance,
             orm.SlackUser,
             orm.EventTag,
             orm.EventTag_x_Org,
         ],
         "f3devregion": [
-            orm.Backblast,
-            orm.Attendance,
-            orm.PaxminerUser,
-            orm.PaxminerAO,
             orm.AchievementsList,
             orm.AchievementsAwarded,
         ],
-        "paxminer": [orm.PaxminerRegion],
     }
 
     for schema, tables in schema_table_map.items():
@@ -71,33 +65,10 @@ def initialize_tables():
 
     slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
     client = WebClient(token=slack_bot_token)
-    channels = client.conversations_list().get("channels")
     users = client.users_list().get("members")
 
-    ao_list = [
-        orm.PaxminerAO(
-            channel_id=c["id"],
-            ao=c["name"],
-            channel_created=c["created"],
-            archived=1 if c["is_archived"] else 0,
-            backblast=0,
-        )
-        for c in channels
-    ]
-
-    paxminer_user_list = [
-        orm.PaxminerUser(
-            user_id=u["id"],
-            user_name=u["profile"]["display_name"],
-            real_name=u["profile"]["real_name"],
-            phone=u["profile"].get("phone"),
-            email=u["profile"].get("email"),
-        )
-        for u in users
-    ]
-
     user_list = [
-        orm.UserNew(
+        orm.User(
             id=i + 1,
             f3_name=u["profile"]["display_name"] or u["profile"]["real_name"],
             email=u["profile"].get("email") or u["id"],
@@ -110,6 +81,7 @@ def initialize_tables():
         orm.SlackUser(
             id=i + 1,
             slack_id=u["id"],
+            slack_team_id=u["team_id"],
             user_name=u["profile"]["display_name"] or u["profile"]["real_name"],
             email=u["profile"].get("email") or u["id"],
             user_id=i + 1,
@@ -117,8 +89,6 @@ def initialize_tables():
         )
         for i, u in enumerate(users)
     ]
-    for u in slack_user_list:
-        print(u)
 
     achievement_list = [
         orm.AchievementsList(
@@ -139,14 +109,6 @@ def initialize_tables():
             verb="Qing at 4 beatdowns in a month",
             code="leader_of_men",
         ),
-    ]
-
-    paxminer_region = [
-        orm.PaxminerRegion(
-            region="F3DevRegion",
-            slack_token=os.environ["SLACK_BOT_TOKEN"],
-            schema_name="f3devregion",
-        )
     ]
 
     org_type_list = [
@@ -193,14 +155,7 @@ def initialize_tables():
     ]
 
     session = get_session(schema="f3devregion")
-    session.add_all(ao_list)
-    session.add_all(paxminer_user_list)
     session.add_all(achievement_list)
-    session.commit()
-    session.close()
-
-    session = get_session(schema="paxminer")
-    session.add_all(paxminer_region)
     session.commit()
     session.close()
 
