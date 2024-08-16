@@ -201,9 +201,7 @@ def get_region_record(team_id: str, body, context, client, logger) -> SlackSetti
             is_active=True,
             slack_id=team_id,
         )
-        print("creating org record")
         org_record: Org = DbManager.create_record(org_record)
-        print(org_record.id)
         region_record.org_id = org_record.id
         DbManager.update_record(Org, org_record.id, {Org.slack_app_settings: region_record.to_json()})
 
@@ -228,12 +226,12 @@ def get_region_record(team_id: str, body, context, client, logger) -> SlackSetti
         ]
         DbManager.create_records(event_tag_x_org_records)
 
-        # populate_users(client, slack_id=team_id)
+        populate_users(client, team_id)
 
     return region_record
 
 
-def populate_users(client: WebClient, slack_id: str):
+def populate_users(client: WebClient, team_id: str):
     users = client.users_list().get("members")
     user_list = [
         User(
@@ -249,14 +247,17 @@ def populate_users(client: WebClient, slack_id: str):
 
     slack_user_list = [
         SlackUser(
-            slack_id=users_dict.get(u["profile"].get("email")),
+            slack_id=u["id"],
+            user_id=users_dict.get(u["profile"].get("email") or u["id"]),
             user_name=u["profile"]["display_name"] or u["profile"]["real_name"],
             email=u["profile"].get("email") or u["id"],
             avatar_url=u["profile"]["image_192"],
+            slack_team_id=team_id,
         )
         for u in users
     ]
     DbManager.create_or_ignore(SlackUser, slack_user_list)
+    update_local_slack_users()
 
 
 def get_request_type(body: dict) -> Tuple[str]:

@@ -149,7 +149,8 @@ class DbManager:
         session = get_session(schema=schema)
         try:
             for record in records:
-                stmt = insert(cls).values(record.__dict__).prefix_with("IGNORE")
+                record_dict = {k: v for k, v in record.__dict__.items() if k != "_sa_instance_state"}
+                stmt = insert(cls).values(record_dict).prefix_with("IGNORE")
                 session.execute(stmt)
             session.flush()
         finally:

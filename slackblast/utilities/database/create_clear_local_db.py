@@ -8,7 +8,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 import logging
 
-from slack_sdk import WebClient
 from sqlalchemy.engine import Engine
 from sqlalchemy_utils import create_database, database_exists
 
@@ -63,32 +62,32 @@ def create_tables():
 def initialize_tables():
     logger.info("Initializing tables with data from Slack...")
 
-    slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
-    client = WebClient(token=slack_bot_token)
-    users = client.users_list().get("members")
+    # slack_bot_token = os.environ["SLACK_BOT_TOKEN"]
+    # client = WebClient(token=slack_bot_token)
+    # users = client.users_list().get("members")
 
-    user_list = [
-        orm.User(
-            id=i + 1,
-            f3_name=u["profile"]["display_name"] or u["profile"]["real_name"],
-            email=u["profile"].get("email") or u["id"],
-            # home_region_id=1,
-        )
-        for i, u in enumerate(users)
-    ]
+    # user_list = [
+    #     orm.User(
+    #         id=i + 1,
+    #         f3_name=u["profile"]["display_name"] or u["profile"]["real_name"],
+    #         email=u["profile"].get("email") or u["id"],
+    #         # home_region_id=1,
+    #     )
+    #     for i, u in enumerate(users)
+    # ]
 
-    slack_user_list = [
-        orm.SlackUser(
-            id=i + 1,
-            slack_id=u["id"],
-            slack_team_id=u["team_id"],
-            user_name=u["profile"]["display_name"] or u["profile"]["real_name"],
-            email=u["profile"].get("email") or u["id"],
-            user_id=i + 1,
-            avatar_url=u["profile"]["image_192"],
-        )
-        for i, u in enumerate(users)
-    ]
+    # slack_user_list = [
+    #     orm.SlackUser(
+    #         id=i + 1,
+    #         slack_id=u["id"],
+    #         slack_team_id=u["team_id"],
+    #         user_name=u["profile"]["display_name"] or u["profile"]["real_name"],
+    #         email=u["profile"].get("email") or u["id"],
+    #         user_id=i + 1,
+    #         avatar_url=u["profile"]["image_192"],
+    #     )
+    #     for i, u in enumerate(users)
+    # ]
 
     achievement_list = [
         orm.AchievementsList(
@@ -165,9 +164,9 @@ def initialize_tables():
     session.add_all(event_type_list)
     session.add_all(attendance_type_list)
     session.add_all(event_tag_list)
-    session.add_all(user_list)
-    session.commit()
-    session.add_all(slack_user_list)
+    # session.add_all(user_list)
+    # session.commit()
+    # session.add_all(slack_user_list)
     session.commit()
     session.close()
 
