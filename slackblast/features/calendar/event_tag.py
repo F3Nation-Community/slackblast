@@ -6,12 +6,12 @@ from slack_sdk.web import WebClient
 
 from utilities.constants import EVENT_TAG_COLORS
 from utilities.database import DbManager
-from utilities.database.orm import EventTag, EventTag_x_Org, Org, Region
+from utilities.database.orm import EventTag, EventTag_x_Org, Org, SlackSettings
 from utilities.helper_functions import safe_convert, safe_get
 from utilities.slack import actions, orm
 
 
-def manage_event_tags(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def manage_event_tags(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     action = safe_get(body, "actions", 0, "selected_option", "value")
 
     if action == "add":
@@ -25,7 +25,7 @@ def build_event_tag_form(
     client: WebClient,
     logger: Logger,
     context: dict,
-    region_record: Region,
+    region_record: SlackSettings,
     edit_event_tag: EventTag_x_Org = None,
 ):
     form = copy.deepcopy(EVENT_TAG_FORM)
@@ -76,7 +76,7 @@ def build_event_tag_form(
     )
 
 
-def handle_event_tag_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_event_tag_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     form_data = EVENT_TAG_FORM.get_selected_values(body)
     event_tag_name = form_data.get(actions.CALENDAR_ADD_EVENT_TAG_NEW)
     event_tag_id = form_data.get(actions.CALENDAR_ADD_EVENT_TAG_SELECT)
@@ -116,7 +116,9 @@ def handle_event_tag_add(body: dict, client: WebClient, logger: Logger, context:
             )
 
 
-def build_event_tag_list_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def build_event_tag_list_form(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
+):
     event_tag_records: list[tuple[EventTag, EventTag_x_Org]] = DbManager.find_join_records2(
         EventTag, EventTag_x_Org, [EventTag_x_Org.org_id == region_record.org_id]
     )
@@ -150,7 +152,9 @@ def build_event_tag_list_form(body: dict, client: WebClient, logger: Logger, con
     )
 
 
-def handle_event_tag_edit_delete(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_event_tag_edit_delete(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
+):
     event_tag_org_id = safe_convert(safe_get(body, "actions", 0, "action_id").split("_")[1], int)
     action = safe_get(body, "actions", 0, "selected_option", "value")
 

@@ -27,7 +27,7 @@ def create_tables():
 
     schema_table_map = {
         "slackblast": [
-            orm.Region,
+            # orm.Region,
             orm.OrgType,
             orm.Org,
             orm.EventCategory,

@@ -6,7 +6,7 @@ from slack_sdk.web import WebClient
 
 from utilities.database import DbManager
 from utilities.database.orm import (
-    Region,
+    SlackSettings,
 )
 from utilities.helper_functions import (
     safe_get,
@@ -17,7 +17,12 @@ from utilities.slack import orm as slack_orm
 
 
 def build_custom_field_menu(
-    body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region, update_view_id: str = None
+    body: dict,
+    client: WebClient,
+    logger: Logger,
+    context: dict,
+    region_record: SlackSettings,
+    update_view_id: str = None,
 ) -> None:
     """Iterates through the custom fields and builds a menu to enable/disable and add/edit/delete them.
 
@@ -41,7 +46,7 @@ def build_custom_field_menu(
             }
         }
         DbManager.update_record(
-            cls=Region,
+            cls=SlackSettings,
             id=region_record.team_id,
             fields={"custom_fields": custom_fields},
         )
@@ -113,7 +118,7 @@ def build_custom_field_menu(
 
 
 def build_custom_field_add_edit(
-    body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
 ) -> None:
     """Builds a form to add or edit a custom field.
 
@@ -163,7 +168,7 @@ def handle_custom_field_delete(
     client: WebClient,
     logger: Logger,
     context: dict,
-    region_record: Region,
+    region_record: SlackSettings,
     trigger_id: str,
 ):
     custom_fields: dict = region_record.custom_fields or {}
@@ -178,19 +183,19 @@ def handle_custom_field_delete(
     )
 
 
-def delete_custom_field(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def delete_custom_field(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     custom_field_name = safe_get(body, "actions", 0, "value")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
     view_id = safe_get(body, "container", "view_id")
 
     custom_fields: dict = region_record.custom_fields
     custom_fields.pop(custom_field_name)
-    DbManager.update_record(cls=Region, id=team_id, fields={"custom_fields": custom_fields})
+    DbManager.update_record(cls=SlackSettings, id=team_id, fields={"custom_fields": custom_fields})
     update_local_region_records()
     build_custom_field_menu(body, client, logger, context, region_record, update_view_id=view_id)
 
 
-def handle_custom_field_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_custom_field_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     config_data = forms.CUSTOM_FIELD_ADD_EDIT_FORM.get_selected_values(body)
 
     custom_field_name = safe_get(config_data, actions.CUSTOM_FIELD_ADD_NAME)
@@ -205,7 +210,9 @@ def handle_custom_field_add(body: dict, client: WebClient, logger: Logger, conte
         "enabled": True,
     }
 
-    DbManager.update_record(cls=Region, id=region_record.team_id, fields={Region.custom_fields: custom_fields})
+    DbManager.update_record(
+        cls=SlackSettings, id=region_record.team_id, fields={SlackSettings.custom_fields: custom_fields}
+    )
     update_local_region_records()
 
     print(
@@ -221,7 +228,9 @@ def handle_custom_field_add(body: dict, client: WebClient, logger: Logger, conte
     build_custom_field_menu(body, client, logger, context, region_record, update_view_id=previous_view_id)
 
 
-def handle_custom_field_menu(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_custom_field_menu(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
+):
     custom_fields = region_record.custom_fields or {}
 
     selected_values: dict = safe_get(body, "view", "state", "values")
@@ -232,5 +241,7 @@ def handle_custom_field_menu(body: dict, client: WebClient, logger: Logger, cont
                 value[key]["selected_option"]["value"] == "enable"
             )
 
-    DbManager.update_record(cls=Region, id=region_record.team_id, fields={Region.custom_fields: custom_fields})
+    DbManager.update_record(
+        cls=SlackSettings, id=region_record.team_id, fields={SlackSettings.custom_fields: custom_fields}
+    )
     update_local_region_records()

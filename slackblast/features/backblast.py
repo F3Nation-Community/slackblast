@@ -19,7 +19,7 @@ from utilities.database.orm import (
     EventType,
     EventType_x_Org,
     Org,
-    Region,
+    SlackSettings,
 )
 from utilities.database.special_queries import event_attendance_query, event_preblast_query
 from utilities.helper_functions import (
@@ -39,7 +39,7 @@ from utilities.slack import orm as slack_orm
 register_heif_opener()
 
 
-def add_custom_field_blocks(form: slack_orm.BlockView, region_record: Region) -> slack_orm.BlockView:
+def add_custom_field_blocks(form: slack_orm.BlockView, region_record: SlackSettings) -> slack_orm.BlockView:
     output_form = copy.deepcopy(form)
     for custom_field in (region_record.custom_fields or {}).values():
         if safe_get(custom_field, "enabled"):
@@ -68,7 +68,7 @@ def backblast_middleware(
     client: WebClient,
     logger: Logger,
     context: dict,
-    region_record: Region,
+    region_record: SlackSettings,
 ):
     user = get_user(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger)
     user_id = user.user_id
@@ -122,7 +122,7 @@ def backblast_middleware(
     )
 
 
-def build_backblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def build_backblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     """
     Args:
         body (dict): Slack request body
@@ -215,7 +215,7 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
         )
 
 
-def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     create_or_edit = "create" if safe_get(body, "view", "callback_id") == actions.BACKBLAST_CALLBACK_ID else "edit"
 
     backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
@@ -507,7 +507,9 @@ COUNT: {count}
             logger.error(f"Error removing file: {e}")
 
 
-def handle_backblast_edit_button(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_backblast_edit_button(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
+):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
 

@@ -4,12 +4,12 @@ from logging import Logger
 from slack_sdk.web import WebClient
 
 from utilities.database import DbManager
-from utilities.database.orm import EventCategory, EventType, EventType_x_Org, Region
+from utilities.database.orm import EventCategory, EventType, EventType_x_Org, SlackSettings
 from utilities.helper_functions import safe_get
 from utilities.slack import actions, orm
 
 
-def build_event_type_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def build_event_type_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     form = copy.deepcopy(EVENT_TYPE_FORM)
 
     # get event types that are not already in EventType_x_Org
@@ -42,7 +42,7 @@ def build_event_type_form(body: dict, client: WebClient, logger: Logger, context
     )
 
 
-def handle_event_type_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_event_type_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     form_data = EVENT_TYPE_FORM.get_selected_values(body)
     event_type_name = form_data.get(actions.CALENDAR_ADD_EVENT_TYPE_NEW)
     event_type_id = form_data.get(actions.CALENDAR_ADD_EVENT_TYPE_SELECT)

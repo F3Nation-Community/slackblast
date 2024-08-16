@@ -6,12 +6,12 @@ from slack_sdk.web import WebClient
 
 from features.calendar import ao
 from utilities.database import DbManager
-from utilities.database.orm import Location, Region
+from utilities.database.orm import Location, SlackSettings
 from utilities.helper_functions import safe_convert, safe_get
 from utilities.slack import actions, orm
 
 
-def manage_locations(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def manage_locations(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     action = safe_get(body, "actions", 0, "selected_option", "value")
 
     if action == "add":
@@ -25,7 +25,7 @@ def build_location_add_form(
     client: WebClient,
     logger: Logger,
     context: dict,
-    region_record: Region,
+    region_record: SlackSettings,
     edit_location: Location = None,
 ):
     form = copy.deepcopy(LOCATION_FORM)
@@ -69,7 +69,7 @@ def build_location_add_form(
     )
 
 
-def handle_location_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_location_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     form_data = LOCATION_FORM.get_selected_values(body)
     metadata = safe_convert(safe_get(body, "view", "private_metadata"), json.loads)
 
@@ -118,7 +118,9 @@ def handle_location_add(body: dict, client: WebClient, logger: Logger, context: 
         )
 
 
-def build_location_list_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def build_location_list_form(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
+):
     location_records = DbManager.find_records(Location, [Location.org_id == region_record.org_id])
 
     blocks = [
@@ -152,7 +154,9 @@ def build_location_list_form(body: dict, client: WebClient, logger: Logger, cont
     )
 
 
-def handle_location_edit_delete(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_location_edit_delete(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
+):
     location_id = safe_convert(safe_get(body, "actions", 0, "action_id").split("_")[1], int)
     action = safe_get(body, "actions", 0, "selected_option", "value")
 

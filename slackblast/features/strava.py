@@ -11,13 +11,13 @@ from slack_sdk import WebClient
 
 from utilities import constants
 from utilities.database import DbManager
-from utilities.database.orm import Region, SlackUser
+from utilities.database.orm import SlackSettings, SlackUser
 from utilities.helper_functions import parse_rich_block, replace_user_channel_ids, safe_get
 from utilities.slack import actions, forms
 from utilities.slack import orm as slack_orm
 
 
-def build_strava_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def build_strava_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
@@ -138,7 +138,9 @@ def build_strava_form(body: dict, client: WebClient, logger: Logger, context: di
         )
 
 
-def build_strava_modify_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def build_strava_modify_form(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
+):
     strava_metadata = json.loads(safe_get(body, "actions", 0, "value") or "{}")
     private_metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
     strava_activity_id = strava_metadata[actions.STRAVA_ACTIVITY_ID]
@@ -361,7 +363,7 @@ def get_strava_activity(
     return data
 
 
-def handle_strava_modify(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_strava_modify(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     strava_data: dict = forms.STRAVA_ACTIVITY_MODIFY_FORM.get_selected_values(body)
     event_type = safe_get(body, "type")
     metadata = json.loads(body["view"]["private_metadata"])

@@ -17,13 +17,13 @@ from utilities.database.orm import (
     EventTag_x_Org,
     EventType_x_Org,
     Org,
-    Region,
+    SlackSettings,
     SlackUser,
     User,
 )
 from utilities.slack import actions
 
-REGION_RECORDS: Dict[str, Region] = {}
+REGION_RECORDS: Dict[str, SlackSettings] = {}
 SLACK_USERS: Dict[str, SlackUser] = {}
 
 
@@ -118,7 +118,7 @@ def get_user_names(
         return names
 
 
-def get_user(slack_user_id: str, region_record: Region, client: WebClient, logger: Logger) -> SlackUser:
+def get_user(slack_user_id: str, region_record: SlackSettings, client: WebClient, logger: Logger) -> SlackUser:
     if not SLACK_USERS:
         update_local_slack_users()
 
@@ -172,7 +172,7 @@ def update_local_slack_users() -> None:
     SLACK_USERS = {slack_user.slack_id: slack_user for slack_user in slack_users}
 
 
-def get_region_record(team_id: str, body, context, client, logger) -> Region:
+def get_region_record(team_id: str, body, context, client, logger) -> SlackSettings:
     if not REGION_RECORDS:
         update_local_region_records()
 
@@ -186,30 +186,27 @@ def get_region_record(team_id: str, body, context, client, logger) -> Region:
         except Exception:
             team_name = team_domain
 
-        slack_app_settings = {
-            "bot_access_token": context["bot_token"],
-        }
+        region_record = SlackSettings(
+            team_id=team_id,
+            bot_token=context["bot_token"],
+            workspace_name=team_name,
+            email_enabled=0,
+            email_option_show=0,
+            editing_locked=0,
+        )
 
         org_record = Org(
             org_type_id=2,
             name=team_name,
             is_active=True,
             slack_id=team_id,
-            slack_app_settings=slack_app_settings,
         )
+        print("creating org record")
         org_record: Org = DbManager.create_record(org_record)
+        print(org_record.id)
+        region_record.org_id = org_record.id
+        DbManager.update_record(Org, org_record.id, {Org.slack_app_settings: region_record.to_json()})
 
-        region_record: Region = DbManager.create_record(
-            Region(
-                team_id=team_id,
-                bot_token=context["bot_token"],
-                workspace_name=team_name,
-                email_enabled=0,
-                email_option_show=0,
-                editing_locked=0,
-                org_id=org_record.id,
-            )
-        )
         REGION_RECORDS[team_id] = region_record
 
         event_type_x_org_records = [
@@ -231,7 +228,7 @@ def get_region_record(team_id: str, body, context, client, logger) -> Region:
         ]
         DbManager.create_records(event_tag_x_org_records)
 
-        populate_users(client, slack_id=team_id)
+        # populate_users(client, slack_id=team_id)
 
     return region_record
 
@@ -284,7 +281,8 @@ def get_request_type(body: dict) -> Tuple[str]:
 
 def update_local_region_records() -> None:
     print("Updating local region records...")
-    region_records: List[Region] = DbManager.find_records(Region, filters=[True])
+    org_records: List[Org] = DbManager.find_records(Org, filters=[Org.org_type_id == 2])
+    region_records = [SlackSettings(**org.slack_app_settings) for org in org_records]
     global REGION_RECORDS
     REGION_RECORDS = {region.team_id: region for region in region_records}
 
@@ -351,7 +349,7 @@ def parse_rich_block(
 
 def replace_user_channel_ids(
     text: str,
-    region_record: Region,
+    region_record: SlackSettings,
     client: WebClient,
     logger: Logger,
 ) -> str:

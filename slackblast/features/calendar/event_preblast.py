@@ -13,7 +13,7 @@ from utilities.database.orm import (
     EventTag,
     EventTag_x_Org,
     Location,
-    Region,
+    SlackSettings,
 )
 from utilities.database.special_queries import PreblastInfo, event_attendance_query, event_preblast_query
 from utilities.helper_functions import get_user, get_user_names, safe_convert, safe_get, time_int_to_str
@@ -25,7 +25,7 @@ def build_event_preblast_select_form(
     client: WebClient,
     logger: Logger,
     context: dict,
-    region_record: Region,
+    region_record: SlackSettings,
 ):
     user_id = get_user(safe_get(body, "user", "id") or safe_get(body, "user_id"), region_record, client, logger).id
     event_records = event_attendance_query(
@@ -83,7 +83,7 @@ def handle_event_preblast_select(
     client: WebClient,
     logger: Logger,
     context: dict,
-    region_record: Region,
+    region_record: SlackSettings,
 ):
     event_id = safe_get(body, "actions", 0, "selected_option", "value")
     view_id = safe_get(body, "view", "id")
@@ -97,7 +97,7 @@ def build_event_preblast_form(
     client: WebClient,
     logger: Logger,
     context: dict,
-    region_record: Region,
+    region_record: SlackSettings,
     event_id: int = None,
     update_view_id: str = None,
 ):
@@ -195,7 +195,9 @@ def build_event_preblast_form(
         )
 
 
-def handle_event_preblast_edit(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_event_preblast_edit(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
+):
     form_data = EVENT_PREBLAST_FORM.get_selected_values(body)
     metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}")
     event_id = safe_get(metadata, "event_id")
@@ -285,7 +287,7 @@ def build_preblast_info(
     client: WebClient,
     logger: Logger,
     context: dict,
-    region_record: Region,
+    region_record: SlackSettings,
     event_id: int,
 ) -> PreblastInfo:
     event_record, attendance_records = event_preblast_query(event_id)
@@ -369,7 +371,9 @@ def build_preblast_info(
     )
 
 
-def handle_event_preblast_action(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_event_preblast_action(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
+):
     action_id = safe_get(body, "actions", 0, "action_id")
     metadata = json.loads(safe_get(body, "view", "private_metadata") or "{}") or safe_get(
         body, "message", "metadata", "event_payload"

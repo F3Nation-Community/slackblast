@@ -3,12 +3,14 @@ from logging import Logger
 
 from slack_sdk.web import WebClient
 
-from utilities.database.orm import Region
+from utilities.database.orm import SlackSettings
 from utilities.helper_functions import safe_get
 from utilities.slack import actions, orm
 
 
-def build_calendar_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def build_calendar_config_form(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
+):
     form = copy.deepcopy(CALENDAR_CONFIG_FORM)
     form.update_modal(  # TODO: add a "back to main menu" button?
         client=client,

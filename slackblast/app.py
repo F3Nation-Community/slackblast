@@ -11,7 +11,7 @@ from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 from features import strava
 from utilities.builders import add_loading_form, send_error_response
 from utilities.constants import LOCAL_DEVELOPMENT
-from utilities.database.orm import Region
+from utilities.database.orm import SlackSettings
 from utilities.helper_functions import (
     get_oauth_flow,
     get_region_record,
@@ -47,7 +47,7 @@ def main_response(body, logger, client, ack, context):
     ack()
     logger.info(json.dumps(body, indent=4))
     team_id = safe_get(body, "team_id") or safe_get(body, "team", "id")
-    region_record: Region = get_region_record(team_id, body, context, client, logger)
+    region_record: SlackSettings = get_region_record(team_id, body, context, client, logger)
 
     request_type, request_id = get_request_type(body)
     lookup: Tuple[Callable, bool] = safe_get(safe_get(MAIN_MAPPER, request_type), request_id)

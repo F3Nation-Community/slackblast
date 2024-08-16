@@ -7,12 +7,21 @@ from slack_sdk.web import WebClient
 
 from utilities import constants
 from utilities.database import DbManager
-from utilities.database.orm import Event, EventTag, EventTag_x_Org, EventType, EventType_x_Org, Location, Org, Region
+from utilities.database.orm import (
+    Event,
+    EventTag,
+    EventTag_x_Org,
+    EventType,
+    EventType_x_Org,
+    Location,
+    Org,
+    SlackSettings,
+)
 from utilities.helper_functions import safe_convert, safe_get, time_int_to_str, time_str_to_int
 from utilities.slack import actions, orm
 
 
-def manage_series(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def manage_series(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     action = safe_get(body, "actions", 0, "selected_option", "value")
 
     if action == "add":
@@ -26,7 +35,7 @@ def build_series_add_form(
     client: WebClient,
     logger: Logger,
     context: dict,
-    region_record: Region,
+    region_record: SlackSettings,
     edit_event: Event | None = None,
 ):
     parent_metadata = {"series_id": edit_event.id} if edit_event else {}
@@ -141,7 +150,7 @@ def build_series_add_form(
         )
 
 
-def handle_series_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_series_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     metadata = safe_convert(safe_get(body, "view", "private_metadata"), json.loads)
     if metadata.get("is_series") == "False":
         form_data = EVENT_FORM.get_selected_values(body)
@@ -297,7 +306,7 @@ def build_series_list_form(
     client: WebClient,
     logger: Logger,
     context: dict,
-    region_record: Region,
+    region_record: SlackSettings,
     update_view_id=None,
 ):
     if safe_get(body, "actions", 0, "action_id") == actions.CALENDAR_MANAGE_SERIES:
@@ -369,7 +378,9 @@ def build_series_list_form(
         )
 
 
-def handle_series_edit_delete(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_series_edit_delete(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
+):
     series_id = safe_convert(safe_get(body, "actions", 0, "action_id").split("_")[1], int)
     action = safe_get(body, "actions", 0, "selected_option", "value")
 

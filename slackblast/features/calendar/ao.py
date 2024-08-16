@@ -8,12 +8,12 @@ from slack_sdk.web import WebClient
 
 from utilities import constants
 from utilities.database import DbManager
-from utilities.database.orm import Event, EventType, EventType_x_Org, Location, Org, Region
+from utilities.database.orm import Event, EventType, EventType_x_Org, Location, Org, SlackSettings
 from utilities.helper_functions import safe_convert, safe_get
 from utilities.slack import actions, orm
 
 
-def manage_aos(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def manage_aos(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     action = safe_get(body, "actions", 0, "selected_option", "value")
 
     if action == "add":
@@ -27,7 +27,7 @@ def build_ao_add_form(
     client: WebClient,
     logger: Logger,
     context: dict,
-    region_record: Region,
+    region_record: SlackSettings,
     edit_ao: Org = None,
     update_view_id: str = None,
     update_metadata: dict = None,
@@ -97,7 +97,7 @@ def build_ao_add_form(
         )
 
 
-def handle_ao_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_ao_add(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     form_data = AO_FORM.get_selected_values(body)
     region_org_id = region_record.org_id
     metatdata = safe_convert(safe_get(body, "view", "private_metadata"), json.loads)
@@ -141,7 +141,7 @@ def handle_ao_add(body: dict, client: WebClient, logger: Logger, context: dict, 
         DbManager.create_record(event_type_x_org)
 
 
-def build_ao_list_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def build_ao_list_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     ao_records = DbManager.find_records(Org, [Org.parent_id == region_record.org_id, Org.org_type_id == 1])
 
     blocks = [
@@ -173,7 +173,7 @@ def build_ao_list_form(body: dict, client: WebClient, logger: Logger, context: d
     )
 
 
-def handle_ao_edit_delete(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_ao_edit_delete(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     ao_id = safe_convert(safe_get(body, "actions", 0, "action_id").split("_")[1], int)
     action = safe_get(body, "actions", 0, "selected_option", "value")
 

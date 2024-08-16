@@ -11,14 +11,14 @@ from features.calendar.event_preblast import (
 )
 from utilities.constants import S3_IMAGE_URL
 from utilities.database import DbManager
-from utilities.database.orm import Attendance, Event, EventType, EventType_x_Org, Org, Region
+from utilities.database.orm import Attendance, Event, EventType, EventType_x_Org, Org, SlackSettings
 from utilities.database.special_queries import CalendarHomeQuery, home_schedule_query
 from utilities.helper_functions import get_user, safe_convert, safe_get
 from utilities.slack import actions, orm
 
 
 def handle_event_preblast_select_button(
-    body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
 ):
     action = safe_get(body, "actions", 0, "action_id")
     view_id = safe_get(body, "view", "id")
@@ -29,7 +29,12 @@ def handle_event_preblast_select_button(
 
 
 def build_home_form(
-    body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region, update_view_id: str = None
+    body: dict,
+    client: WebClient,
+    logger: Logger,
+    context: dict,
+    region_record: SlackSettings,
+    update_view_id: str = None,
 ):
     action_id = safe_get(body, "actions", 0, "action_id")
     if action_id == actions.CALENDAR_HOME_DATE_FILTER and not safe_get(body, "actions", 0, "selected_date"):
@@ -215,7 +220,7 @@ def build_home_form(
     )
 
 
-def handle_home_event(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_home_event(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     event_id = safe_convert(safe_get(body, "actions", 0, "action_id").split("_")[1], int)
     action = safe_get(body, "actions", 0, "selected_option", "value")
     user_id = get_user(safe_get(body, "user", "id"), region_record, client, logger).id

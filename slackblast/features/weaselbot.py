@@ -11,7 +11,7 @@ from utilities.database import DbManager
 from utilities.database.orm import (
     AchievementsAwarded,
     AchievementsList,
-    Region,
+    SlackSettings,
 )
 from utilities.helper_functions import (
     safe_get,
@@ -21,7 +21,7 @@ from utilities.slack import actions, forms
 from utilities.slack import orm as slack_orm
 
 
-def build_achievement_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def build_achievement_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     paxminer_schema = region_record.paxminer_schema
     update_view_id = safe_get(body, actions.LOADING_ID)
     achievement_form = copy.deepcopy(forms.ACHIEVEMENT_FORM)
@@ -79,7 +79,7 @@ def build_achievement_form(body: dict, client: WebClient, logger: Logger, contex
     )
 
 
-def handle_achievements_tag(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_achievements_tag(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     achievement_data = forms.ACHIEVEMENT_FORM.get_selected_values(body)
     achievement_pax_list = safe_get(achievement_data, actions.ACHIEVEMENT_PAX)
     achievement_id = int(safe_get(achievement_data, actions.ACHIEVEMENT_SELECT))
@@ -127,7 +127,7 @@ def handle_achievements_tag(body: dict, client: WebClient, logger: Logger, conte
         )
 
 
-def build_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def build_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     # paxminer_schema = region_record.paxminer_schema
     # update_view_id = safe_get(body, actions.LOADING_ID)
     config_form = copy.deepcopy(forms.WEASELBOT_CONFIG_FORM)
@@ -182,25 +182,25 @@ def build_config_form(body: dict, client: WebClient, logger: Logger, context: di
         )
 
 
-def handle_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_config_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     config_data = forms.WEASELBOT_CONFIG_FORM.get_selected_values(body)
     fields = {
-        Region.send_achievements: 1
+        SlackSettings.send_achievements: 1
         if "achievements" in safe_get(config_data, actions.WEASELBOT_ENABLE_FEATURES)
         else 0,
-        Region.send_aoq_reports: 1
+        SlackSettings.send_aoq_reports: 1
         if "kotter_reports" in safe_get(config_data, actions.WEASELBOT_ENABLE_FEATURES)
         else 0,
-        Region.achievement_channel: safe_get(config_data, actions.WEASELBOT_ACHIEVEMENT_CHANNEL),
-        Region.default_siteq: safe_get(config_data, actions.WEASELBOT_KOTTER_CHANNEL),
-        Region.NO_POST_THRESHOLD: safe_get(config_data, actions.WEASELBOT_KOTTER_WEEKS),
-        Region.REMINDER_WEEKS: safe_get(config_data, actions.WEASELBOT_KOTTER_REMOVE_WEEKS),
-        Region.HOME_AO_CAPTURE: safe_get(config_data, actions.WEASELBOT_HOME_AO_WEEKS),
-        Region.NO_Q_THRESHOLD_WEEKS: safe_get(config_data, actions.WEASELBOT_Q_WEEKS),
-        Region.NO_Q_THRESHOLD_POSTS: safe_get(config_data, actions.WEASELBOT_Q_POSTS),
+        SlackSettings.achievement_channel: safe_get(config_data, actions.WEASELBOT_ACHIEVEMENT_CHANNEL),
+        SlackSettings.default_siteq: safe_get(config_data, actions.WEASELBOT_KOTTER_CHANNEL),
+        SlackSettings.NO_POST_THRESHOLD: safe_get(config_data, actions.WEASELBOT_KOTTER_WEEKS),
+        SlackSettings.REMINDER_WEEKS: safe_get(config_data, actions.WEASELBOT_KOTTER_REMOVE_WEEKS),
+        SlackSettings.HOME_AO_CAPTURE: safe_get(config_data, actions.WEASELBOT_HOME_AO_WEEKS),
+        SlackSettings.NO_Q_THRESHOLD_WEEKS: safe_get(config_data, actions.WEASELBOT_Q_WEEKS),
+        SlackSettings.NO_Q_THRESHOLD_POSTS: safe_get(config_data, actions.WEASELBOT_Q_POSTS),
     }
     DbManager.update_record(
-        cls=Region,
+        cls=SlackSettings,
         id=context["team_id"],
         fields=fields,
     )

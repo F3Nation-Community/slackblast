@@ -67,7 +67,7 @@ class GetDBClass:
         return self
 
 
-class Region(BaseClass, GetDBClass):
+class SlackSettings(BaseClass, GetDBClass):
     __tablename__ = "regions"
     id: Mapped[intpk]
     team_id: Mapped[str100]
@@ -106,7 +106,7 @@ class Region(BaseClass, GetDBClass):
     updated: Mapped[dt_update]
 
     def get_id():
-        return Region.team_id
+        return SlackSettings.team_id
 
 
 # class User(BaseClass, GetDBClass):

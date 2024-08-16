@@ -6,7 +6,7 @@ from logging import Logger
 import pytz
 from slack_sdk.web import WebClient
 
-from utilities.database.orm import Region
+from utilities.database.orm import SlackSettings
 from utilities.helper_functions import (
     get_user_names,
     remove_keys_from_dict,
@@ -16,7 +16,7 @@ from utilities.slack import actions, forms
 from utilities.slack import orm as slack_orm
 
 
-def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
 
@@ -74,7 +74,7 @@ def build_preblast_form(body: dict, client: WebClient, logger: Logger, context: 
     )
 
 
-def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     create_or_edit = "create" if safe_get(body, "view", "callback_id") == actions.PREBLAST_CALLBACK_ID else "edit"
 
     preblast_data = forms.PREBLAST_FORM.get_selected_values(body)
@@ -186,7 +186,9 @@ def handle_preblast_post(body: dict, client: WebClient, logger: Logger, context:
         print(json.dumps({"event_type": "successful_preblast_edit", "team_name": region_record.workspace_name}))
 
 
-def handle_preblast_edit_button(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def handle_preblast_edit_button(
+    body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings
+):
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
     channel_id = safe_get(body, "channel_id") or safe_get(body, "channel", "id")
 

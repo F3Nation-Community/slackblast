@@ -4,7 +4,7 @@ from logging import Logger
 from slack_sdk.web import WebClient
 
 from utilities import constants
-from utilities.database.orm import Region
+from utilities.database.orm import SlackSettings
 from utilities.helper_functions import safe_get
 from utilities.slack import actions, forms
 
@@ -23,7 +23,7 @@ def add_loading_form(body: dict, client: WebClient) -> str:
     return safe_get(loading_form_response, "view", "id")
 
 
-def ignore_event(body: dict, client: WebClient, logger: Logger, context: dict, region_record: Region):
+def ignore_event(body: dict, client: WebClient, logger: Logger, context: dict, region_record: SlackSettings):
     logger.debug("Ignoring event")
 
 
