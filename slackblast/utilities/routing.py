@@ -1,4 +1,4 @@
-from features import backblast, config, custom_fields, preblast, strava, weaselbot, welcome
+from features import backblast, config, custom_fields, preblast, region, strava, weaselbot, welcome
 from features.calendar import ao, event_preblast, event_tag, event_type, home, location, series
 from features.calendar import config as calendar_config
 from utilities import announcements, builders
@@ -45,6 +45,7 @@ VIEW_MAPPER = {
     actions.CALENDAR_ADD_EVENT_TYPE_CALLBACK_ID: (event_type.handle_event_type_add, False),
     actions.EVENT_PREBLAST_POST_CALLBACK_ID: (event_preblast.handle_event_preblast_edit, False),
     actions.CALENDAR_ADD_EVENT_TAG_CALLBACK_ID: (event_tag.handle_event_tag_add, False),
+    actions.REGION_CALLBACK_ID: (region.handle_region_edit, False),
 }
 
 ACTION_MAPPER = {
@@ -95,6 +96,7 @@ ACTION_MAPPER = {
     actions.MSG_EVENT_PREBLAST_BUTTON: (event_preblast.handle_event_preblast_action, False),
     actions.BACKBLAST_FILL_SELECT: (backblast.build_backblast_form, False),
     actions.BACKBLAST_NEW_BLANK_BUTTON: (backblast.build_backblast_form, False),
+    actions.REGION_INFO_BUTTON: (region.build_region_form, False),
 }
 
 VIEW_CLOSED_MAPPER = {

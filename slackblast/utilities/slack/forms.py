@@ -204,6 +204,10 @@ CONFIG_FORM = orm.BlockView(
                     label=":date: Calendar Settings",
                     action=actions.CONFIG_CALENDAR,
                 ),
+                orm.ButtonElement(
+                    label=":world_map: Region Info",
+                    action=actions.REGION_INFO_BUTTON,
+                ),
             ],
         ),
     ]

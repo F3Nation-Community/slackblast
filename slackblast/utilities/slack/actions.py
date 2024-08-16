@@ -221,6 +221,18 @@ MSG_EVENT_PREBLAST_MOLESKINE = "event_preblast_moleskine_dm"
 MSG_EVENT_PREBLAST_SUBMIT = "event_preblast_submit_dm"
 MSG_EVENT_PREBLAST_BUTTON = "event_preblast_button_dm"
 
+REGION_NAME = "region_name"
+REGION_DESCRIPTION = "region_description"
+REGION_LOGO = "region_logo"
+REGION_CALLBACK_ID = "region-id"
+REGION_WEBSITE = "region_website"
+REGION_EMAIL = "region_email"
+REGION_TWITTER = "region_twitter"
+REGION_INSTAGRAM = "region_instagram"
+REGION_FACEBOOK = "region_facebook"
+REGION_INFO_BUTTON = "region_info"
+
+
 ACTION_PREFIXES = [
     STRAVA_ACTIVITY_BUTTON,
     SERIES_EDIT_DELETE,

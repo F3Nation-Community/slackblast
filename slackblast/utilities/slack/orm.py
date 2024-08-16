@@ -351,6 +351,44 @@ class PlainTextInputElement(BaseElement):
 
 
 @dataclass
+class EmailInputElement(BaseElement):
+    initial_value: str = None
+
+    def get_selected_value(self, input_data, action):
+        return safe_get(input_data, action, action, "value")
+
+    def as_form_field(self, action: str):
+        j = {
+            "type": "email_text_input",
+            "action_id": action,
+        }
+        if self.initial_value:
+            j["initial_value"] = self.initial_value
+        if self.placeholder:
+            j.update(self.make_placeholder_field())
+        return j
+
+
+@dataclass
+class URLInputElement(BaseElement):
+    initial_value: str = None
+
+    def get_selected_value(self, input_data, action):
+        return safe_get(input_data, action, action, "value")
+
+    def as_form_field(self, action: str):
+        j = {
+            "type": "url_text_input",
+            "action_id": action,
+        }
+        if self.initial_value:
+            j["initial_value"] = self.initial_value
+        if self.placeholder:
+            j.update(self.make_placeholder_field())
+        return j
+
+
+@dataclass
 class RichTextInputElement(BaseElement):
     initial_value: Dict[str, Any] = None
 
