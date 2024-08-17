@@ -11,6 +11,7 @@ from utilities.database import DbManager
 from utilities.database.orm import (
     AchievementsAwarded,
     AchievementsList,
+    Org,
     SlackSettings,
 )
 from utilities.helper_functions import (
@@ -199,9 +200,7 @@ def handle_config_form(body: dict, client: WebClient, logger: Logger, context: d
         SlackSettings.NO_Q_THRESHOLD_WEEKS: safe_get(config_data, actions.WEASELBOT_Q_WEEKS),
         SlackSettings.NO_Q_THRESHOLD_POSTS: safe_get(config_data, actions.WEASELBOT_Q_POSTS),
     }
-    DbManager.update_record(
-        cls=SlackSettings,
-        id=context["team_id"],
-        fields=fields,
-    )
+
+    region = region_record._update(fields)
+    DbManager.update_record(Org, region_record.org_id, fields={Org.slack_app_settings: region.to_json()})
     update_local_region_records()
