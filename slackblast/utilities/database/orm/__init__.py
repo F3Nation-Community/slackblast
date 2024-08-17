@@ -259,6 +259,7 @@ class SlackUser(BaseClass, GetDBClass):
     slack_id: Mapped[str100]
     user_name: Mapped[str100]
     email: Mapped[str255]
+    is_admin: Mapped[bool]
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
     avatar_url: Mapped[Optional[str255]]
     slack_team_id: Mapped[str100]

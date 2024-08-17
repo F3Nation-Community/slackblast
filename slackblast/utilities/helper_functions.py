@@ -153,6 +153,7 @@ def get_user(slack_user_id: str, region_record: SlackSettings, client: WebClient
                     email=email,
                     user_name=user_name,
                     avatar_url=avatar_url,
+                    is_admin=safe_get(user_info, "user", "is_admin"),
                 )
             )
 
@@ -253,6 +254,7 @@ def populate_users(client: WebClient, team_id: str):
             email=u["profile"].get("email") or u["id"],
             avatar_url=u["profile"]["image_192"],
             slack_team_id=team_id,
+            is_admin=u.get("is_admin"),
         )
         for u in users
     ]
