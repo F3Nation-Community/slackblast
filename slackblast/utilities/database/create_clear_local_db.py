@@ -1,6 +1,8 @@
 import os
 import sys
 
+from sqlalchemy import text
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 import logging
@@ -119,6 +121,17 @@ def initialize_tables():
     logger.info("Tables initialized!")
 
 
+def drop_database():
+    logger.info("Resetting database...")
+    session = get_session()
+    session.execute(text("DROP SCHEMA IF EXISTS f3devregion;"))
+    session.execute(text("DROP SCHEMA IF EXISTS paxminer;"))
+    session.execute(text("DROP SCHEMA IF EXISTS slackblast;"))
+    session.commit()
+    session.close()
+
+
 if __name__ == "__main__":
+    drop_database()
     create_tables()
     initialize_tables()

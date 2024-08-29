@@ -151,7 +151,7 @@ class PaxminerUser(BaseClass, GetDBClass):
     user_name: Mapped[str45]
     real_name: Mapped[str45]
     phone: Mapped[Optional[str45]]
-    email: Mapped[Optional[str45]]
+    email: Mapped[Optional[str255]]
     start_date: Mapped[Optional[date]]
     app: Mapped[tinyint0]
     json: Mapped[Optional[dict[str, Any]]]
