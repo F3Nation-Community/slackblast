@@ -48,7 +48,7 @@ def build_home_form(
     )
     event_type_records = [x[0] for x in event_types]
 
-    org_record = DbManager.get_record(Org, region_record.org_id)
+    org_record: Org = DbManager.get_record(Org, region_record.org_id)
     org_settings = org_record.slack_app_settings
     this_week_url = S3_IMAGE_URL.format(image_name=safe_get(org_settings, "calendar_image_current") or "default.png")
     next_week_url = S3_IMAGE_URL.format(image_name=safe_get(org_settings, "calendar_image_next") or "default.png")

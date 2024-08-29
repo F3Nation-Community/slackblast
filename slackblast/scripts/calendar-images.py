@@ -1,4 +1,8 @@
 import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
 import random
 from datetime import date, timedelta
 
@@ -186,6 +190,8 @@ for region_id in df_all["region_id"].unique():
         include_list.append(True)
 
         # filter out duplicate dates
+        print(include_list)
+        print(df.head())
         df = df[include_list]
 
         # Reshape to wide format by date

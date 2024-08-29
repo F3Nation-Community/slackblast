@@ -102,6 +102,8 @@ class SlackSettings(BaseClass, GetDBClass):
     NO_Q_THRESHOLD_WEEKS: Mapped[Optional[int]] = mapped_column(Integer, default=4)
     NO_Q_THRESHOLD_POSTS: Mapped[Optional[int]] = mapped_column(Integer, default=4)
     org_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
+    calendar_image_current: Mapped[Optional[str255]]
+    calendar_image_next: Mapped[Optional[str255]]
     created: Mapped[dt_create]
     updated: Mapped[dt_update]
 
