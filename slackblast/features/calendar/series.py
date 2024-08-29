@@ -196,6 +196,10 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
     series_records = []
     day_of_weeks = safe_get(form_data, actions.CALENDAR_ADD_SERIES_DOW)
 
+    if safe_get(metadata, "series_id"):
+        edit_series_record = DbManager.get_record(Event, metadata["series_id"])
+        day_of_weeks = [str(edit_series_record.day_of_week)]
+
     # day_of_weeks will be None if this is a one-time event
     if not day_of_weeks:
         series_records = [
@@ -226,10 +230,11 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
                 end_date=end_date,
                 start_time=time_str_to_int(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_TIME)),
                 end_time=end_time,
-                recurrence_pattern=safe_get(form_data, actions.CALENDAR_ADD_SERIES_FREQUENCY),
-                recurrence_interval=recurrence_interval,
-                index_within_interval=index_within_interval,
-                day_of_week=int(dow),
+                recurrence_pattern=safe_get(form_data, actions.CALENDAR_ADD_SERIES_FREQUENCY)
+                or edit_series_record.recurrence_pattern,
+                recurrence_interval=recurrence_interval or edit_series_record.recurrence_interval,
+                index_within_interval=index_within_interval or edit_series_record.index_within_interval,
+                day_of_week=int(dow) if dow else edit_series_record.day_of_week,
                 is_series=True,
                 is_active=True,
                 highlight=safe_get(form_data, actions.CALENDAR_ADD_SERIES_HIGHLIGHT) == ["True"],
@@ -245,13 +250,25 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
 
         # Delete all future events associated with the series
         # TODO: I could do a check to see if dates / times have changed, if not we could update the events instead of deleting them # noqa
-        DbManager.delete_records(Event, [Event.series_id == metadata["series_id"], Event.start_date >= datetime.now()])
+        DbManager.delete_records(
+            Event,
+            [
+                Event.series_id == metadata["series_id"],
+                Event.start_date >= datetime.now(),
+            ],
+        )
     else:
         records = DbManager.create_records(series_records)
 
     # Now that the series has been created, we need to create the individual events
     if day_of_weeks:
         create_events(records)
+
+    if safe_get(metadata, "series_id"):
+        body["actions"] = [{"action_id": actions.CALENDAR_MANAGE_SERIES}]
+        build_series_list_form(
+            body, client, logger, context, region_record, update_view_id=safe_get(body, "view", "previous_view_id")
+        )
 
 
 def create_events(records: list[Event]):
@@ -325,7 +342,7 @@ def build_series_list_form(
             Event.is_series == is_series,
             (Event.org_id == region_record.org_id) or (Org.parent_id == region_record.org_id),
             Event.is_active,
-            Event.start_date >= datetime.now(),
+            # Event.start_date >= datetime.now(),
         ],
     )
     series_records = [x[0] for x in series_records][:40]
@@ -335,7 +352,7 @@ def build_series_list_form(
     blocks = []
     for s in series_records:
         if is_series:
-            label = f"{s.name} ({constants.DAY_OF_WEEK_OPTIONS['names'][s.day_of_week+1]} @ {time_int_to_str(s.start_time).replace(':', '')})"[  # noqa
+            label = f"{s.name} ({constants.DAY_OF_WEEK_OPTIONS['names'][s.day_of_week-1]} @ {time_int_to_str(s.start_time).replace(':', '')})"[  # noqa
                 :50
             ]
         else:

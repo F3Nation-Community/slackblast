@@ -54,8 +54,6 @@ def build_home_form(
     next_week_url = S3_IMAGE_URL.format(image_name=safe_get(org_settings, "calendar_image_next") or "default.png")
 
     blocks = [
-        orm.ImageBlock(label="This week's schedule", alt_text="Current", image_url=this_week_url),
-        orm.ImageBlock(label="Next week's schedule", alt_text="Next", image_url=next_week_url),
         orm.DividerBlock(),
         orm.SectionBlock(label="*Upcoming Schedule*"),
         orm.InputBlock(
@@ -130,6 +128,11 @@ def build_home_form(
         #     ],
         # ),
     ]
+
+    if safe_get(org_settings, "calendar_image_current"):
+        blocks.insert(0, orm.ImageBlock(label="This week's schedule", alt_text="Current", image_url=this_week_url))
+    if safe_get(org_settings, "calendar_image_next"):
+        blocks.insert(1, orm.ImageBlock(label="Next week's schedule", alt_text="Next", image_url=next_week_url))
 
     if safe_get(body, "view"):
         existing_filter_data = orm.BlockView(blocks=blocks).get_selected_values(body)
