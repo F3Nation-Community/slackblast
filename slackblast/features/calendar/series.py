@@ -17,7 +17,7 @@ from utilities.database.orm import (
     Org,
     SlackSettings,
 )
-from utilities.helper_functions import safe_convert, safe_get, time_int_to_str, time_str_to_int
+from utilities.helper_functions import safe_convert, safe_get
 from utilities.slack import actions, orm
 
 
@@ -94,8 +94,8 @@ def build_series_add_form(
                 edit_event.start_date, datetime.strftime, ["%Y-%m-%d"]
             ),
             actions.CALENDAR_ADD_SERIES_END_DATE: safe_convert(edit_event.end_date, datetime.strftime, ["%Y-%m-%d"]),
-            actions.CALENDAR_ADD_SERIES_START_TIME: safe_convert(edit_event.start_time, time_int_to_str),
-            actions.CALENDAR_ADD_SERIES_END_TIME: safe_convert(edit_event.end_time, time_int_to_str),
+            actions.CALENDAR_ADD_SERIES_START_TIME: safe_convert(edit_event.start_time, datetime.strftime, ["%H:%M"]),
+            actions.CALENDAR_ADD_SERIES_END_TIME: safe_convert(edit_event.end_time, datetime.strftime, ["%H:%M"]),
             actions.CALENDAR_ADD_SERIES_DOW: [str(edit_event.day_of_week)],
             actions.CALENDAR_ADD_SERIES_FREQUENCY: edit_event.recurrence_pattern,
             actions.CALENDAR_ADD_SERIES_INTERVAL: edit_event.recurrence_interval,
@@ -165,7 +165,6 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
         end_time = datetime.strptime(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_TIME), "%H:%M") + timedelta(
             hours=1
         )
-    end_time = int(datetime.strftime(end_time, "%H%M"))
 
     # Slack won't return the selection for location and event type after being defaulted, so we need to get the initial value # noqa
     view_blocks = safe_get(body, "view", "blocks")
@@ -210,7 +209,7 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
                 event_type_id=event_type_id,
                 event_tag_id=event_tag_id,
                 start_date=datetime.strptime(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_DATE), "%Y-%m-%d"),
-                start_time=time_str_to_int(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_TIME)),
+                start_time=datetime.strptime(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_TIME), "%H:%M"),
                 end_time=end_time,
                 is_series=False,
                 is_active=True,
@@ -228,7 +227,7 @@ def handle_series_add(body: dict, client: WebClient, logger: Logger, context: di
                 event_tag_id=event_tag_id,
                 start_date=datetime.strptime(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_DATE), "%Y-%m-%d"),
                 end_date=end_date,
-                start_time=time_str_to_int(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_TIME)),
+                start_time=datetime.strptime(safe_get(form_data, actions.CALENDAR_ADD_SERIES_START_TIME), "%H:%M"),
                 end_time=end_time,
                 recurrence_pattern=safe_get(form_data, actions.CALENDAR_ADD_SERIES_FREQUENCY)
                 or edit_series_record.recurrence_pattern,
@@ -352,7 +351,7 @@ def build_series_list_form(
     blocks = []
     for s in series_records:
         if is_series:
-            label = f"{s.name} ({constants.DAY_OF_WEEK_OPTIONS['names'][s.day_of_week-1]} @ {time_int_to_str(s.start_time).replace(':', '')})"[  # noqa
+            label = f"{s.name} ({constants.DAY_OF_WEEK_OPTIONS['names'][s.day_of_week-1]} @ {datetime.strftime(s.start_time), '%H%M'})"[  # noqa
                 :50
             ]
         else:

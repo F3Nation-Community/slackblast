@@ -16,7 +16,7 @@ from utilities.database.orm import (
     SlackSettings,
 )
 from utilities.database.special_queries import PreblastInfo, event_attendance_query, event_preblast_query
-from utilities.helper_functions import get_user, get_user_names, safe_convert, safe_get, time_int_to_str
+from utilities.helper_functions import get_user, get_user_names, safe_convert, safe_get
 from utilities.slack import actions, orm
 
 
@@ -349,7 +349,7 @@ def build_preblast_info(
 
     event_details = f"*Preblast: {event_record.event.name}*"
     event_details += f"\n*Date:* {event_record.event.start_date.strftime('%A, %B %d')}"
-    event_details += f"\n*Start Time:* {time_int_to_str(event_record.event.start_time)}"
+    event_details += f"\n*Time:* {datetime.datetime.strftime(event_record.event.start_time, '%H%M')}"
     event_details += f"\n*Where:* {location}"
     event_details += f"\n*Event Type:* {event_record.event_type.name}"
     if event_record.event_tag:

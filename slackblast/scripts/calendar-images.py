@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 import random
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import boto3
 import dataframe_image as dfi
@@ -157,7 +157,7 @@ for region_id in df_all["region_id"].unique():
         # convert start_date from date to string
         df.loc[:, "event_date"] = pd.to_datetime(df["start_date"])
         df.loc[:, "event_date_fmt"] = df["event_date"].dt.strftime("%m/%d")
-        df.loc[:, "event_time"] = df["start_time"].apply(time_int_to_str)
+        df.loc[:, "event_time"] = df["start_time"].apply(datetime.strptime, args=("%H%M",))
         df.loc[df["q_name"].isna(), "q_name"] = "OPEN!"
         df.loc[:, "q_name"] = df["q_name"].str.replace(r"\(.*\)", "")
 

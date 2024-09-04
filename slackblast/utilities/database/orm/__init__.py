@@ -1,8 +1,8 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, time
 from typing import Any, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.dialects.mysql import BLOB, DATE, DECIMAL, JSON, LONGTEXT, TEXT, TINYINT
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy.dialects.postgresql import BYTEA, DATE, JSONB, TEXT, TIME
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, registry
 from typing_extensions import Annotated
 
@@ -13,21 +13,21 @@ str45 = Annotated[str, String(45)]
 str90 = Annotated[str, String(90)]
 str100 = Annotated[str, String(100)]
 str255 = Annotated[str, String(255)]
-intpk = Annotated[int, mapped_column(primary_key=True)]
-tinyint = Annotated[int, TINYINT]
-tinyint0 = Annotated[int, mapped_column(TINYINT, default=0)]
-tinyint1 = Annotated[int, mapped_column(TINYINT, default=1)]
-longtext = Annotated[str, LONGTEXT]
+intpk = Annotated[int, mapped_column(Integer, primary_key=True, autoincrement=True)]
+smallint = Annotated[int, mapped_column(Integer, default=0)]
+smallint1 = Annotated[int, mapped_column(Integer, default=1)]
 text = Annotated[str, TEXT]
-json = Annotated[dict, JSON]
-dt_create = Annotated[datetime, mapped_column(DateTime, default=datetime.now(timezone.utc))]
+jsonb = Annotated[dict, JSONB]
+dt_create = Annotated[datetime, mapped_column(DateTime, server_default=func.timezone("utc", func.now()))]
 dt_update = Annotated[
-    datetime, mapped_column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    datetime,
+    mapped_column(DateTime, server_default=func.timezone("utc", func.now()), onupdate=func.timezone("utc", func.now())),
 ]
 str45pk = Annotated[str, mapped_column(String(45), primary_key=True)]
 datepk = Annotated[date, mapped_column(DATE, primary_key=True)]
-blob = Annotated[bytes, BLOB]
-dec16_6 = Annotated[float, mapped_column(DECIMAL(16, 6))]
+bytea = Annotated[bytes, BYTEA]
+dec16_6 = Annotated[float, mapped_column(Integer)]
+time_notz = Annotated[time, TIME]
 
 
 class BaseClass(DeclarativeBase):
@@ -37,9 +37,9 @@ class BaseClass(DeclarativeBase):
         str90: String(90),
         str100: String(100),
         str255: String(255),
-        dict[str, Any]: JSON,
-        longtext: LONGTEXT,
+        dict[str, Any]: JSONB,
         text: TEXT,
+        time_notz: TIME,
     }
 
 
@@ -62,8 +62,6 @@ class GetDBClass:
         for k, v in fields.items():
             attr_name = str(k).split(".")[-1]
             setattr(self, attr_name, v)
-            # if attr_name not in ["created", "updated"]:
-            #     setattr(self, attr_name, v)
         return self
 
 
@@ -73,27 +71,27 @@ class SlackSettings(BaseClass, GetDBClass):
     team_id: Mapped[str100]
     workspace_name: Mapped[Optional[str100]]
     bot_token: Mapped[Optional[str100]]
-    email_enabled: Mapped[tinyint0]
+    email_enabled: Mapped[smallint]
     email_server: Mapped[Optional[str100]]
     email_server_port: Mapped[Optional[int]]
     email_user: Mapped[Optional[str100]]
-    email_password: Mapped[Optional[longtext]]
+    email_password: Mapped[Optional[text]]
     email_to: Mapped[Optional[str100]]
-    email_option_show: Mapped[Optional[tinyint0]]
-    postie_format: Mapped[Optional[tinyint1]]
-    editing_locked: Mapped[tinyint0]
+    email_option_show: Mapped[Optional[smallint]]
+    postie_format: Mapped[Optional[smallint1]]
+    editing_locked: Mapped[smallint]
     default_destination: Mapped[Optional[str]] = mapped_column(String(30), default="ao_channel")
     destination_channel: Mapped[Optional[str100]]
     backblast_moleskin_template: Mapped[Optional[dict[str, Any]]]
     preblast_moleskin_template: Mapped[Optional[dict[str, Any]]]
-    strava_enabled: Mapped[Optional[tinyint1]]
+    strava_enabled: Mapped[Optional[smallint1]]
     custom_fields: Mapped[Optional[dict[str, Any]]]
-    welcome_dm_enable: Mapped[Optional[tinyint]]
+    welcome_dm_enable: Mapped[Optional[smallint]]
     welcome_dm_template: Mapped[Optional[dict[str, Any]]]
-    welcome_channel_enable: Mapped[Optional[tinyint]]
+    welcome_channel_enable: Mapped[Optional[smallint]]
     welcome_channel: Mapped[Optional[str100]]
-    send_achievements: Mapped[Optional[tinyint1]]
-    send_aoq_reports: Mapped[Optional[tinyint1]]
+    send_achievements: Mapped[Optional[smallint1]]
+    send_aoq_reports: Mapped[Optional[smallint1]]
     achievement_channel: Mapped[Optional[str100]]
     default_siteq: Mapped[Optional[str45]]
     NO_POST_THRESHOLD: Mapped[Optional[int]] = mapped_column(Integer, default=2)
@@ -111,27 +109,11 @@ class SlackSettings(BaseClass, GetDBClass):
         return SlackSettings.team_id
 
 
-# class User(BaseClass, GetDBClass):
-#     __tablename__ = "slackblast_users"
-#     id: Mapped[intpk]
-#     team_id: Mapped[Optional[str100]]
-#     user_id: Mapped[Optional[str100]]
-#     strava_access_token: Mapped[Optional[str100]]
-#     strava_refresh_token: Mapped[Optional[str100]]
-#     strava_expires_at: Mapped[Optional[datetime]]
-#     strava_athlete_id: Mapped[Optional[int]]
-#     created: Mapped[dt_create]
-#     updated: Mapped[dt_update]
-
-#     def get_id():
-#         return User.id
-
-
 class AchievementsList(BaseClass, GetDBClass):
     __tablename__ = "achievements_list"
     id: Mapped[intpk]
     name: Mapped[str255]
-    description: Mapped[longtext]
+    description: Mapped[text]
     verb: Mapped[str255]
     code: Mapped[str255]
     created: Mapped[dt_create]
@@ -168,18 +150,18 @@ class Event(BaseClass, GetDBClass):
     highlight: Mapped[bool]
     start_date: Mapped[date]
     end_date: Mapped[Optional[date]]
-    start_time: Mapped[Optional[int]]
-    end_time: Mapped[Optional[int]]
+    start_time: Mapped[Optional[time_notz]]
+    end_time: Mapped[Optional[time_notz]]
     day_of_week: Mapped[Optional[int]]
     name: Mapped[str100]
-    description: Mapped[Optional[longtext]]
+    description: Mapped[Optional[text]]
     recurrence_pattern: Mapped[Optional[str30]]
     recurrence_interval: Mapped[Optional[int]]
     index_within_interval: Mapped[Optional[int]]
     pax_count: Mapped[Optional[int]]
     fng_count: Mapped[Optional[int]]
-    preblast: Mapped[Optional[longtext]]
-    backblast: Mapped[Optional[longtext]]
+    preblast: Mapped[Optional[text]]
+    backblast: Mapped[Optional[text]]
     preblast_rich: Mapped[Optional[dict[str, Any]]]
     backblast_rich: Mapped[Optional[dict[str, Any]]]
     preblast_ts: Mapped[Optional[dec16_6]]
@@ -198,7 +180,7 @@ class EventType(BaseClass, GetDBClass):
     id: Mapped[intpk]
     name: Mapped[str100]
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey("event_categories.id"))
-    description: Mapped[Optional[longtext]]
+    description: Mapped[Optional[text]]
     acronym: Mapped[Optional[str30]]
     created: Mapped[dt_create]
     updated: Mapped[dt_update]
@@ -212,7 +194,7 @@ class EventCategory(BaseClass, GetDBClass):
 
     id: Mapped[intpk]
     name: Mapped[str100]
-    description: Mapped[Optional[longtext]]
+    description: Mapped[Optional[text]]
     created: Mapped[dt_create]
     updated: Mapped[dt_update]
 
@@ -226,7 +208,7 @@ class Location(BaseClass, GetDBClass):
     id: Mapped[intpk]
     org_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("orgs.id"))
     name: Mapped[str100]
-    description: Mapped[Optional[longtext]]
+    description: Mapped[Optional[text]]
     is_active: Mapped[bool]
     lat: Mapped[Optional[float]]
     lon: Mapped[Optional[float]]
@@ -300,7 +282,7 @@ class AttendanceType(BaseClass, GetDBClass):
 
     id: Mapped[intpk]
     type: Mapped[str100]
-    description: Mapped[Optional[longtext]]
+    description: Mapped[Optional[text]]
     created: Mapped[dt_create]
     updated: Mapped[dt_update]
 
@@ -316,9 +298,9 @@ class Org(BaseClass, GetDBClass):
     org_type_id: Mapped[int] = mapped_column(Integer, ForeignKey("org_types.id"))
     default_location_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("locations.id"))
     name: Mapped[str100]
-    description: Mapped[Optional[longtext]]
+    description: Mapped[Optional[text]]
     is_active: Mapped[bool]
-    logo: Mapped[Optional[blob]]
+    logo: Mapped[Optional[bytea]]
     website: Mapped[Optional[str100]]
     email: Mapped[Optional[str255]]
     twitter: Mapped[Optional[str100]]
@@ -366,7 +348,7 @@ class EventTag(BaseClass, GetDBClass):
 
     id: Mapped[intpk]
     name: Mapped[str100]
-    description: Mapped[Optional[longtext]]
+    description: Mapped[Optional[text]]
     color: Mapped[Optional[str30]]
     created: Mapped[dt_create]
     updated: Mapped[dt_update]

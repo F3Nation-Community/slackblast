@@ -26,7 +26,6 @@ def create_tables():
 
     schema_table_map = {
         "slackblast": [
-            # orm.Region,
             orm.OrgType,
             orm.Org,
             orm.EventCategory,
@@ -54,6 +53,7 @@ def create_tables():
             create_database(engine.url)
         with engine.connect() as conn:
             orm.BaseClass.metadata.create_all(bind=conn, tables=tables)
+            conn.commit()
         engine.dispose()
 
     logger.info("Schemas and tables created!")
@@ -119,38 +119,35 @@ def initialize_tables():
 
     event_category_list = [
         orm.EventCategory(
-            id=1, name="1st F - Core Workout", description="The core F3 activity - must meet all 5 core principles."
+            name="1st F - Core Workout", description="The core F3 activity - must meet all 5 core principles."
         ),
+        orm.EventCategory(name="1st F - Pre Workout", description="Pre-workout activities (pre-rucks, pre-runs, etc)."),
         orm.EventCategory(
-            id=2, name="1st F - Pre Workout", description="Pre-workout activities (pre-rucks, pre-runs, etc)."
-        ),
-        orm.EventCategory(
-            id=3,
             name="1st F - Off the books",
             description="Fitness activities that didn't meet all 5 core principles (unscheduled, open to all men, etc).",  # noqa: E501
         ),
-        orm.EventCategory(id=4, name="2nd F - Fellowship", description="General category for 2nd F events."),
-        orm.EventCategory(id=5, name="3rd F - Faith", description="General category for 3rd F events."),
+        orm.EventCategory(name="2nd F - Fellowship", description="General category for 2nd F events."),
+        orm.EventCategory(name="3rd F - Faith", description="General category for 3rd F events."),
     ]
 
     event_type_list = [
-        orm.EventType(id=1, name="Bootcamp", category_id=1, acronym="BC"),
-        orm.EventType(id=2, name="Run", category_id=1, acronym="RU"),
-        orm.EventType(id=3, name="Ruck", category_id=1, acronym="RK"),
-        orm.EventType(id=4, name="QSource", category_id=3, acronym="QS"),
+        orm.EventType(name="Bootcamp", category_id=1, acronym="BC"),
+        orm.EventType(name="Run", category_id=1, acronym="RU"),
+        orm.EventType(name="Ruck", category_id=1, acronym="RK"),
+        orm.EventType(name="QSource", category_id=3, acronym="QS"),
     ]
 
     attendance_type_list = [
-        orm.AttendanceType(id=1, type="PAX"),
-        orm.AttendanceType(id=2, type="Q"),
-        orm.AttendanceType(id=3, type="Co-Q"),
+        orm.AttendanceType(type="PAX"),
+        orm.AttendanceType(type="Q"),
+        orm.AttendanceType(type="Co-Q"),
     ]
 
     event_tag_list = [
-        orm.EventTag(id=1, name="Open", color="Green"),
-        orm.EventTag(id=2, name="VQ", color="Blue"),
-        orm.EventTag(id=3, name="Manniversary", color="Yellow"),
-        orm.EventTag(id=4, name="Convergence", color="Orange"),
+        orm.EventTag(name="Open", color="Green"),
+        orm.EventTag(name="VQ", color="Blue"),
+        orm.EventTag(name="Manniversary", color="Yellow"),
+        orm.EventTag(name="Convergence", color="Orange"),
     ]
 
     session = get_session(schema="f3devregion")
@@ -175,12 +172,11 @@ def initialize_tables():
 
 def drop_database():
     logger.info("Resetting database...")
-    session = get_session()
-    session.execute(text("DROP SCHEMA IF EXISTS f3devregion;"))
-    session.execute(text("DROP SCHEMA IF EXISTS paxminer;"))
-    session.execute(text("DROP SCHEMA IF EXISTS slackblast;"))
-    session.commit()
-    session.close()
+    engine = get_engine(schema="postgres")
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
+        connection.execute(text("DROP DATABASE IF EXISTS f3devregion WITH (FORCE);"))
+        connection.execute(text("DROP DATABASE IF EXISTS paxminer WITH (FORCE);"))
+        connection.execute(text("DROP DATABASE IF EXISTS slackblast WITH (FORCE);"))
 
 
 if __name__ == "__main__":

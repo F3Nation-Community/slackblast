@@ -3,7 +3,9 @@ from dataclasses import dataclass
 from typing import List, Tuple, TypeVar
 
 from sqlalchemy import and_, create_engine, pool
-from sqlalchemy.dialects.mysql import insert
+
+# from sqlalchemy.dialects.mysql import insert
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 
@@ -27,7 +29,8 @@ def get_engine(echo=False, schema=None) -> Engine:
     user = os.environ[constants.ADMIN_DATABASE_USER]
     passwd = os.environ[constants.ADMIN_DATABASE_PASSWORD]
     database = schema or os.environ[constants.ADMIN_DATABASE_SCHEMA]
-    db_url = f"mysql+pymysql://{user}:{passwd}@{host}:3306/{database}?charset=utf8mb4"
+    # db_url = f"mysql+pymysql://{user}:{passwd}@{host}:3306/{database}?charset=utf8mb4"
+    db_url = f"postgresql://{user}:{passwd}@{host}:5432/{database}"
     return create_engine(db_url, echo=echo, poolclass=pool.NullPool)
 
 
@@ -150,7 +153,7 @@ class DbManager:
         try:
             for record in records:
                 record_dict = {k: v for k, v in record.__dict__.items() if k != "_sa_instance_state"}
-                stmt = insert(cls).values(record_dict).prefix_with("IGNORE")
+                stmt = insert(cls).values(record_dict).on_conflict_do_nothing()
                 session.execute(stmt)
             session.flush()
         finally:
@@ -161,9 +164,12 @@ class DbManager:
         session = get_session(schema=schema)
         try:
             for record in records:
-                stmt = insert(cls).values(record.__dict__)
+                record_dict = {k: v for k, v in record.__dict__.items() if k != "_sa_instance_state"}
+                stmt = insert(cls).values(record_dict)
                 update_dict = {c.name: getattr(record, c.name) for c in cls.__table__.columns}
-                stmt = stmt.on_duplicate_key_update(**update_dict)
+                stmt = stmt.on_conflict_do_update(
+                    index_elements=[cls.__table__.primary_key.columns.keys()], set_=update_dict
+                )
                 session.execute(stmt)
             session.flush()
         finally:
