@@ -444,27 +444,30 @@ def replace_user_channel_ids(
     Returns:
         str: text with slack ids replaced
     """
-    user_records = None
-    channel_records = None
-    USER_PATTERN = r"<@([A-Z0-9]+)>"
-    CHANNEL_PATTERN = r"<#([A-Z0-9]+)(?:\|[A-Za-z\d]+)?>"
-    if region_record.paxminer_schema:
-        user_records = DbManager.find_records(PaxminerUser, filters=[True], schema=region_record.paxminer_schema)
-        channel_records = DbManager.find_records(PaxminerAO, filters=[True], schema=region_record.paxminer_schema)
-    text = text.replace("{}", "")
+    try:
+        user_records = None
+        channel_records = None
+        USER_PATTERN = r"<@([A-Z0-9]+)>"
+        CHANNEL_PATTERN = r"<#([A-Z0-9]+)(?:\|[A-Za-z\d]+)?>"
+        if region_record.paxminer_schema:
+            user_records = DbManager.find_records(PaxminerUser, filters=[True], schema=region_record.paxminer_schema)
+            channel_records = DbManager.find_records(PaxminerAO, filters=[True], schema=region_record.paxminer_schema)
+        updated_text = text.replace("{}", "")
 
-    slack_user_ids = re.findall(USER_PATTERN, text or "")
-    slack_user_names = get_user_names(slack_user_ids, logger, client, return_urls=False, user_records=user_records)
-    text = re.sub(USER_PATTERN, "{}", text)
-    text = text.format(*slack_user_names)
+        slack_user_ids = re.findall(USER_PATTERN, updated_text or "")
+        slack_user_names = get_user_names(slack_user_ids, logger, client, return_urls=False, user_records=user_records)
+        updated_text = re.sub(USER_PATTERN, "{}", updated_text)
+        updated_text = updated_text.format(*slack_user_names)
 
-    slack_channel_ids = re.findall(CHANNEL_PATTERN, text or "")
-    slack_channel_names = get_channel_names(slack_channel_ids, logger, client, channel_records=channel_records)
+        slack_channel_ids = re.findall(CHANNEL_PATTERN, updated_text or "")
+        slack_channel_names = get_channel_names(slack_channel_ids, logger, client, channel_records=channel_records)
 
-    text = re.sub(CHANNEL_PATTERN, "{}", text)
-    text = text.format(*slack_channel_names)
+        updated_text = re.sub(CHANNEL_PATTERN, "{}", updated_text)
+        updated_text = updated_text.format(*slack_channel_names)
 
-    return text
+        return updated_text
+    except Exception:
+        return text
 
 
 def plain_text_to_rich_block(text: str) -> Dict[str, Any]:
