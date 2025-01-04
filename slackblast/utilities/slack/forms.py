@@ -209,10 +209,10 @@ CONFIG_FORM = orm.BlockView(
                 #     label=":robot_face: Weaselbot Settings",
                 #     action=actions.CONFIG_WEASELBOT,
                 # ),
-                # orm.ButtonElement(
-                #     label=":pick: Paxminer Settings",
-                #     action=actions.CONFIG_PAXMINER,
-                # ),
+                orm.ButtonElement(
+                    label=":pick: Paxminer Settings",
+                    action=actions.CONFIG_PAXMINER,
+                ),
             ],
         ),
     ]
