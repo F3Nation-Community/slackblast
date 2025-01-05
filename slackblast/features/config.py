@@ -227,16 +227,18 @@ def handle_config_paxminer_post(body: dict, client: WebClient, logger: Logger, c
         schema="paxminer",
     )
 
+    scrape_channels = safe_get(config_data, actions.CONFIG_PAXMINER_SCRAPE_CHANNELS) or []
+
     DbManager.update_records(
         cls=PaxminerAO,
-        filters=[PaxminerAO.channel_id.not_in(safe_get(config_data, actions.CONFIG_PAXMINER_SCRAPE_CHANNELS))],
+        filters=[PaxminerAO.channel_id.not_in(scrape_channels)],
         fields={PaxminerAO.backblast: 0},
         schema=region_record.paxminer_schema,
     )
 
     DbManager.update_records(
         cls=PaxminerAO,
-        filters=[PaxminerAO.channel_id.in_(safe_get(config_data, actions.CONFIG_PAXMINER_SCRAPE_CHANNELS))],
+        filters=[PaxminerAO.channel_id.in_(scrape_channels)],
         fields={PaxminerAO.backblast: 1},
         schema=region_record.paxminer_schema,
     )
