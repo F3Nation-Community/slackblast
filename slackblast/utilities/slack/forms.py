@@ -584,31 +584,42 @@ WEASELBOT_CONFIG_FORM = orm.BlockView(
 )
 
 PAXMINER_REPORT_DICT = {
-    "names": ["PAX Charts", "Q Charts", "AO Leaderboards", "Region Leaderboard", "Region Stats"],
-    "values": ["pax_charts", "q_charts", "ao_leaderboards", "region_leaderboard", "region_stats"],
+    "names": [
+        "PAX Charts",
+        "Q Charts",
+        "AO Leaderboards",
+        "Region Leaderboard",
+        # "Region Stats",
+    ],
+    "values": [
+        "pax_charts",
+        "q_charts",
+        "ao_leaderboards",
+        "region_leaderboard",
+        # "region_stats",
+    ],
     "fields": [
         "send_pax_charts",
         "send_q_charts",
         "send_ao_leaderboard",
         "send_region_leaderboard",
-        "send_region_stats",
+        # "send_region_stats",
     ],
     "schema": [
         PaxminerRegion.send_pax_charts,
         PaxminerRegion.send_q_charts,
         PaxminerRegion.send_ao_leaderboard,
         PaxminerRegion.send_region_leaderboard,
-        PaxminerRegion.send_region_stats,
+        # PaxminerRegion.send_region_stats,
     ],
 }
 
 CONFIG_PAXMINER_FORM = orm.BlockView(
     blocks=[
         orm.InputBlock(
-            label="1st F Channel (for reports)",
-            action=actions.CONFIG_PAXMINER_1STF_CHANNEL,
-            optional=False,
-            element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
+            label="Which channels should be scraped by PAXMiner?",
+            action=actions.CONFIG_PAXMINER_SCRAPE_CHANNELS,
+            element=orm.MultiChannelsSelectElement(placeholder="Select some channels..."),
         ),
         orm.InputBlock(
             label="Which reports should be enabled?",
@@ -622,9 +633,28 @@ CONFIG_PAXMINER_FORM = orm.BlockView(
             optional=False,
         ),
         orm.InputBlock(
-            label="Which channels should be scraped by PAXMiner?",
-            action=actions.CONFIG_PAXMINER_SCRAPE_CHANNELS,
-            element=orm.MultiChannelsSelectElement(placeholder="Select some channels..."),
+            label="Which channel should region reports be posted to?",
+            action=actions.CONFIG_PAXMINER_1STF_CHANNEL,
+            optional=False,
+            element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
+        ),
+        orm.SectionBlock(
+            label="""
+*Report Descriptions*
+
+*PAX Charts:*
+- One graph sent to each PAX. YTD posting summary, broken down by month and bisected by AO. Contains a total YTD in the upper right
+*Q Charts:*
+- Graph sent to each AO channel of who has Q'd in the last month.
+- Graph sent to the firstf channel, who has Q'd in the last month across the region bisected by AO.
+*AO Leaderboards:*
+- Two Graphs Sent to each AO channel
+- PAX posts in last month
+- PAX posts YTD
+*Region:*
+- Graph sent to the firstf channel of PAX Posts in the last month
+- Graph sent to the firstf channel of PAX Posts YTD.
+"""  # noqa: E501
         ),
     ]
 )
