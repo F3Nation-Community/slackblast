@@ -2,7 +2,7 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Slackblast is a Slack application you can get up and running in your Slack environment that invokes a simple Backblast form for someone to fill out in the Slack App (mobile, desktop, or web) when they type `/slackblast`, `/backblast`, or `/preblast`. Slackblast interfaces with your PAXminer database directly, and its posts do not need to be scraped by PAXminer (PAXminer will ignore them). If you have not already [set up PAXminer](https://f3stlouis.com/paxminer-setup/), do that first.
+Slackblast is a Slack application you can get up and running in your Slack environment that invokes a simple Backblast form for someone to fill out in the Slack App (mobile, desktop, or web) when they type `/slackblast`, `/backblast`, or `/preblast`. Slackblast interfaces with your PAXminer database directly, and its posts do not need to be scraped by PAXminer (PAXminer will ignore them). If you have not already [set up PAXminer](https://docs.google.com/document/d/10fUia5FdUXSz2WbDtIj9gmWpTvsb_NQKo5fhcIz1kp8/edit?tab=t.0#heading=h.d137ayvelxpw), do that first.
 
 Slackblast serves over 100 regions and runs on AWS Lambda - installation is as simple as a [simple link click](#getting-started-), without the need for you to get your own server up and running.
 
