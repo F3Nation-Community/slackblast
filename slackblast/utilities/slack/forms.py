@@ -627,11 +627,11 @@ CONFIG_PAXMINER_FORM = orm.BlockView(
                 initial_value="In preparation for PAXMiner's retirement, we are asking regions to disable scraping and utilize Slackblast for all backblast creation. Disabling scraping will not impact your monthly reporting.",  # noqa: E501
             ),
         ),
-        orm.InputBlock(
-            label="Which channels should be scraped by PAXMiner?",
-            action=actions.CONFIG_PAXMINER_SCRAPE_CHANNELS,
-            element=orm.MultiChannelsSelectElement(placeholder="Select some channels..."),
-        ),
+        # orm.InputBlock(
+        #     label="Which channels should be scraped by PAXMiner?",
+        #     action=actions.CONFIG_PAXMINER_SCRAPE_CHANNELS,
+        #     element=orm.MultiChannelsSelectElement(placeholder="Select some channels..."),
+        # ),
         orm.InputBlock(
             label="Which monthly reports should be enabled?",
             action=actions.CONFIG_PAXMINER_ENABLE_REPORTS,
@@ -650,7 +650,7 @@ CONFIG_PAXMINER_FORM = orm.BlockView(
             element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
         ),
         orm.InputBlock(
-            label="Which channels should AO reports be posted to?",
+            label="Which channels should be enabled for monthly reporting?",
             action=actions.CONFIG_PAXMINER_REPORT_CHANNELS,
             element=orm.MultiChannelsSelectElement(placeholder="Select some channels..."),
         ),

@@ -190,7 +190,6 @@ def build_config_paxminer_form(body: dict, client: WebClient, logger: Logger, co
             if paxminer_record[0].scrape_backblasts == 0:
                 config_form.blocks.pop(0)
                 config_form.blocks.pop(0)
-                config_form.blocks.pop(0)
 
             config_form.set_initial_values(
                 {
@@ -238,30 +237,21 @@ def handle_config_paxminer_post(body: dict, client: WebClient, logger: Logger, c
         schema="paxminer",
     )
 
-    scrape_channels = safe_get(config_data, actions.CONFIG_PAXMINER_SCRAPE_CHANNELS) or []
     report_channels = safe_get(config_data, actions.CONFIG_PAXMINER_REPORT_CHANNELS) or []
 
-    # if not in scrape or report, set backblast to 0
+    # if not in report, set backblast to 0
     DbManager.update_records(
         cls=PaxminerAO,
-        filters=[PaxminerAO.channel_id.not_in(set(scrape_channels) | set(report_channels))],
+        filters=[PaxminerAO.channel_id.not_in(report_channels)],
         fields={PaxminerAO.backblast: 0},
         schema=region_record.paxminer_schema,
     )
 
-    # if in both scrape and report, set backblast to 1
+    # if in report, set backblast to 1
     DbManager.update_records(
         cls=PaxminerAO,
-        filters=[PaxminerAO.channel_id.in_(set(scrape_channels) & set(report_channels))],
+        filters=[PaxminerAO.channel_id.in_(report_channels)],
         fields={PaxminerAO.backblast: 1},
-        schema=region_record.paxminer_schema,
-    )
-
-    # if in report but not scrape, set backblast to 2
-    DbManager.update_records(
-        cls=PaxminerAO,
-        filters=[PaxminerAO.channel_id.in_(set(report_channels) - set(scrape_channels))],
-        fields={PaxminerAO.backblast: 2},
         schema=region_record.paxminer_schema,
     )
 
