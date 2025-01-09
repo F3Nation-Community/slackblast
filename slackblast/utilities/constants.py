@@ -135,5 +135,4 @@ PAXMINER_REPORT_DICT = {
     "send_ao_leaderboard": "ao_leaderboard",
     "send_q_charts": "q_charts",
     "send_region_leaderboard": "region_leaderboard",
-    # "send_region_stats": "region_stats",
 }

@@ -211,10 +211,8 @@ paxminer_region = Table(
     Column("send_ao_leaderboard", TINYINT),
     Column("send_q_charts", TINYINT),
     Column("send_region_leaderboard", TINYINT),
-    Column("send_region_uniquepax_chart", TINYINT),
-    Column("send_region_stats", String(45), default="0"),
-    Column("send_mid_month_charts", String(45), default="0"),
     Column("comments", TEXT),
+    Column("scrape_backblasts", TINYINT),
     schema="paxminer",
 )
 

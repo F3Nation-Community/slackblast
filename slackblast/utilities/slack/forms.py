@@ -589,40 +589,51 @@ PAXMINER_REPORT_DICT = {
         "Q Charts",
         "AO Leaderboards",
         "Region Leaderboard",
-        # "Region Stats",
     ],
     "values": [
         "pax_charts",
         "q_charts",
         "ao_leaderboards",
         "region_leaderboard",
-        # "region_stats",
     ],
     "fields": [
         "send_pax_charts",
         "send_q_charts",
         "send_ao_leaderboard",
         "send_region_leaderboard",
-        # "send_region_stats",
     ],
     "schema": [
         PaxminerRegion.send_pax_charts,
         PaxminerRegion.send_q_charts,
         PaxminerRegion.send_ao_leaderboard,
         PaxminerRegion.send_region_leaderboard,
-        # PaxminerRegion.send_region_stats,
     ],
 }
 
 CONFIG_PAXMINER_FORM = orm.BlockView(
     blocks=[
         orm.InputBlock(
+            label="Enable PAXMiner scraping?",
+            action=actions.CONFIG_PAXMINER_SCRAPE_ENABLE,
+            optional=False,
+            element=orm.RadioButtonsElement(
+                options=orm.as_selector_options(
+                    names=["Scraping Enabled", "Disable Scraping"], values=["enable", "disable"]
+                ),  # noqa: E501
+            ),
+        ),
+        orm.ContextBlock(
+            element=orm.ContextElement(
+                initial_value="In preparation for PAXMiner's retirement, we are asking regions to disable scraping and utilize Slackblast for all backblast creation. Disabling scraping will not impact your monthly reporting.",  # noqa: E501
+            ),
+        ),
+        orm.InputBlock(
             label="Which channels should be scraped by PAXMiner?",
             action=actions.CONFIG_PAXMINER_SCRAPE_CHANNELS,
             element=orm.MultiChannelsSelectElement(placeholder="Select some channels..."),
         ),
         orm.InputBlock(
-            label="Which reports should be enabled?",
+            label="Which monthly reports should be enabled?",
             action=actions.CONFIG_PAXMINER_ENABLE_REPORTS,
             element=orm.CheckboxInputElement(
                 options=orm.as_selector_options(
@@ -637,6 +648,11 @@ CONFIG_PAXMINER_FORM = orm.BlockView(
             action=actions.CONFIG_PAXMINER_1STF_CHANNEL,
             optional=False,
             element=orm.ChannelsSelectElement(placeholder="Select the channel..."),
+        ),
+        orm.InputBlock(
+            label="Which channels should AO reports be posted to?",
+            action=actions.CONFIG_PAXMINER_REPORT_CHANNELS,
+            element=orm.MultiChannelsSelectElement(placeholder="Select some channels..."),
         ),
         orm.SectionBlock(
             label="""

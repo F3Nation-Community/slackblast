@@ -66,6 +66,8 @@ CONFIG_PAXMINER_1STF_CHANNEL = "paxminer_1stf_channel"
 CONFIG_PAXMINER_ENABLE_REPORTS = "paxminer_enable_reports"
 CONFIG_PAXMINER_SCRAPE_CHANNELS = "paxminer_scrape_channels"
 CONFIG_PAXMINER_CALLBACK_ID = "config-paxminer-id"
+CONFIG_PAXMINER_REPORT_CHANNELS = "paxminer_report_channels"
+CONFIG_PAXMINER_SCRAPE_ENABLE = "paxminer_scrape_enable"
 
 WELCOME_MESSAGE_CONFIG_CALLBACK_ID = "welcome-message-config-id"
 WELCOME_DM_TEMPLATE = "welcome-dm-template"

@@ -15,9 +15,7 @@ CREATE TABLE paxminer.`regions` (
   `send_ao_leaderboard` tinyint DEFAULT '0',
   `send_q_charts` tinyint DEFAULT '0',
   `send_region_leaderboard` tinyint DEFAULT '0',
-  `send_region_uniquepax_chart` tinyint DEFAULT '0',
-  `send_region_stats` varchar(45) DEFAULT '0',
-  `send_mid_month_charts` varchar(45) DEFAULT '0',
+  `scrape_backblasts` tinyint DEFAULT '0',
   `comments` text,
   PRIMARY KEY (`region`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb3;
