@@ -185,7 +185,7 @@ def build_config_paxminer_form(body: dict, client: WebClient, logger: Logger, co
                     report_options.append(forms.PAXMINER_REPORT_DICT["values"][index])
 
             scrape_ao_options = [ao.channel_id for ao in ao_records if ao.backblast == 1]
-            report_ao_options = [ao.channel_id for ao in ao_records if ao.backblast > 1]
+            report_ao_options = [ao.channel_id for ao in ao_records if ao.backblast >= 1]
 
             if paxminer_record[0].scrape_backblasts == 0:
                 config_form.blocks.pop(0)
