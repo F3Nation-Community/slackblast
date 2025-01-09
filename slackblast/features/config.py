@@ -225,6 +225,9 @@ def handle_config_paxminer_post(body: dict, client: WebClient, logger: Logger, c
 
     fields = {
         PaxminerRegion.firstf_channel: safe_get(config_data, actions.CONFIG_PAXMINER_1STF_CHANNEL),
+        PaxminerRegion.scrape_backblasts: 1
+        if safe_get(config_data, actions.CONFIG_PAXMINER_SCRAPE_ENABLE) == "enable"
+        else 0,
         **report_options,
     }
 
