@@ -63,6 +63,7 @@ BACKBLAST_FORM = orm.BlockView(
             action=actions.BACKBLAST_PAX,
             optional=False,
             element=orm.MultiUsersSelectElement(placeholder="Select the PAX..."),
+            hint="Don't forget you can type to search in the dropdown menu!",
         ),
         orm.InputBlock(
             label="List untaggable PAX, separated by commas (not FNGs)",
@@ -94,6 +95,7 @@ BACKBLAST_FORM = orm.BlockView(
             action=actions.BACKBLAST_MOLESKIN,
             optional=False,
             element=orm.RichTextInputElement(),
+            hint="Due to a known Slack issue, please avoid the use of hashtags (#) in the Moleskine.",
         ),
         orm.DividerBlock(),
         orm.InputBlock(
