@@ -538,13 +538,18 @@ class ContextBlock(BaseBlock):
 class ImageBlock(BaseBlock):
     image_url: str = None
     alt_text: str = None
+    slack_file_id: str = None
 
     def as_form_field(self):
         j = {
             "type": "image",
-            "image_url": self.image_url,
+            # "image_url": self.image_url,
             "alt_text": self.alt_text,
         }
+        if self.image_url:
+            j["image_url"] = self.image_url
+        if self.slack_file_id:
+            j["slack_file"] = {"id": self.slack_file_id}
         if self.action:
             j["block_id"] = self.action
         if self.label:

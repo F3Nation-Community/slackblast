@@ -20,6 +20,7 @@ BACKBLAST_NEW_BUTTON = "new-backblast"
 BACKBLAST_OP = "original_poster"
 BACKBLAST_STRAVA_BUTTON = "strava-button"
 BACKBLAST_FILE = "boyband_file"
+BACKBLAST_FILE_IDS = "file_ids"
 
 PREBLAST_CALLBACK_ID = "preblast-id"
 PREBLAST_TITLE = "title"
