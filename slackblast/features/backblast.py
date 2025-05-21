@@ -168,6 +168,8 @@ def build_backblast_form(body: dict, client: WebClient, logger: Logger, context:
             "channel_id": safe_get(body, "container", "channel_id"),
             "message_ts": safe_get(body, "container", "message_ts"),
             "files": safe_get(initial_backblast_data, actions.BACKBLAST_FILE) or [],
+            "file_ids": safe_get(initial_backblast_data, actions.BACKBLAST_FILE_IDS) or [],
+            "file_slack_urls": safe_get(initial_backblast_data, actions.BACKBLAST_FILE_SLACK_URLS) or [],
         }
 
         backblast_form.delete_block(actions.BACKBLAST_EMAIL_SEND)
