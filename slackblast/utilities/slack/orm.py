@@ -539,6 +539,7 @@ class ImageBlock(BaseBlock):
     image_url: str = None
     alt_text: str = None
     slack_file_id: str = None
+    slack_file_url: str = None
 
     def as_form_field(self):
         j = {
@@ -550,6 +551,8 @@ class ImageBlock(BaseBlock):
             j["image_url"] = self.image_url
         if self.slack_file_id:
             j["slack_file"] = {"id": self.slack_file_id}
+        if self.slack_file_url:
+            j["slack_file"] = {"url": self.slack_file_url}
         if self.action:
             j["block_id"] = self.action
         if self.label:

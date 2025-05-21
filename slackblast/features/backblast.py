@@ -252,12 +252,14 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     ao = safe_get(backblast_data, actions.BACKBLAST_AO)
     files = safe_get(backblast_data, actions.BACKBLAST_FILE) or []
     file_ids = safe_get(backblast_data, actions.BACKBLAST_FILE_IDS) or []
+    file_slack_urls = safe_get(backblast_data, actions.BACKBLAST_FILE_SLACK_URLS) or []
 
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
     file_list = []
     file_send_list = []
     file_ids = [file["id"] for file in files] if files else []
+    file_slack_urls = [file["permalink"] for file in files] if files else []
     for file in files or []:
         try:
             r = requests.get(file["url_private_download"], headers={"Authorization": f"Bearer {client.token}"})
@@ -341,7 +343,8 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         message_channel = safe_get(message_metadata, "channel_id")
         message_ts = safe_get(message_metadata, "message_ts")
         file_list = safe_get(message_metadata, "files") if not file_list else file_list
-        file_ids = safe_get(message_metadata, "file_ids") or file_ids
+        file_ids = safe_get(message_metadata, "file_ids") if not file_ids else file_ids
+        file_slack_urls = safe_get(message_metadata, "file_slack_urls") if not file_slack_urls else file_slack_urls
     else:
         message_channel = chan
         message_ts = None
@@ -404,6 +407,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     if file_list:
         custom_fields["files"] = file_list
         custom_fields["file_ids"] = file_ids
+        custom_fields["file_slack_urls"] = file_slack_urls
 
     msg_block = {
         "type": "section",
@@ -420,6 +424,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     backblast_data.pop(actions.BACKBLAST_MOLESKIN, None)
     backblast_data[actions.BACKBLAST_FILE] = file_list
     backblast_data[actions.BACKBLAST_FILE_IDS] = file_ids
+    backblast_data[actions.BACKBLAST_FILE_SLACK_URLS] = file_slack_urls
 
     backblast_data[actions.BACKBLAST_OP] = user_id
 
@@ -464,7 +469,15 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         )
 
     blocks = [msg_block, moleskin]
-    if file_ids:
+    if file_slack_urls:
+        for url in file_slack_urls or []:
+            blocks.append(
+                slack_orm.ImageBlock(
+                    alt_text=title,
+                    slack_file_url=url,
+                ).as_form_field()
+            )
+    elif file_ids:
         for id in file_ids or []:
             blocks.append(
                 slack_orm.ImageBlock(

@@ -21,6 +21,7 @@ BACKBLAST_OP = "original_poster"
 BACKBLAST_STRAVA_BUTTON = "strava-button"
 BACKBLAST_FILE = "boyband_file"
 BACKBLAST_FILE_IDS = "file_ids"
+BACKBLAST_FILE_SLACK_URLS = "file_slack_urls"
 
 PREBLAST_CALLBACK_ID = "preblast-id"
 PREBLAST_TITLE = "title"
