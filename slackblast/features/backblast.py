@@ -259,6 +259,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
     file_list = []
+    low_res_file_list = []
     file_send_list = []
     file_ids = [file["id"] for file in files] if files else []
     file_slack_urls = [file["permalink"] for file in files] if files else []
@@ -280,11 +281,15 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                 coeff = min(constants.MAX_HEIC_SIZE / max(x, y), 1)
                 heic_img = heic_img.resize((int(x * coeff), int(y * coeff)))
                 heic_img.save(file_path.replace(".heic", ".png"), quality=95, optimize=True, format="PNG")
+                coeff2 = min(constants.LOW_REZ_IMAGE_SIZE / max(x, y), 1)
+                heic_img = heic_img.resize((int(x * coeff2), int(y * coeff2)))
+                heic_img.save(file_path.replace(".heic", "_low_res.png"), quality=75, optimize=True, format="PNG")
                 os.remove(file_path)
 
                 file_path = file_path.replace(".heic", ".png")
                 file_name = file_name.replace(".heic", ".png")
                 file_mimetype = "image/png"
+                file_name_low_res = file_name.replace(".png", "_low_res.png")
 
             # read first line of file to determine if it's an image
             with open(file_path, "rb") as f:
@@ -304,6 +309,11 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                     channel=user_id,
                 )
             else:
+                image = Image.open(file_path)
+                coeff = min(constants.LOW_REZ_IMAGE_SIZE / max(image.size), 1)
+                image = image.resize((int(image.size[0] * coeff), int(image.size[1] * coeff)))
+                file_name_low_res = f"{file['id']}_low_res.{file['filetype']}"
+                image.save(file_path, quality=75, optimize=True, format="PNG")
                 if constants.LOCAL_DEVELOPMENT:
                     s3_client = boto3.client(
                         "s3",
@@ -316,7 +326,11 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                     s3_client.upload_fileobj(
                         f, "slackblast-images", file_name, ExtraArgs={"ContentType": file_mimetype}
                     )
+                    s3_client.upload_fileobj(
+                        f, "slackblast-images", file_name_low_res, ExtraArgs={"ContentType": "image/png"}
+                    )
                 file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_name}")
+                low_res_file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_name_low_res}")
                 file_send_list.append(
                     {
                         "filepath": file_path,
@@ -344,6 +358,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         message_metadata = json.loads(body["view"]["private_metadata"])
         message_channel = safe_get(message_metadata, "channel_id")
         message_ts = safe_get(message_metadata, "message_ts")
+        low_res_file_list = safe_get(message_metadata, "low_res_files") if not low_res_file_list else low_res_file_list
         file_list = safe_get(message_metadata, "files") if not file_list else file_list
         file_ids = safe_get(message_metadata, "file_ids") if not file_ids else file_ids
         file_slack_urls = safe_get(message_metadata, "file_slack_urls") if not file_slack_urls else file_slack_urls
@@ -407,6 +422,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
             custom_fields[field[len(actions.CUSTOM_FIELD_PREFIX) :]] = value
 
     if file_list:
+        custom_fields["low_res_files"] = low_res_file_list
         custom_fields["files"] = file_list
         custom_fields["file_ids"] = file_ids
         custom_fields["file_slack_urls"] = file_slack_urls
@@ -424,6 +440,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     # }
 
     backblast_data.pop(actions.BACKBLAST_MOLESKIN, None)
+    backblast_data[actions.BACKBLAST_LOW_RES_FILE] = low_res_file_list
     backblast_data[actions.BACKBLAST_FILE] = file_list
     backblast_data[actions.BACKBLAST_FILE_IDS] = file_ids
     backblast_data[actions.BACKBLAST_FILE_SLACK_URLS] = file_slack_urls
@@ -471,7 +488,23 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
         )
 
     blocks = [msg_block, moleskin]
-    if file_slack_urls:
+    if low_res_file_list:
+        for file in low_res_file_list or []:
+            blocks.append(
+                slack_orm.ImageBlock(
+                    alt_text=title,
+                    image_url=file,
+                ).as_form_field()
+            )
+    elif file_list:
+        for file in file_list or []:
+            blocks.append(
+                slack_orm.ImageBlock(
+                    alt_text=title,
+                    image_url=file,
+                ).as_form_field()
+            )
+    elif file_slack_urls:
         for url in file_slack_urls or []:
             blocks.append(
                 slack_orm.ImageBlock(
@@ -485,14 +518,6 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                 slack_orm.ImageBlock(
                     alt_text=title,
                     slack_file_id=id,
-                ).as_form_field()
-            )
-    elif file_list:
-        for file in file_list or []:
-            blocks.append(
-                slack_orm.ImageBlock(
-                    alt_text=title,
-                    image_url=file,
                 ).as_form_field()
             )
     blocks.append(edit_block)
