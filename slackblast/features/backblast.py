@@ -237,7 +237,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     backblast_form = copy.deepcopy(forms.BACKBLAST_FORM)
     backblast_form = add_custom_field_blocks(backblast_form, region_record)
     backblast_data: dict = backblast_form.get_selected_values(body)
-    logger.debug(f"Backblast data: {backblast_data}")
+    logger.info(f"Backblast data: {backblast_data}")
 
     title = safe_get(backblast_data, actions.BACKBLAST_TITLE)
     the_date = safe_get(backblast_data, actions.BACKBLAST_DATE)
@@ -346,7 +346,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                 )
         except Exception as e:
             logger.error(f"Error uploading file: {e}")
-
+    print(low_res_file_list, file_list, file_ids, file_slack_urls)
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
     user_records = None
