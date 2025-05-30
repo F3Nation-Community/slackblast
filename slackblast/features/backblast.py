@@ -290,6 +290,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                 file_name = file_name.replace(".heic", ".png")
                 file_mimetype = "image/png"
                 file_name_low_res = file_name.replace(".png", "_low_res.png")
+                file_path_low_res = file_path.replace(".png", "_low_res.png")
 
             # read first line of file to determine if it's an image
             with open(file_path, "rb") as f:
@@ -313,7 +314,8 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                 coeff = min(constants.LOW_REZ_IMAGE_SIZE / max(image.size), 1)
                 image = image.resize((int(image.size[0] * coeff), int(image.size[1] * coeff)))
                 file_name_low_res = f"{file['id']}_low_res.{file['filetype']}"
-                image.save(file_path, quality=75, optimize=True, format="PNG")
+                file_path_low_res = f"/tmp/{file_name_low_res}"
+                image.save(file_path_low_res, quality=75, optimize=True, format="PNG")
                 if constants.LOCAL_DEVELOPMENT:
                     s3_client = boto3.client(
                         "s3",
@@ -326,6 +328,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                     s3_client.upload_fileobj(
                         f, "slackblast-images", file_name, ExtraArgs={"ContentType": file_mimetype}
                     )
+                with open(file_path_low_res, "rb") as f:
                     s3_client.upload_fileobj(
                         f, "slackblast-images", file_name_low_res, ExtraArgs={"ContentType": "image/png"}
                     )
