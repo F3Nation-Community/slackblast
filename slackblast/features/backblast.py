@@ -8,8 +8,6 @@ import boto3
 import pytz
 import requests
 from cryptography.fernet import Fernet
-from PIL import Image
-from pillow_heif import register_heif_opener
 from slack_sdk.web import WebClient
 
 from utilities import constants, sendmail
@@ -29,8 +27,6 @@ from utilities.helper_functions import (
 )
 from utilities.slack import actions, forms
 from utilities.slack import orm as slack_orm
-
-register_heif_opener()
 
 
 def add_custom_field_blocks(form: slack_orm.BlockView, region_record: Region) -> slack_orm.BlockView:
@@ -265,88 +261,79 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
     file_slack_urls = [file["permalink"] for file in files] if files else []
     for file in files or []:
         try:
-            r = requests.get(file["url_private_download"], headers={"Authorization": f"Bearer {client.token}"})
-            r.raise_for_status()
+            r_full = requests.get(file["url_private_download"], headers={"Authorization": f"Bearer {client.token}"})
+            r_full.raise_for_status()
 
             file_name = f"{file['id']}.{file['filetype']}"
             file_path = f"/tmp/{file_name}"
             file_mimetype = file["mimetype"]
 
+            # Determine the highest thumbnail size possible
+            highest_thumb = max(file["original_w"], file["original_h"])
+            thumb_sizes = [64, 80, 160, 480, 720, 800, 960, 1024]
+            thumb_size = next(
+                (size for size in thumb_sizes if size >= highest_thumb), 1024
+            )  # default to 1024 if no larger size found
+            r_low_res = requests.get(
+                file[f"thumb_{thumb_size}"],
+                headers={"Authorization": f"Bearer {client.token}"},
+                params={"width": constants.LOW_REZ_IMAGE_SIZE, "height": constants.LOW_REZ_IMAGE_SIZE},
+            )
+            file_name_low_res = f"{file['id']}_low_res.{file['filetype']}"
+            file_path_low_res = f"/tmp/{file_name_low_res}"
+
             with open(file_path, "wb") as f:
-                f.write(r.content)
+                f.write(r_full.content)
 
-            if file["filetype"] == "heic":
-                heic_img = Image.open(file_path)
-                x, y = heic_img.size
-                coeff = min(constants.MAX_HEIC_SIZE / max(x, y), 1)
-                heic_img = heic_img.resize((int(x * coeff), int(y * coeff)))
-                heic_img.save(file_path.replace(".heic", ".png"), quality=95, optimize=True, format="PNG")
-                coeff2 = min(constants.LOW_REZ_IMAGE_SIZE / max(x, y), 1)
-                heic_img = heic_img.resize((int(x * coeff2), int(y * coeff2)))
-                heic_img.save(file_path.replace(".heic", "_low_res.png"), quality=75, optimize=True, format="PNG")
-                os.remove(file_path)
+            with open(file_path_low_res, "wb") as f:
+                f.write(r_low_res.content)
 
-                file_path = file_path.replace(".heic", ".png")
-                file_name = file_name.replace(".heic", ".png")
-                file_mimetype = "image/png"
-                file_name_low_res = file_name.replace(".png", "_low_res.png")
-                file_path_low_res = file_path.replace(".png", "_low_res.png")
+            # no longer doing conversion
+            # if file["filetype"] == "heic":
+            #     heic_img = Image.open(file_path)
+            #     x, y = heic_img.size
+            #     coeff = min(constants.MAX_HEIC_SIZE / max(x, y), 1)
+            #     heic_img = heic_img.resize((int(x * coeff), int(y * coeff)))
+            #     heic_img.save(file_path.replace(".heic", ".png"), quality=95, optimize=True, format="PNG")
+            #     coeff2 = min(constants.LOW_REZ_IMAGE_SIZE / max(x, y), 1)
+            #     heic_img = heic_img.resize((int(x * coeff2), int(y * coeff2)))
+            #     heic_img.save(file_path.replace(".heic", "_low_res.png"), quality=75, optimize=True, format="PNG")
+            #     os.remove(file_path)
 
-            # read first line of file to determine if it's an image
-            with open(file_path, "rb") as f:
-                try:
-                    first_line = f.readline().decode("utf-8")
-                except Exception as e:
-                    logger.info(f"Error reading photo as text: {e}")
-                    first_line = ""
-            if first_line[:9] == "<!DOCTYPE":
-                logger.debug(f"File {file_name} is not an image, skipping")
-                msg = "To enable boybands, you will need to reinstall Slackblast with some new permissions."
-                msg += " To to this, simply use this link: "
-                msg += "https://n1tbdh3ak9.execute-api.us-east-2.amazonaws.com/Prod/slack/install."
-                msg += " You can edit your backblast and upload a boyband once this is complete."
-                client.chat_postMessage(
-                    text=msg,
-                    channel=user_id,
+            #     file_path = file_path.replace(".heic", ".png")
+            #     file_name = file_name.replace(".heic", ".png")
+            #     file_mimetype = "image/png"
+            #     file_name_low_res = file_name.replace(".png", "_low_res.png")
+            #     file_path_low_res = file_path.replace(".png", "_low_res.png")
+
+            if constants.LOCAL_DEVELOPMENT:
+                s3_client = boto3.client(
+                    "s3",
+                    aws_access_key_id=os.environ[constants.AWS_ACCESS_KEY_ID],
+                    aws_secret_access_key=os.environ[constants.AWS_SECRET_ACCESS_KEY],
                 )
             else:
-                image = Image.open(file_path)
-                coeff = min(constants.LOW_REZ_IMAGE_SIZE / max(image.size), 1)
-                image = image.resize((int(image.size[0] * coeff), int(image.size[1] * coeff)))
-                file_name_low_res = f"{file['id']}_low_res.{file['filetype']}"
-                file_path_low_res = f"/tmp/{file_name_low_res}"
-                image.save(file_path_low_res, quality=75, optimize=True, format="PNG")
-                if constants.LOCAL_DEVELOPMENT:
-                    s3_client = boto3.client(
-                        "s3",
-                        aws_access_key_id=os.environ[constants.AWS_ACCESS_KEY_ID],
-                        aws_secret_access_key=os.environ[constants.AWS_SECRET_ACCESS_KEY],
-                    )
-                else:
-                    s3_client = boto3.client("s3")
-                with open(file_path, "rb") as f:
-                    s3_client.upload_fileobj(
-                        f, "slackblast-images", file_name, ExtraArgs={"ContentType": file_mimetype}
-                    )
-                with open(file_path_low_res, "rb") as f:
-                    s3_client.upload_fileobj(
-                        f, "slackblast-images", file_name_low_res, ExtraArgs={"ContentType": "image/png"}
-                    )
-                file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_name}")
-                low_res_file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_name_low_res}")
-                file_send_list.append(
-                    {
-                        "filepath": file_path,
-                        "meta": {
-                            "filename": file_name,
-                            "maintype": file_mimetype.split("/")[0],
-                            "subtype": file_mimetype.split("/")[1],
-                        },
-                    }
+                s3_client = boto3.client("s3")
+            with open(file_path, "rb") as f:
+                s3_client.upload_fileobj(f, "slackblast-images", file_name, ExtraArgs={"ContentType": file_mimetype})
+            with open(file_path_low_res, "rb") as f:
+                s3_client.upload_fileobj(
+                    f, "slackblast-images", file_name_low_res, ExtraArgs={"ContentType": "image/png"}
                 )
+            file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_name}")
+            low_res_file_list.append(f"https://slackblast-images.s3.amazonaws.com/{file_name_low_res}")
+            file_send_list.append(
+                {
+                    "filepath": file_path,
+                    "meta": {
+                        "filename": file_name,
+                        "maintype": file_mimetype.split("/")[0],
+                        "subtype": file_mimetype.split("/")[1],
+                    },
+                }
+            )
         except Exception as e:
             logger.error(f"Error uploading file: {e}")
-    print(low_res_file_list, file_list, file_ids, file_slack_urls)
     user_id = safe_get(body, "user_id") or safe_get(body, "user", "id")
 
     user_records = None
