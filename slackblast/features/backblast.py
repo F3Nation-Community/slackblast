@@ -279,7 +279,7 @@ def handle_backblast_post(body: dict, client: WebClient, logger: Logger, context
                 headers={"Authorization": f"Bearer {client.token}"},
                 params={"width": constants.LOW_REZ_IMAGE_SIZE, "height": constants.LOW_REZ_IMAGE_SIZE},
             )
-            file_name_low_res = f"{file['id']}_low_res.{file['filetype']}"
+            file_name_low_res = f"{file['id']}_low_res.png"
             file_path_low_res = f"/tmp/{file_name_low_res}"
 
             with open(file_path, "wb") as f:
